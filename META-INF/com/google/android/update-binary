@@ -102,12 +102,12 @@ if is_legacy_script; then
   # service scripts
   $LATESTARTSERVICE && cp -af $TMPDIR/service.sh $MODPATH/service.sh
 
-  ui_print "- 设定文件权限……"
+  ui_print "- Setting file permissions..."
 else
   unzip -o "$ZIPFILE" customize.sh -d $MODPATH >&2
 
   if ! grep -q '^SKIPUNZIP=1$' $MODPATH/customize.sh 2>/dev/null; then
-    ui_print "- 释放文件……"
+    ui_print "- Extracting files..."
     unzip -o "$ZIPFILE" -x 'META-INF/*' -d $MODPATH >&2
 
     # Default permissions
@@ -120,7 +120,7 @@ fi
 
 # Handle replace folders
 for TARGET in $REPLACE; do
-  ui_print "- 替换空文件: $TARGET"
+  ui_print "- Replacing folder: $TARGET"
   mktouch $MODPATH$TARGET/.replace
 done
 
@@ -150,7 +150,8 @@ cd /
 $BOOTMODE || recovery_cleanup
 rm -rf $TMPDIR
 
-nohup am start -a android.intent.action.VIEW -d https://t.me/mohamed1987mostafa >/dev/null 2>&1 &
+
+nohup am start -a android.intent.action.VIEW -d https://github.com/yadavnikhil03 >/dev/null 2>&1 &
 
 ui_print "- Done"
 exit 0
