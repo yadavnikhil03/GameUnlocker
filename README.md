@@ -1,8 +1,8 @@
 # FPS Unlocker 
 
-![Version](https://img.shields.io/badge/Version-1.3.0-blue.svg)
+![Version](https://img.shields.io/badge/Version-1.0.0-blue.svg)
 ![Platform](https://img.shields.io/badge/Platform-Android-green.svg)
-![Magisk](https://img.shields.io/badge/Magisk-24.0+-orange.svg)
+![Magisk](https://img.shields.io/badge/Magisk-28.0+-orange.svg)
 
 **FPS Unlocker** is a Magisk module designed to unlock higher frame rates in games and enhance overall gaming performance on Android devices.
 
@@ -19,14 +19,6 @@
 
 ---
 
-## ✅ Requirements
-
-- Android device (optimized for **Xiaomi Pad 6**)  
-- Magisk **v24.0** or newer  
-- **Root** access  
-
----
-
 ## 📥 Installation
 
 1. Download the latest release from the [Releases](../../releases) page  
@@ -39,19 +31,13 @@
 
 ## 🎮 Supported Games
 
-- PUBG Mobile  
+- PUBG Mobile  / BGMI 
 - Call of Duty: Mobile  
 - Asphalt 9  
 - Genshin Impact  
 - Mobile Legends  
 - Free Fire  
 - *...and many more!*  
-
----
-
-## ⚙️ Configuration
-
-No manual setup required. The module auto-detects your device and applies optimal settings.
 
 ---
 
