@@ -3,33 +3,28 @@
 MODDIR=${0%/*}
 sleep 15
 
-# ===== FPS Unlock =====
+# ===== FPS Unlock (Android 12+ Compatible) =====
 setprop debug.vendor.qti.game.fps 120
 setprop persist.vendor.qti.game.fps 120
 setprop ro.vendor.display.enable_fps_switch 1
+setprop debug.sf.hw 1
+setprop debug.performance.tuning 1
+setprop video.accelerate.hw 1
 
-# ===== Thermal & Performance =====
-setprop persist.vendor.thermal.engine.disable 1
-setprop vendor.gpu.mode performance
+# ===== Safe Performance Optimizations =====
+setprop debug.composition.type gpu
+setprop persist.sys.use_dithering 0
+setprop debug.egl.profiler 1
+setprop debug.egl.hw 1
 
-# Lower texture quality
-setprop vendor.gfx.low_quality 1
-setprop vendor.gfx.disable_high_res_textures 1
+# ===== GPU Performance =====
+setprop debug.gr.numframebuffers 3
+setprop debug.overlayui.enable 1
+setprop persist.sys.ui.hw 1
 
-# Disable high-quality shadows
-setprop vendor.gfx.disable_shadows 1
-
-# Lower rendering resolution scaling
-setprop debug.hwui.renderer opengl
-setprop debug.hwui.render_dirty_regions false
-setprop debug.hwui.disable_vsync true
-setprop persist.sys.sf.lcd_density 220
-
-# Reduce anisotropic filtering
-setprop vendor.gfx.anisotropic_filtering 0
-
-# Input Lag Tweaks
+# ===== Reduce Input Lag =====
 setprop touch.vendor.sampling_rate 240
+setprop touch.presure.scale 0.001
 
 # Log to Magisk
-log -p i -t GameUnlocker "Applied FPS unlock + potato graphics "
+log -p i -t GameUnlocker "[v1.1.0] Applied Android 12 compatible FPS unlock"

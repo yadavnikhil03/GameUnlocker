@@ -1,4 +1,7 @@
-ro.product.manufacturer=vivo
-ro.product.brand=vivo
-ro.product.marketname=iQOO Neo8 Pro
-ro.product.model=V2302A
+# Device spoofing for better game compatibility
+ro.product.manufacturer=Xiaomi
+ro.product.brand=Redmi
+ro.product.marketname=Redmi K60 Pro
+ro.product.model=23013RK75C
+ro.soc.manufacturer=Qualcomm
+ro.soc.model=SM8550

@@ -1,8 +1,9 @@
 # FPS Unlocker 
 
-![Version](https://img.shields.io/badge/Version-1.0.0-blue.svg)
+![Version](https://img.shields.io/badge/Version-1.1.0-blue.svg)
 ![Platform](https://img.shields.io/badge/Platform-Android-green.svg)
 ![Magisk](https://img.shields.io/badge/Magisk-28.0+-orange.svg)
+![Android](https://img.shields.io/badge/Android-12+-success.svg)
 
 **FPS Unlocker** is a Magisk module designed to unlock higher frame rates in games and enhance overall gaming performance on Android devices.
 
@@ -31,13 +32,22 @@
 
 ## 🎮 Supported Games
 
-- PUBG Mobile  / BGMI 
+- PUBG Mobile / BGMI ✅ **Android 12+ Fixed**
 - Call of Duty: Mobile  
 - Asphalt 9  
 - Genshin Impact  
 - Mobile Legends  
 - Free Fire  
 - *...and many more!*  
+
+---
+
+## ⚠️ Important Notes
+
+- **Android 12+ Users:** This version (1.1.0) fixes the lobby crash issue reported in PUBG Mobile
+- The module uses safe system properties that won't trigger game anti-cheat systems
+- If you experience crashes, try clearing game cache before reporting issues
+- Reboot required after installation/update
 
 ---
 
