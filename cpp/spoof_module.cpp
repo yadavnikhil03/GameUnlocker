@@ -17,8 +17,8 @@
 #define LOG_TAG "GameUnlocker"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 
-static const char* config_path = "/data/adb/modules/GameUnlocker/config.json";
-static const char* spoof_file_path = "/data/adb/modules/GameUnlocker/cpuinfo_spoof";
+static const char* config_path = "/data/adb/modules/Game-Unlocker/config.json";
+static const char* spoof_file_path = "/data/adb/modules/Game-Unlocker/cpuinfo_spoof";
 
 struct JniString {
     JNIEnv* env;
