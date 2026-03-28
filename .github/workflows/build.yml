@@ -1,0 +1,66 @@
+name: Build Zygisk Module
+
+on:
+  push:
+    branches: [ "main" ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Android NDK
+      uses: nttld/setup-ndk@v1
+      id: setup-ndk
+      with:
+        ndk-version: r25c
+
+    - name: Build Zygisk Libraries (armeabi-v7a)
+      run: |
+        mkdir -p build/armeabi-v7a
+        cd build/armeabi-v7a
+        cmake ../../cpp \
+          -DCMAKE_TOOLCHAIN_FILE=${{ steps.setup-ndk.outputs.ndk-path }}/build/cmake/android.toolchain.cmake \
+          -DANDROID_ABI=armeabi-v7a \
+          -DANDROID_PLATFORM=android-21 \
+          -DCMAKE_BUILD_TYPE=Release
+        make
+        mkdir -p ../../zygisk/armeabi-v7a
+        cp libgameunlocker.so ../../zygisk/armeabi-v7a/libgameunlocker.so
+
+    - name: Build Zygisk Libraries (arm64-v8a)
+      run: |
+        mkdir -p build/arm64-v8a
+        cd build/arm64-v8a
+        cmake ../../cpp \
+          -DCMAKE_TOOLCHAIN_FILE=${{ steps.setup-ndk.outputs.ndk-path }}/build/cmake/android.toolchain.cmake \
+          -DANDROID_ABI=arm64-v8a \
+          -DANDROID_PLATFORM=android-21 \
+          -DCMAKE_BUILD_TYPE=Release
+        make
+        mkdir -p ../../zygisk/arm64-v8a/
+        cp libgameunlocker.so ../../zygisk/arm64-v8a/libgameunlocker.so
+
+    - name: Package Magisk Module
+      run: |
+        zip -r9 GameUnlocker-Zygisk.zip META-INF common zygisk customize.sh module.prop README.md
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: GameUnlocker-Zygisk
+        path: GameUnlocker-Zygisk.zip
+
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: GameUnlocker-Zygisk.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
