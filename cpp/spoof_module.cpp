@@ -17,7 +17,6 @@
 #define LOG_TAG "GameUnlocker"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 
-static const char* config_path = "/data/adb/modules/Game-Unlocker/config.json";
 static const char* spoof_file_path = "/data/adb/modules/Game-Unlocker/cpuinfo_spoof";
 
 struct JniString {
@@ -33,10 +32,22 @@ struct JniString {
     const char* get() const { return chars; }
 };
 
-bool isAppInConfig(const std::string& appName) {
-    std::ifstream file(config_path);
-    if (!file.is_open()) return false;
-    std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+bool isAppInConfig(zygisk::Api* api, const std::string& appName) {
+    if (!api) return false;
+    int dirfd = api->getModuleDir();
+    if (dirfd < 0) return false;
+    
+    int fd = openat(dirfd, "config.json", O_RDONLY);
+    if (fd < 0) return false;
+    
+    char buffer[8192];
+    memset(buffer, 0, sizeof(buffer));
+    ssize_t bytes = read(fd, buffer, sizeof(buffer)-1);
+    close(fd);
+    
+    if (bytes <= 0) return false;
+    
+    std::string content(buffer);
     return content.find("\"" + appName + "\"") != std::string::npos;
 }
 
@@ -74,7 +85,7 @@ public:
         }
 
         std::string pkgStr(package_name);
-        if (isAppInConfig(pkgStr)) {
+        if (isAppInConfig(api, pkgStr)) {
             LOGI("GameUnlocker App Detected: %s", package_name);
             executeCompanionCommand("mount_spoof");
             
