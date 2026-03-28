@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <thread>
 #include <mutex>
+#include <cstring>
 #include "zygisk.hpp"
 
 #define LOG_TAG "GameUnlocker"
