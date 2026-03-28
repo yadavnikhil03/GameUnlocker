@@ -67,8 +67,18 @@ set_permissions() {
 
 ui_print " ▶️ Moving files to destination..."
 sleep 0.7
-mv  ${CommonPath}/*  $MODPATH
-rm  -rf ${CommonPath}
+mv ${CommonPath}/* $MODPATH
+rm -rf ${CommonPath}
+
+if [ -d "$MODPATH/zygisk" ]; then
+  ui_print " ▶️ Zygisk libraries detected."
+else
+  ui_print " ⚠️ Note: Zygisk library not found. Make sure to compile the C++ source if you cloned from github."
+fi
+
+ui_print " ▶️ Configuring permissions for Spoof config..."
+chmod 0644 $MODPATH/config.json
+chmod 0444 $MODPATH/cpuinfo_spoof
 sleep 1
 
 ui_print ""

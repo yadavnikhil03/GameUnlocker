@@ -1,0 +1,27 @@
+{
+  "PACKAGES_iQOO_Neo8_Pro": [
+    "com.tencent.ig",
+    "com.pubg.imidas",
+    "com.pubg.krmobile",
+    "com.vng.pubgmobile",
+    "com.rekoo.pubgm",
+    "com.tencent.tmgp.pubgmhd",
+    "com.riotgames.league.wildrift",
+    "com.riotgames.league.wildrifttw",
+    "com.riotgames.league.wildriftvn"
+  ],
+  "PACKAGES_iQOO_Neo8_Pro_DEVICE": {
+    "MANUFACTURER": "vivo",
+    "BRAND": "vivo",
+    "MODEL": "V2302A",
+    "DEVICE": "V2302A",
+    "PRODUCT": "V2302A",
+    "FINGERPRINT": "vivo/V2302A/V2302A:13/TP1A.220624.014/compil02251912:user/release-keys"
+  },
+  "cpu_spoof": {
+    "with_cpu": [
+      "com.epicgames.fortnite",
+      "com.ea.gp.apexlegendsmobilefps"
+    ]
+  }
+}

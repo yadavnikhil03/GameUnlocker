@@ -1,1 +1,1 @@
-feat: Base Zygisk module structure and Magisk scripts
+feat: Core Zygisk logic, JSON config, and CMake setup
