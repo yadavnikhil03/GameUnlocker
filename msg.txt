@@ -1,1 +1,1 @@
-feat: Core Zygisk logic, JSON config, and CMake setup
+feat(ui): Web UI interface and API scripts
