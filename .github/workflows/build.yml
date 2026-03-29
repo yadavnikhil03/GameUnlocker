@@ -49,7 +49,7 @@ jobs:
 
     - name: Package Magisk Module
       run: |
-        zip -r9 GameUnlocker_${{ github.ref_name }}.zip META-INF common zygisk customize.sh module.prop README.md
+        zip -r9 GameUnlocker_${{ github.ref_name }}.zip META-INF common zygisk customize.sh module.prop README.md webroot
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4

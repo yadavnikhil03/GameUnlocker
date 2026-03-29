@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameUnlocker Manager</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f0f0f; color: #fff; padding: 20px; }
+        h1 { color: #00d2ff; text-align: center; }
+        .card { background: #1a1a1a; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        input { padding: 12px; width: 100%; box-sizing: border-box; margin-bottom: 12px; border-radius: 6px; border: 1px solid #333; background: #2a2a2a; color: #fff; font-size: 16px; }
+        button { padding: 12px 20px; border: none; border-radius: 6px; background: #00d2ff; color: #000; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px; margin-bottom: 10px; }
+        button.reset { background: #ff4757; color: white; }
+        pre { background: #000; padding: 15px; border-radius: 8px; overflow-x: auto; color: #00ea00; font-size: 14px; }
+        .error { color: #ff4757; }
+    </style>
+</head>
+<body>
+    <h1>GameUnlocker Setup</h1>
+    
+    <div class="card">
+        <h3>Add New Game</h3>
+        <input type="text" id="pkgName" placeholder="e.g., com.activision.callofduty.shooter">
+        <button onclick="addGame()">Inject App to Config</button>
+    </div>
+    
+    <div class="card">
+        <h3>Current Target Apps</h3>
+        <button onclick="loadConfig()">Reload List</button>
+        <button class="reset" onclick="resetConfig()">Reset to Defaults</button>
+        <pre id="configView">Loading...</pre>
+    </div>
+
+    <script>
+        const configPath = "/data/adb/modules/Game-Unlocker/config.json";
+
+        async function execShell(cmd) {
+            if (typeof ksu !== 'undefined' && ksu.exec) {
+                return await ksu.exec(cmd);
+            } else if (typeof apatch !== 'undefined' && apatch.exec) {
+                return await apatch.exec(cmd);
+            } else if (typeof mmrl !== 'undefined') {
+                return { errno: 0, stdout: "MMRL triggered. Not fully mapped.", stderr: "" };
+            }
+            return null; // Fallback to HTTP API
+        }
+
+        async function loadConfig() {
+            try {
+                let stdout = "";
+                let shell = await execShell(`cat ${configPath}`);
+                
+                if (shell !== null) {
+                    if (shell.errno === 0) stdout = shell.stdout;
+                } else {
+                    // Fallback to Magisk CGI-BIN API
+                    let res = await fetch('/cgi-bin/api.sh?action=get_config');
+                    stdout = await res.text();
+                }
+
+                if (stdout) {
+                    const cfg = JSON.parse(stdout);
+                    document.getElementById('configView').innerText = JSON.stringify(cfg.PACKAGES_iQOO_Neo8_Pro, null, 2);
+                    document.getElementById('configView').classList.remove('error');
+                } else {
+                    document.getElementById('configView').innerText = "Error reading config.json";
+                }
+            } catch (e) {
+                document.getElementById('configView').innerText = "Failed to load config. Connection Error.";
+                document.getElementById('configView').classList.add('error');
+            }
+        }
+
+        async function addGame() {
+            const pkg = document.getElementById('pkgName').value.trim();
+            if (!pkg) return;
+            try {
+                let success = false;
+                let shell = await execShell(`sed -i 's/"PACKAGES_iQOO_Neo8_Pro": \\\[/"PACKAGES_iQOO_Neo8_Pro": \\\[\\n    "${pkg}",/' ${configPath}`);
+                
+                if (shell !== null) {
+                    success = (shell.errno === 0);
+                } else {
+                    // Fallback to Magisk CGI-BIN API
+                    let res = await fetch('/cgi-bin/api.sh?action=add_game&pkg=' + pkg);
+                    let data = await res.json();
+                    success = data.success;
+                }
+
+                if (success) {
+                    alert('Successfully added: ' + pkg + '\\nReboot to apply changes!');
+                    document.getElementById('pkgName').value = '';
+                    loadConfig();
+                } else {
+                    alert('Failed to modify config.');
+                }
+            } catch (e) {
+                alert('API error.');
+            }
+        }
+
+        async function resetConfig() {
+            if(!confirm("Reset configuration to default?")) return;
+            try {
+                let success = false;
+                let shell = await execShell(`cat <<EOF > ${configPath}\\n{\\n"PACKAGES_iQOO_Neo8_Pro":["com.tencent.ig","com.pubg.imobile","com.pubg.imidas","com.pubg.krmobile","com.vng.pubgmobile","com.rekoo.pubgm","com.tencent.tmgp.pubgmhd","com.riotgames.league.wildrift","com.riotgames.league.wildrifttw","com.riotgames.league.wildriftvn"],"PACKAGES_iQOO_Neo8_Pro_DEVICE":{"MANUFACTURER":"vivo","BRAND":"vivo","MODEL":"V2302A","DEVICE":"V2302A","PRODUCT":"V2302A","FINGERPRINT":"vivo/V2302A/V2302A:13/TP1A.220624.014/compil02251912:user/release-keys"},"cpu_spoof":{"with_cpu":["com.epicgames.fortnite","com.ea.gp.apexlegendsmobilefps"]}}\\n}\\nEOF`);
+                
+                if (shell !== null) {
+                    success = (shell.errno === 0);
+                } else {
+                    // Fallback to Magisk CGI-BIN API
+                    let res = await fetch('/cgi-bin/api.sh?action=reset_config');
+                    let data = await res.json();
+                    success = data.success;
+                }
+
+                if(success) {
+                    alert("Config reset!");
+                    loadConfig();
+                }
+            } catch(e) {
+                alert('API error.');
+            }
+        }
+
+        window.onload = loadConfig;
+    </script>
+</body>
+</html>
