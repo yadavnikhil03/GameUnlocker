@@ -1,7 +1,7 @@
 id=Game-Unlocker
 name=Game Unlocker (Zygisk)
-version=v2.0.4
-versionCode=204
+version=v2.0.5
+versionCode=205
 author=yadavnikhil03 @github
 description=Magisk/KSU Zygisk Module that unlocks 60/90/120 FPS in games via safe per-app spoofing and dynamic thermal adjustments.
 updateJson=https://raw.githubusercontent.com/yadavnikhil03/GameUnlocker/main/release.json
