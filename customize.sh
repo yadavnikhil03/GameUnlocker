@@ -12,85 +12,86 @@ Android=`getprop ro.build.version.release`
 CPU_ABI=`getprop ro.product.cpu.abi`
 CommonPath=$MODPATH/common
 
+abort_missing_zygisk() {
+  ui_print ""
+  ui_print " [!] Package validation failed"
+  ui_print ""
+  ui_print " Detected ABI : $CPU_ABI"
+  ui_print " Missing file  : $1"
+  ui_print ""
+  ui_print " This ZIP looks incomplete or was built without the Zygisk library."
+  ui_print " Install the release build, then reboot and try again."
+  abort
+}
+
 print_modname() {
   ui_print ""
-  sleep 0.5
-  ui_print "╔═╗╔═╗╔═╗  ╦ ╦╔╗╔╦  ╔═╗╔═╗╦╔═╔═╗╦═╗"
-  ui_print "╠╣ ╠═╝╚═╗  ║ ║║║║║  ║ ║║  ╠╩╗║╣ ╠╦╝"
-  ui_print "╚  ╩  ╚═╝  ╚═╝╝╚╝╩═╝╚═╝╚═╝╩ ╩╚═╝╩╚═"
-  sleep 0.5
+  ui_print " Game Unlocker"
+  ui_print " High-performance Zygisk module"
+  ui_print " Maintainer: @yadavnikhil03"
   ui_print ""
-  sleep 0.3
-  ui_print "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓"
-  ui_print "┃       ⚡ SUPERCHARGE YOUR GAMING EXPERIENCE ⚡ ┃"
-  ui_print "┃           Developed by @yadavnikhil03           ┃"
-  ui_print "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
-  sleep 1
+  ui_print " Device profile"
+  ui_print " - Name : $Market_Name"
+  ui_print " - Model: $Model"
+  ui_print " - Code : $Device"
+  ui_print " - Android: $Android"
+  ui_print " - Build : $Version"
+  ui_print " - ABI   : $CPU_ABI"
   ui_print ""
-  ui_print "📱 DEVICE PROFILE 📱"
-  ui_print "━━━━━━━━━━━━━━━━━━━━"
-  sleep 0.5
-  ui_print "  ➤ Device: $Market _Name"
-  sleep 0.3
-  ui_print "  ➤ Model: $Model"
-  sleep 0.3
-  ui_print "  ➤ Codename: $Device"
-  sleep 0.3
-  ui_print "  ➤ Android: $Android"
-  sleep 0.3
-  ui_print "  ➤ Build: $Version"
-  sleep 0.3
-  ui_print "  ➤ Architecture: $CPU_ABI"
-  sleep 0.5
-  ui_print ""
-  ui_print "⚙️ INITIALIZING MODULE INSTALLATION ⚙️"
-  ui_print "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  sleep 1
+  ui_print " Starting installation..."
   ui_print ""
 }
 
 print_modname
 
 on_install() {
-  ui_print " ▶️ Extracting module files..."
-  sleep 0.7
-  unzip -o "$ZIPFILE" 'system/*' -d $MODPATH >&2
-  sleep 0.5
+  ui_print " [*] Extracting module files"
+  unzip -o "$ZIPFILE" \
+    'module.prop' \
+    'common/*' \
+    'zygisk/*' \
+    'webroot/*' \
+    'system/*' \
+    -d $MODPATH >&2
 }
 
 set_permissions() {
-  ui_print " ▶️ Setting appropriate permissions..."
-  sleep 0.7
+  ui_print " [*] Applying permissions"
   set_perm_recursive  $MODPATH  0  0  0755  0644
-  sleep 0.5
 }
 
-ui_print " ▶️ Moving files to destination..."
-sleep 0.7
+ui_print " [*] Preparing package"
 mv ${CommonPath}/* $MODPATH
 rm -rf ${CommonPath}
 
-if [ -d "$MODPATH/zygisk" ]; then
-  ui_print " ▶️ Zygisk libraries detected."
-else
-  ui_print " ⚠️ Note: Zygisk library not found. Make sure to compile the C++ source if you cloned from github."
+if [ ! -d "$MODPATH/zygisk" ]; then
+  abort_missing_zygisk "$MODPATH/zygisk/<abi>.so"
 fi
 
-ui_print " ▶️ Configuring permissions for Spoof config..."
+case "$CPU_ABI" in
+  arm64-v8a)
+    [ -f "$MODPATH/zygisk/arm64-v8a.so" ] || abort_missing_zygisk "$MODPATH/zygisk/arm64-v8a.so"
+    ;;
+  armeabi-v7a|armeabi)
+    [ -f "$MODPATH/zygisk/armeabi-v7a.so" ] || abort_missing_zygisk "$MODPATH/zygisk/armeabi-v7a.so"
+    ;;
+  *)
+    ui_print ""
+    ui_print " [!] Unsupported CPU ABI: $CPU_ABI"
+    ui_print " Supported ABIs: arm64-v8a, armeabi-v7a"
+    abort
+    ;;
+esac
+
+ui_print " [*] Zygisk library verified for $CPU_ABI"
+
+ui_print " [*] Finalizing config files"
 chmod 0644 $MODPATH/config.json
 chmod 0444 $MODPATH/cpuinfo_spoof
-sleep 1
 
 ui_print ""
-ui_print " ✅ INSTALLATION COMPLETED SUCCESSFULLY ✅"
-sleep 0.5
-ui_print " 🔄 Reboot your device to apply changes 🔄"
-sleep 0.5
+ui_print " Installation complete"
+ui_print " Reboot the device to activate the module"
 ui_print ""
-ui_print "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓"
-ui_print "┃  Thank you for using Game Unlocker 🎮 - Enjoy gaming!  ┃"
-ui_print "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
-sleep 1
+ui_print " Game Unlocker is ready"
 ui_print ""
-
-sleep 1
