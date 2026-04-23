@@ -21,11 +21,18 @@
 ## Installation
 
 1. Download the latest `GameUnlocker-Zygisk.zip` from the [Releases](../../releases) page.
+	- Do **not** use GitHub "Download ZIP" source archives. They may not include compiled `zygisk/*.so` binaries.
 2. Make sure **Zygisk** is enabled in your Magisk / KernelSU app.
 3. Open **Magisk Manager** / **KernelSU**
 4. Tap on **Modules** > **Install from storage**
 5. Select the downloaded `.zip` file.
 6. **Reboot** your device.
+
+### Troubleshooting: "Zygisk module not loaded due to incompatibility"
+
+- Ensure the installed zip contains `zygisk/arm64-v8a.so` (and `zygisk/armeabi-v7a.so` for 32-bit support).
+- If you installed from a source archive, uninstall module, reboot, and install the release asset zip.
+- Keep Magisk updated and verify Zygisk is enabled before rebooting.
 
 ---
 
@@ -51,6 +58,14 @@
 ## Credits & Acknowledgments
 
 - Huge thanks to [AlirezaParsi](https://github.com/AlirezaParsi) and his [COPG (Call Of PUBG Gaming)](https://github.com/AlirezaParsi/COPG) project. The core Zygisk C++ spoofing engine and approach in this module were heavily inspired by and adapted from the COPG repository.
+
+---
+
+## Open-Source Compliance
+
+- This repository is open source under the project license.
+- If you fork or redistribute this project, keep attribution and license files intact.
+- See [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) for third-party attribution and reuse expectations.
 
 ---
 

@@ -1,1 +1,1 @@
-feat(ui): Web UI interface and API scripts
+docs: Update third-party notices and licensing

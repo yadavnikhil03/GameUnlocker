@@ -2,6 +2,10 @@
   "PACKAGES_iQOO_Neo8_Pro": [
     "com.tencent.ig",
     "com.pubg.imobile",
+    "com.pubg.imobilelite",
+    "com.pubg.imobile.india",
+    "com.pubg.imobile.battlegroundsindia",
+    "com.pubg.imobile.in",
     "com.pubg.imidas",
     "com.pubg.krmobile",
     "com.vng.pubgmobile",
@@ -12,12 +16,12 @@
     "com.riotgames.league.wildriftvn"
   ],
   "PACKAGES_iQOO_Neo8_Pro_DEVICE": {
-    "MANUFACTURER": "vivo",
-    "BRAND": "vivo",
-    "MODEL": "V2302A",
-    "DEVICE": "V2302A",
-    "PRODUCT": "V2302A",
-    "FINGERPRINT": "vivo/V2302A/V2302A:13/TP1A.220624.014/compil02251912:user/release-keys"
+    "MANUFACTURER": "Asus",
+    "BRAND": "asus",
+    "MODEL": "ZS673KS",
+    "DEVICE": "ASUS_I005_1",
+    "PRODUCT": "WW_I005D",
+    "FINGERPRINT": "asus/WW_I005D/ASUS_I005_1:11/RKQ1.201022.002/18.0840.2103.26-0:user/release-keys"
   },
   "cpu_spoof": {
     "with_cpu": [
