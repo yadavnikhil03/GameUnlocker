@@ -1,6 +1,6 @@
 # FPS Unlocker (Zygisk)
 
-![Version](https://img.shields.io/badge/Version-2.0.0-blue.svg)
+![Version](https://img.shields.io/badge/Version-2.0.5-blue.svg)
 ![Platform](https://img.shields.io/badge/Platform-Android-green.svg)
 ![Magisk](https://img.shields.io/badge/Magisk-Zygisk_Enabled-orange.svg)
 
