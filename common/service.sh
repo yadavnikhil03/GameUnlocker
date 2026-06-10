@@ -20,22 +20,12 @@ apply_perf_mode() {
     setprop persist.vendor.thermal.engine.disable 1
     setprop vendor.gpu.mode performance
     setprop vendor.gfx.low_quality 1
-    setprop vendor.gfx.disable_high_res_textures 1
-    setprop vendor.gfx.disable_shadows 1
-    setprop debug.hwui.renderer opengl
-    setprop debug.hwui.disable_vsync true
-    setprop vendor.gfx.anisotropic_filtering 0
 }
 
 restore_perf_mode() {
     setprop persist.vendor.thermal.engine.disable 0
     setprop vendor.gpu.mode normal
     setprop vendor.gfx.low_quality 0
-    setprop vendor.gfx.disable_high_res_textures 0
-    setprop vendor.gfx.disable_shadows 0
-    setprop debug.hwui.renderer skia
-    setprop debug.hwui.disable_vsync false
-    setprop vendor.gfx.anisotropic_filtering 1
 }
 
 until [ "$(getprop sys.boot_completed)" = "1" ]; do
@@ -44,7 +34,6 @@ done
 
 sleep 15
 
-# Keep legacy vendor keys for devices that honor them.
 setprop debug.vendor.qti.game.fps 120
 setprop persist.vendor.qti.game.fps 120
 setprop ro.vendor.display.enable_fps_switch 1

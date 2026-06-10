@@ -6,3 +6,4 @@ author=yadavnikhil03 @github
 description=Magisk/KSU Zygisk Module that unlocks 60/90/120 FPS in games via safe per-app spoofing and dynamic thermal adjustments.
 updateJson=https://raw.githubusercontent.com/yadavnikhil03/GameUnlocker/main/release.json
 support=https://github.com/yadavnikhil03/GameUnlocker/issues
+zygisk=yes

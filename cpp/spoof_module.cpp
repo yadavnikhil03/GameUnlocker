@@ -168,19 +168,18 @@ public:
         
             jclass buildClass = env->FindClass("android/os/Build");
             if (buildClass) {
-                setStr(buildClass, "MANUFACTURER", "Asus");
-                setStr(buildClass, "BRAND", "asus");
-                setStr(buildClass, "MODEL", "ZS673KS");
-                setStr(buildClass, "DEVICE", "ASUS_I005_1");
-                setStr(buildClass, "PRODUCT", "WW_I005D");
-                setStr(buildClass, "FINGERPRINT", "asus/WW_I005D/ASUS_I005_1:11/RKQ1.201022.002/18.0840.2103.26-0:user/release-keys");
-                setStr(buildClass, "BRAND_FOR_DEVICE", "asus");
+                setStr(buildClass, "MANUFACTURER", "Samsung");
+                setStr(buildClass, "BRAND", "samsung");
+                setStr(buildClass, "MODEL", "SM-S928B");
+                setStr(buildClass, "DEVICE", "e3q");
+                setStr(buildClass, "PRODUCT", "e3qxx");
+                setStr(buildClass, "FINGERPRINT", "samsung/e3qxx/e3q:14/UP1A.231005.007/S928BXXS1AXBG:user/release-keys");
+                setStr(buildClass, "BRAND_FOR_DEVICE", "samsung");
                 env->DeleteLocalRef(buildClass);
             } else {
                 env->ExceptionClear();
             }
 
-            // We only patch static Build fields; library can be unloaded afterwards.
             api->setOption(zygisk::Option::DLCLOSE_MODULE_LIBRARY);
         } else {
             api->setOption(zygisk::Option::DLCLOSE_MODULE_LIBRARY);

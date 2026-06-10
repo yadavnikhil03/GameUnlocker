@@ -60,7 +60,7 @@
 
                 if (stdout) {
                     const cfg = JSON.parse(stdout);
-                    document.getElementById('configView').innerText = JSON.stringify(cfg.PACKAGES_iQOO_Neo8_Pro, null, 2);
+                    document.getElementById('configView').innerText = JSON.stringify(cfg.PACKAGES_SAMSUNG_S24_ULTRA, null, 2);
                     document.getElementById('configView').classList.remove('error');
                 } else {
                     document.getElementById('configView').innerText = "Error reading config.json";
@@ -76,7 +76,7 @@
             if (!pkg) return;
             try {
                 let success = false;
-                let shell = await execShell(`sed -i 's/"PACKAGES_iQOO_Neo8_Pro": \\\[/"PACKAGES_iQOO_Neo8_Pro": \\\[\\n    "${pkg}",/' ${configPath}`);
+                let shell = await execShell(`sed -i 's/"PACKAGES_SAMSUNG_S24_ULTRA": \\\[/"PACKAGES_SAMSUNG_S24_ULTRA": \\\[\\n    "${pkg}",/' ${configPath}`);
                 
                 if (shell !== null) {
                     success = (shell.errno === 0);
@@ -103,7 +103,7 @@
             if(!confirm("Reset configuration to default?")) return;
             try {
                 let success = false;
-                let shell = await execShell(`cat <<EOF > ${configPath}\\n{\\n"PACKAGES_iQOO_Neo8_Pro":["com.tencent.ig","com.pubg.imobile","com.pubg.imidas","com.pubg.krmobile","com.vng.pubgmobile","com.rekoo.pubgm","com.tencent.tmgp.pubgmhd","com.riotgames.league.wildrift","com.riotgames.league.wildrifttw","com.riotgames.league.wildriftvn"],"PACKAGES_iQOO_Neo8_Pro_DEVICE":{"MANUFACTURER":"vivo","BRAND":"vivo","MODEL":"V2302A","DEVICE":"V2302A","PRODUCT":"V2302A","FINGERPRINT":"vivo/V2302A/V2302A:13/TP1A.220624.014/compil02251912:user/release-keys"},"cpu_spoof":{"with_cpu":["com.epicgames.fortnite","com.ea.gp.apexlegendsmobilefps"]}}\\n}\\nEOF`);
+                let shell = await execShell(`cat <<EOF > ${configPath}\\n{\\n"PACKAGES_SAMSUNG_S24_ULTRA":["com.tencent.ig","com.pubg.imobile","com.pubg.imidas","com.pubg.krmobile","com.vng.pubgmobile","com.rekoo.pubgm","com.tencent.tmgp.pubgmhd","com.riotgames.league.wildrift","com.riotgames.league.wildrifttw","com.riotgames.league.wildriftvn","com.riotgames.valormobile"],"PACKAGES_SAMSUNG_S24_ULTRA_DEVICE":{"MANUFACTURER":"Samsung","BRAND":"samsung","MODEL":"SM-S928B","DEVICE":"e3q","PRODUCT":"e3qxx","FINGERPRINT":"samsung/e3qxx/e3q:14/UP1A.231005.007/S928BXXS1AXBG:user/release-keys"},"cpu_spoof":{"with_cpu":["com.epicgames.fortnite","com.ea.gp.apexlegendsmobilefps"]}}\\n}\\nEOF`);
                 
                 if (shell !== null) {
                     success = (shell.errno === 0);

@@ -33,7 +33,7 @@ elif [ "$ACTION" = "add_game" ]; then
       exit 0
     fi
 
-    sed -i 's/"PACKAGES_iQOO_Neo8_Pro": \[/"PACKAGES_iQOO_Neo8_Pro": \[\n    "'"$PKG"'",/' "$CONFIG_FILE"
+    sed -i 's/"PACKAGES_SAMSUNG_S24_ULTRA": \[/"PACKAGES_SAMSUNG_S24_ULTRA": \[\n    "'"$PKG"'",/' "$CONFIG_FILE"
     echo "{\"success\": true}"
     else
         echo "{\"success\": false}"
@@ -41,7 +41,7 @@ elif [ "$ACTION" = "add_game" ]; then
 elif [ "$ACTION" = "reset_config" ]; then
     cat <<EOF > "$CONFIG_FILE"
 {
-  "PACKAGES_iQOO_Neo8_Pro": [
+  "PACKAGES_SAMSUNG_S24_ULTRA": [
     "com.tencent.ig",
     "com.pubg.imobile",
     "com.pubg.imobilelite",
@@ -55,15 +55,16 @@ elif [ "$ACTION" = "reset_config" ]; then
     "com.tencent.tmgp.pubgmhd",
     "com.riotgames.league.wildrift",
     "com.riotgames.league.wildrifttw",
-    "com.riotgames.league.wildriftvn"
+    "com.riotgames.league.wildriftvn",
+    "com.riotgames.valormobile"
   ],
-  "PACKAGES_iQOO_Neo8_Pro_DEVICE": {
-    "MANUFACTURER": "Asus",
-    "BRAND": "asus",
-    "MODEL": "ZS673KS",
-    "DEVICE": "ASUS_I005_1",
-    "PRODUCT": "WW_I005D",
-    "FINGERPRINT": "asus/WW_I005D/ASUS_I005_1:11/RKQ1.201022.002/18.0840.2103.26-0:user/release-keys"
+  "PACKAGES_SAMSUNG_S24_ULTRA_DEVICE": {
+    "MANUFACTURER": "Samsung",
+    "BRAND": "samsung",
+    "MODEL": "SM-S928B",
+    "DEVICE": "e3q",
+    "PRODUCT": "e3qxx",
+    "FINGERPRINT": "samsung/e3qxx/e3q:14/UP1A.231005.007/S928BXXS1AXBG:user/release-keys"
   },
   "cpu_spoof": {
     "with_cpu": [
