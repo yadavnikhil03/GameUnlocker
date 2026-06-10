@@ -37,25 +37,16 @@
 5. Select the downloaded `.zip` file.
 6. **Reboot** your device.
 
-### Troubleshooting: "Zygisk module not loaded due to incompatibility"
+## How to Add Your Games
 
-- Ensure the installed zip contains `zygisk/arm64-v8a.so` (and `zygisk/armeabi-v7a.so` for 32-bit support).
-- If you installed from a source archive, uninstall module, reboot, and install the release asset zip.
-- Keep Magisk updated and verify Zygisk is enabled before rebooting.
+1. Open your Magisk or KernelSU app.
+2. Go to the **Modules** tab and find Game Unlocker.
+3. Tap the **Action** button. 
+4. This will pop open our WebUI! 
+5. Under **Add New Game**, simply tap the text box, select your game from the dropdown list of apps installed on your phone, and hit **"Inject App to Config"**.
+6. **Reboot** your phone one last time, and boom—your game is fully unlocked and ready to play! 
 
----
-
-## Supported Games
-
-- PUBG Mobile / BGMI
-- Call of Duty: Mobile
-- Asphalt 9
-- Genshin Impact
-- Mobile Legends
-- Free Fire
-- *...and many more!*
-
----
+*Tip: If you ever run into a problem, just open the WebUI again and click the **🐛 Report Bug** button. It will grab all the logs needed to help you!*
 
 ## Contact & Support
 
