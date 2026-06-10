@@ -75,6 +75,17 @@ elif [ "$ACTION" = "reset_config" ]; then
 }
 EOF
     echo "{\"success\": true}"
+elif [ "$ACTION" = "get_apps" ]; then
+    APPS=$(pm list packages -3 | cut -f 2 -d ":" | tr '\n' ',')
+    echo "{\"success\": true, \"apps\": \"$APPS\"}"
+elif [ "$ACTION" = "get_device_info" ]; then
+    MODEL=$(getprop ro.product.model)
+    ANDROID=$(getprop ro.build.version.release)
+    echo "{\"success\": true, \"model\": \"$MODEL\", \"android\": \"$ANDROID\"}"
+elif [ "$ACTION" = "generate_logs" ]; then
+    logcat -d -s GameUnlocker > /sdcard/Download/GameUnlocker_Logs.txt
+    SNIPPET=$(logcat -d -s GameUnlocker -t 20)
+    echo "{\"success\": true, \"snippet\": \"$(echo "$SNIPPET" | base64 -w 0)\"}"
 else
     echo "{\"error\": \"invalid action\"}"
 fi

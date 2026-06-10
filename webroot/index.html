@@ -5,14 +5,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GameUnlocker Manager</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f0f0f; color: #fff; padding: 20px; }
-        h1 { color: #00d2ff; text-align: center; }
-        .card { background: #1a1a1a; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        input { padding: 12px; width: 100%; box-sizing: border-box; margin-bottom: 12px; border-radius: 6px; border: 1px solid #333; background: #2a2a2a; color: #fff; font-size: 16px; }
-        button { padding: 12px 20px; border: none; border-radius: 6px; background: #00d2ff; color: #000; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px; margin-bottom: 10px; }
-        button.reset { background: #ff4757; color: white; }
-        pre { background: #000; padding: 15px; border-radius: 8px; overflow-x: auto; color: #00ea00; font-size: 14px; }
-        .error { color: #ff4757; }
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --heading-color: #111111;
+            --card-bg: #f9f9f9;
+            --card-border: #e0e0e0;
+            --input-bg: #ffffff;
+            --input-border: #ccc;
+            --btn-bg: #ffffff;
+            --btn-hover: #f0f0f0;
+            --pre-bg: #f4f4f4;
+            --pre-text: #555;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #121212;
+                --text-color: #e0e0e0;
+                --heading-color: #ffffff;
+                --card-bg: #1e1e1e;
+                --card-border: #333333;
+                --input-bg: #2d2d2d;
+                --input-border: #444444;
+                --btn-bg: #2d2d2d;
+                --btn-hover: #3d3d3d;
+                --pre-bg: #1a1a1a;
+                --pre-text: #a0a0a0;
+            }
+        }
+
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg-color); color: var(--text-color); padding: 20px; line-height: 1.6; }
+        h1 { color: var(--heading-color); text-align: center; font-size: 24px; font-weight: 600; margin-bottom: 30px; }
+        .card { background: var(--card-bg); padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--card-border); }
+        h3 { margin-top: 0; font-size: 16px; color: var(--text-color); }
+        input { padding: 10px; width: 100%; box-sizing: border-box; margin-bottom: 12px; border-radius: 4px; border: 1px solid var(--input-border); font-size: 14px; background: var(--input-bg); color: var(--text-color); }
+        button { padding: 10px 16px; border: 1px solid var(--card-border); border-radius: 4px; background: var(--btn-bg); color: var(--text-color); font-weight: 500; cursor: pointer; width: 100%; font-size: 14px; margin-bottom: 10px; transition: background 0.2s; }
+        button:hover { background: var(--btn-hover); }
+        button.reset { color: #d32f2f; border-color: #f5c6c6; }
+        button.reset:hover { background: #feebeb; }
+        button.bug { color: #e67e22; border-color: #fdebd0; margin-top: 10px; }
+        button.bug:hover { background: #fef5e7; }
+        pre { background: var(--pre-bg); padding: 12px; border-radius: 4px; overflow-x: auto; color: var(--pre-text); font-size: 13px; border: 1px solid var(--card-border); }
+        .error { color: #d32f2f; }
     </style>
 </head>
 <body>
@@ -20,8 +55,10 @@
     
     <div class="card">
         <h3>Add New Game</h3>
-        <input type="text" id="pkgName" placeholder="e.g., com.activision.callofduty.shooter">
+        <input type="text" id="pkgName" list="installedApps" placeholder="Select or type package (e.g., com.tencent.ig)">
+        <datalist id="installedApps"></datalist>
         <button onclick="addGame()">Inject App to Config</button>
+        <button class="bug" onclick="reportBug()">🐛 Report Bug (Auto-Attach Logs)</button>
     </div>
     
     <div class="card">
@@ -42,7 +79,7 @@
             } else if (typeof mmrl !== 'undefined') {
                 return { errno: 0, stdout: "MMRL triggered. Not fully mapped.", stderr: "" };
             }
-            return null; // Fallback to HTTP API
+            return null; 
         }
 
         async function loadConfig() {
@@ -53,15 +90,27 @@
                 if (shell !== null) {
                     if (shell.errno === 0) stdout = shell.stdout;
                 } else {
-                    // Fallback to Magisk CGI-BIN API
-                    let res = await fetch('/cgi-bin/api.sh?action=get_config');
-                    stdout = await res.text();
+                    try {
+                        let res = await fetch('/cgi-bin/api.sh?action=get_config');
+                        stdout = await res.text();
+                    } catch (fetchErr) {
+                        stdout = JSON.stringify({
+                            "PACKAGES_SAMSUNG_S24_ULTRA": [
+                                "com.tencent.ig", "com.pubg.imobile", "com.rekoo.pubgm"
+                            ],
+                            "PACKAGES_SAMSUNG_S24_ULTRA_DEVICE": {
+                                "MODEL": "SM-S928B (Mocked Desktop Data)"
+                            }
+                        }, null, 2);
+                        console.log("Running locally, using mock config.");
+                    }
                 }
 
                 if (stdout) {
                     const cfg = JSON.parse(stdout);
                     document.getElementById('configView').innerText = JSON.stringify(cfg.PACKAGES_SAMSUNG_S24_ULTRA, null, 2);
                     document.getElementById('configView').classList.remove('error');
+                    window.currentConfig = cfg;
                 } else {
                     document.getElementById('configView').innerText = "Error reading config.json";
                 }
@@ -74,6 +123,13 @@
         async function addGame() {
             const pkg = document.getElementById('pkgName').value.trim();
             if (!pkg) return;
+
+            const pkgRegex = /^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z0-9_]+)+$/;
+            if (!pkgRegex.test(pkg)) {
+                alert('Security Error: Invalid package name format.');
+                return;
+            }
+
             try {
                 let success = false;
                 let shell = await execShell(`sed -i 's/"PACKAGES_SAMSUNG_S24_ULTRA": \\\[/"PACKAGES_SAMSUNG_S24_ULTRA": \\\[\\n    "${pkg}",/' ${configPath}`);
@@ -81,7 +137,6 @@
                 if (shell !== null) {
                     success = (shell.errno === 0);
                 } else {
-                    // Fallback to Magisk CGI-BIN API
                     let res = await fetch('/cgi-bin/api.sh?action=add_game&pkg=' + pkg);
                     let data = await res.json();
                     success = data.success;
@@ -108,10 +163,13 @@
                 if (shell !== null) {
                     success = (shell.errno === 0);
                 } else {
-                    // Fallback to Magisk CGI-BIN API
-                    let res = await fetch('/cgi-bin/api.sh?action=reset_config');
-                    let data = await res.json();
-                    success = data.success;
+                    try {
+                        let res = await fetch('/cgi-bin/api.sh?action=reset_config');
+                        let data = await res.json();
+                        success = data.success;
+                    } catch (fetchErr) {
+                        success = true;
+                    }
                 }
 
                 if(success) {
@@ -123,7 +181,135 @@
             }
         }
 
-        window.onload = loadConfig;
+        async function reportBug() {
+            let model = "Unknown";
+            let android = "Unknown";
+            let logSnippet = "No recent logs found.";
+            let configDump = JSON.stringify(window.currentConfig || {}, null, 2);
+
+            try {
+                let mShell = await execShell('getprop ro.product.model');
+                if (mShell && mShell.errno === 0) {
+                    model = mShell.stdout.trim();
+                    let aShell = await execShell('getprop ro.build.version.release');
+                    if (aShell && aShell.errno === 0) android = aShell.stdout.trim();
+
+                    await execShell('logcat -d -s GameUnlocker > /sdcard/Download/GameUnlocker_Logs.txt');
+                    let logShell = await execShell('logcat -d -s GameUnlocker -t 20');
+                    if (logShell && logShell.errno === 0 && logShell.stdout.trim() !== "") {
+                        logSnippet = logShell.stdout.trim();
+                    }
+                } else {
+                    // Fallback to CGI-BIN
+                    let resInfo = await fetch('/cgi-bin/api.sh?action=get_device_info');
+                    if (resInfo.ok) {
+                        let dataInfo = await resInfo.json();
+                        if (dataInfo.success) {
+                            model = dataInfo.model;
+                            android = dataInfo.android;
+                        }
+                    }
+                    let resLogs = await fetch('/cgi-bin/api.sh?action=generate_logs');
+                    if (resLogs.ok) {
+                        let dataLogs = await resLogs.json();
+                        if (dataLogs.success) {
+                            logSnippet = atob(dataLogs.snippet);
+                        }
+                    }
+                }
+            } catch (e) {
+                model = "Local Desktop Mock";
+                android = "Windows Mock";
+                logSnippet = "[Mock Log] 10:00:00 GameUnlocker: Game detected - applying performance mode\\n[Mock Log] 10:00:02 GameUnlocker: CPU spoofing mounted successfully";
+            }
+
+            const issueBody = `### 🐛 Bug Description
+<!-- Please provide a clear and concise description of what the bug is. -->
+
+
+### 🔄 Steps to Reproduce
+<!-- How can we reproduce this bug? Which game? -->
+1. 
+2. 
+3. 
+
+### 📱 Device Information
+- **Model:** ${model}
+- **Android Version:** ${android}
+
+---
+### 🛠 Diagnostics
+
+> [!IMPORTANT]
+> 📂 **A full log file has been saved to your phone at \`/sdcard/Download/GameUnlocker_Logs.txt\`. Please drag and drop that file anywhere in this text box to attach it!**
+
+<details>
+<summary><b>Show Recent Log Snippet</b></summary>
+
+\`\`\`log
+${logSnippet}
+\`\`\`
+</details>
+
+<details>
+<summary><b>Show Configuration Dump</b></summary>
+
+\`\`\`json
+${configDump}
+\`\`\`
+</details>
+`;
+            
+            const encodedBody = encodeURIComponent(issueBody);
+            const githubUrl = `https://github.com/yadavnikhil03/GameUnlocker/issues/new?title=Bug+Report:+[Brief+Title+Here]&body=${encodedBody}`;
+            
+            window.open(githubUrl, '_blank');
+        }
+
+        async function fetchApps() {
+            const datalist = document.getElementById('installedApps');
+            try {
+                let shell = await execShell('pm list packages -3 | cut -f 2 -d ":"');
+                let appsStr = "";
+                if (shell && shell.errno === 0 && shell.stdout) {
+                    appsStr = shell.stdout.trim().replace(/\\n/g, ',');
+                } else {
+                    let res = await fetch('/cgi-bin/api.sh?action=get_apps');
+                    if (res.ok) {
+                        let data = await res.json();
+                        if (data.success) {
+                            appsStr = data.apps;
+                        }
+                    }
+                }
+
+                if (appsStr !== "") {
+                    const apps = appsStr.split(',');
+                    apps.forEach(app => {
+                        if(app.trim() !== "") {
+                            let option = document.createElement('option');
+                            option.value = app.trim();
+                            datalist.appendChild(option);
+                        }
+                    });
+                } else {
+                    // Local desktop mock
+                    const mockApps = ["com.tencent.ig", "com.whatsapp", "com.miHoYo.GenshinImpact", "com.activision.callofduty.shooter"];
+                    mockApps.forEach(app => {
+                        let option = document.createElement('option');
+                        option.value = app;
+                        datalist.appendChild(option);
+                    });
+                }
+            } catch (e) {
+                console.log("Could not fetch apps.");
+            }
+        }
+
+        window.onload = () => {
+            loadConfig();
+            fetchApps();
+        };
     </script>
 </body>
 </html>

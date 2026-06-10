@@ -51,18 +51,18 @@ export PATH="$BB_DIR:$PATH"
 
 "$BB" pkill -f "httpd -p 127.0.0.1:" >/dev/null 2>&1
 
-echo "Starting background server on port $RANDOM_PORT..."
+echo "Starting background server and opening WebUI..."
 
-"$BB" httpd -p 127.0.0.1:$RANDOM_PORT -h "$MODDIR/webroot" >/dev/null 2>&1
+(
+    "$BB" httpd -p 127.0.0.1:$RANDOM_PORT -h "$MODDIR/webroot" >/dev/null 2>&1
+    sleep 300
+    "$BB" pkill -f "httpd -p 127.0.0.1:$RANDOM_PORT" >/dev/null 2>&1
+) &
 
 echo "Redirecting to browser..."
 sleep 1
 am start -a android.intent.action.VIEW -d "http://127.0.0.1:$RANDOM_PORT" >/dev/null 2>&1
 
 echo ""
-echo "Server will run in the background for 5 minutes."
-echo "You may safely close this terminal or swipe it away."
-
-sleep 300
-"$BB" pkill -f "httpd -p 127.0.0.1:$RANDOM_PORT" >/dev/null 2>&1
+echo "Done! You can now use the WebUI in your browser."
 exit 0
