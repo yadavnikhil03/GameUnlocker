@@ -17,6 +17,7 @@
             --btn-hover: #f0f0f0;
             --pre-bg: #f4f4f4;
             --pre-text: #555;
+            --danger-color: #e74c3c;
         }
 
         @media (prefers-color-scheme: dark) {
@@ -39,15 +40,16 @@
         h1 { color: var(--heading-color); text-align: center; font-size: 24px; font-weight: 600; margin-bottom: 30px; }
         .card { background: var(--card-bg); padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--card-border); }
         h3 { margin-top: 0; font-size: 16px; color: var(--text-color); }
-        input { padding: 10px; width: 100%; box-sizing: border-box; margin-bottom: 12px; border-radius: 4px; border: 1px solid var(--input-border); font-size: 14px; background: var(--input-bg); color: var(--text-color); }
+        select, input { padding: 10px; width: 100%; box-sizing: border-box; margin-bottom: 12px; border-radius: 4px; border: 1px solid var(--input-border); font-size: 14px; background: var(--input-bg); color: var(--text-color); }
         button { padding: 10px 16px; border: 1px solid var(--card-border); border-radius: 4px; background: var(--btn-bg); color: var(--text-color); font-weight: 500; cursor: pointer; width: 100%; font-size: 14px; margin-bottom: 10px; transition: background 0.2s; }
         button:hover { background: var(--btn-hover); }
-        button.reset { color: #d32f2f; border-color: #f5c6c6; }
-        button.reset:hover { background: #feebeb; }
         button.bug { color: #e67e22; border-color: #fdebd0; margin-top: 10px; }
         button.bug:hover { background: #fef5e7; }
-        pre { background: var(--pre-bg); padding: 12px; border-radius: 4px; overflow-x: auto; color: var(--pre-text); font-size: 13px; border: 1px solid var(--card-border); }
-        .error { color: #d32f2f; }
+        .profile-section { margin-top: 15px; border-top: 1px solid var(--card-border); padding-top: 15px; }
+        .profile-title { font-weight: bold; margin-bottom: 10px; color: var(--heading-color); }
+        .pkg-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: var(--pre-bg); border-radius: 4px; margin-bottom: 5px; font-size: 13px; font-family: monospace; border: 1px solid var(--card-border); }
+        .remove-btn { background: none; border: none; color: var(--danger-color); cursor: pointer; padding: 4px 8px; font-size: 12px; font-weight: bold; width: auto; margin: 0; }
+        .remove-btn:hover { background: rgba(231, 76, 60, 0.1); }
     </style>
 </head>
 <body>
@@ -55,6 +57,13 @@
     
     <div class="card">
         <h3>Add New Game</h3>
+        <select id="profileSelect">
+            <option value="PACKAGES_SAMSUNG_S24_ULTRA">Samsung Galaxy S24 Ultra (Best for most games)</option>
+            <option value="PACKAGES_REDMAGIC_9_PRO">RedMagic 9 Pro (Best for COD/Brawl Stars)</option>
+            <option value="PACKAGES_XIAOMI_11T_PRO">Xiaomi 11T Pro</option>
+            <option value="PACKAGES_PIXEL_9_PRO">Google Pixel 9 Pro (Best for Genshin)</option>
+            <option value="cpu_spoof_with_cpu">CPU Spoof Only (Fortnite/Apex)</option>
+        </select>
         <input type="text" id="pkgName" list="installedApps" placeholder="Select or type package (e.g., com.tencent.ig)">
         <datalist id="installedApps"></datalist>
         <button onclick="addGame()">Inject App to Config</button>
@@ -64,8 +73,7 @@
     <div class="card">
         <h3>Current Target Apps</h3>
         <button onclick="loadConfig()">Reload List</button>
-        <button class="reset" onclick="resetConfig()">Reset to Defaults</button>
-        <pre id="configView">Loading...</pre>
+        <div id="configView">Loading...</div>
     </div>
 
     <script>
@@ -77,9 +85,19 @@
             } else if (typeof apatch !== 'undefined' && apatch.exec) {
                 return await apatch.exec(cmd);
             } else if (typeof mmrl !== 'undefined') {
-                return { errno: 0, stdout: "MMRL triggered. Not fully mapped.", stderr: "" };
+                return { errno: 0, stdout: "MMRL", stderr: "" };
             }
             return null; 
+        }
+
+        function renderProfile(title, packages) {
+            if (!packages || packages.length === 0) return '';
+            let html = `<div class="profile-section"><div class="profile-title">${title}</div>`;
+            packages.forEach(pkg => {
+                html += `<div class="pkg-item"><span>${pkg}</span> <button class="remove-btn" onclick="removeGame('${pkg}')">✖</button></div>`;
+            });
+            html += `</div>`;
+            return html;
         }
 
         async function loadConfig() {
@@ -94,34 +112,39 @@
                         let res = await fetch('/cgi-bin/api.sh?action=get_config');
                         stdout = await res.text();
                     } catch (fetchErr) {
-                        stdout = JSON.stringify({
-                            "PACKAGES_SAMSUNG_S24_ULTRA": [
-                                "com.tencent.ig", "com.pubg.imobile", "com.rekoo.pubgm"
-                            ],
-                            "PACKAGES_SAMSUNG_S24_ULTRA_DEVICE": {
-                                "MODEL": "SM-S928B (Mocked Desktop Data)"
-                            }
-                        }, null, 2);
-                        console.log("Running locally, using mock config.");
+                        stdout = '{"PACKAGES_SAMSUNG_S24_ULTRA":["com.example.game"]}';
                     }
                 }
 
                 if (stdout) {
                     const cfg = JSON.parse(stdout);
-                    document.getElementById('configView').innerText = JSON.stringify(cfg.PACKAGES_SAMSUNG_S24_ULTRA, null, 2);
-                    document.getElementById('configView').classList.remove('error');
                     window.currentConfig = cfg;
+                    
+                    let html = "";
+                    html += renderProfile("Samsung S24 Ultra", cfg.PACKAGES_SAMSUNG_S24_ULTRA);
+                    html += renderProfile("RedMagic 9 Pro", cfg.PACKAGES_REDMAGIC_9_PRO);
+                    html += renderProfile("Xiaomi 11T Pro", cfg.PACKAGES_XIAOMI_11T_PRO);
+                    html += renderProfile("Pixel 9 Pro", cfg.PACKAGES_PIXEL_9_PRO);
+                    
+                    if(cfg.cpu_spoof && cfg.cpu_spoof.with_cpu) {
+                        html += renderProfile("CPU Spoof Only", cfg.cpu_spoof.with_cpu);
+                    }
+                    if(cfg.cpu_spoof && cfg.cpu_spoof.blacklist) {
+                        html += renderProfile("Blacklisted Apps", cfg.cpu_spoof.blacklist);
+                    }
+
+                    document.getElementById('configView').innerHTML = html || "No games configured.";
                 } else {
                     document.getElementById('configView').innerText = "Error reading config.json";
                 }
             } catch (e) {
-                document.getElementById('configView').innerText = "Failed to load config. Connection Error.";
-                document.getElementById('configView').classList.add('error');
+                document.getElementById('configView').innerText = "Failed to load config.";
             }
         }
 
         async function addGame() {
             const pkg = document.getElementById('pkgName').value.trim();
+            const profile = document.getElementById('profileSelect').value;
             if (!pkg) return;
 
             const pkgRegex = /^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z0-9_]+)+$/;
@@ -132,12 +155,19 @@
 
             try {
                 let success = false;
-                let shell = await execShell(`sed -i 's/"PACKAGES_SAMSUNG_S24_ULTRA": \\\[/"PACKAGES_SAMSUNG_S24_ULTRA": \\\[\\n    "${pkg}",/' ${configPath}`);
+                
+                let shell = null;
+                if(profile === "cpu_spoof_with_cpu") {
+                    shell = await execShell(`sed -i '/"with_cpu": \\\[/a \\    "${pkg}",' ${configPath}`);
+                } else {
+                    shell = await execShell(`sed -i 's/"${profile}": \\\[/"${profile}": \\\[\\n    "${pkg}",/' ${configPath}`);
+                }
                 
                 if (shell !== null) {
                     success = (shell.errno === 0);
                 } else {
-                    let res = await fetch('/cgi-bin/api.sh?action=add_game&pkg=' + pkg);
+                    let actualProfile = profile === "cpu_spoof_with_cpu" ? "with_cpu" : profile;
+                    let res = await fetch('/cgi-bin/api.sh?action=add_game&pkg=' + pkg + '&profile=' + actualProfile);
                     let data = await res.json();
                     success = data.success;
                 }
@@ -154,29 +184,26 @@
             }
         }
 
-        async function resetConfig() {
-            if(!confirm("Reset configuration to default?")) return;
+        async function removeGame(pkg) {
+            if(!confirm(`Remove ${pkg} from configuration?`)) return;
             try {
                 let success = false;
-                let shell = await execShell(`cat <<EOF > ${configPath}\\n{\\n"PACKAGES_SAMSUNG_S24_ULTRA":["com.tencent.ig","com.pubg.imobile","com.pubg.imidas","com.pubg.krmobile","com.vng.pubgmobile","com.rekoo.pubgm","com.tencent.tmgp.pubgmhd","com.riotgames.league.wildrift","com.riotgames.league.wildrifttw","com.riotgames.league.wildriftvn","com.riotgames.valormobile"],"PACKAGES_SAMSUNG_S24_ULTRA_DEVICE":{"MANUFACTURER":"Samsung","BRAND":"samsung","MODEL":"SM-S928B","DEVICE":"e3q","PRODUCT":"e3qxx","FINGERPRINT":"samsung/e3qxx/e3q:14/UP1A.231005.007/S928BXXS1AXBG:user/release-keys"},"cpu_spoof":{"with_cpu":["com.epicgames.fortnite","com.ea.gp.apexlegendsmobilefps"]}}\\n}\\nEOF`);
+                let shell = await execShell(`sed -i '/"${pkg}"/d' ${configPath}`);
                 
                 if (shell !== null) {
                     success = (shell.errno === 0);
                 } else {
-                    try {
-                        let res = await fetch('/cgi-bin/api.sh?action=reset_config');
-                        let data = await res.json();
-                        success = data.success;
-                    } catch (fetchErr) {
-                        success = true;
-                    }
+                    let res = await fetch('/cgi-bin/api.sh?action=remove_game&pkg=' + pkg);
+                    let data = await res.json();
+                    success = data.success;
                 }
 
-                if(success) {
-                    alert("Config reset!");
+                if (success) {
                     loadConfig();
+                } else {
+                    alert('Failed to remove game.');
                 }
-            } catch(e) {
+            } catch (e) {
                 alert('API error.');
             }
         }
@@ -200,7 +227,6 @@
                         logSnippet = logShell.stdout.trim();
                     }
                 } else {
-                    // Fallback to CGI-BIN
                     let resInfo = await fetch('/cgi-bin/api.sh?action=get_device_info');
                     if (resInfo.ok) {
                         let dataInfo = await resInfo.json();
@@ -217,52 +243,11 @@
                         }
                     }
                 }
-            } catch (e) {
-                model = "Local Desktop Mock";
-                android = "Windows Mock";
-                logSnippet = "[Mock Log] 10:00:00 GameUnlocker: Game detected - applying performance mode\\n[Mock Log] 10:00:02 GameUnlocker: CPU spoofing mounted successfully";
-            }
+            } catch (e) {}
 
-            const issueBody = `### 🐛 Bug Description
-<!-- Please provide a clear and concise description of what the bug is. -->
-
-
-### 🔄 Steps to Reproduce
-<!-- How can we reproduce this bug? Which game? -->
-1. 
-2. 
-3. 
-
-### 📱 Device Information
-- **Model:** ${model}
-- **Android Version:** ${android}
-
----
-### 🛠 Diagnostics
-
-> [!IMPORTANT]
-> 📂 **A full log file has been saved to your phone at \`/sdcard/Download/GameUnlocker_Logs.txt\`. Please drag and drop that file anywhere in this text box to attach it!**
-
-<details>
-<summary><b>Show Recent Log Snippet</b></summary>
-
-\`\`\`log
-${logSnippet}
-\`\`\`
-</details>
-
-<details>
-<summary><b>Show Configuration Dump</b></summary>
-
-\`\`\`json
-${configDump}
-\`\`\`
-</details>
-`;
-            
+            const issueBody = `### 🐛 Bug Description\n\n### 🔄 Steps to Reproduce\n1. \n2. \n3. \n\n### 📱 Device Information\n- **Model:** ${model}\n- **Android Version:** ${android}\n\n---\n### 🛠 Diagnostics\n\n> [!IMPORTANT]\n> 📂 **A full log file has been saved to your phone at \`/sdcard/Download/GameUnlocker_Logs.txt\`. Please drag and drop that file anywhere in this text box to attach it!**\n\n<details>\n<summary><b>Show Recent Log Snippet</b></summary>\n\n\`\`\`log\n${logSnippet}\n\`\`\`\n</details>\n\n<details>\n<summary><b>Show Configuration Dump</b></summary>\n\n\`\`\`json\n${configDump}\n\`\`\`\n</details>`;
             const encodedBody = encodeURIComponent(issueBody);
             const githubUrl = `https://github.com/yadavnikhil03/GameUnlocker/issues/new?title=Bug+Report:+[Brief+Title+Here]&body=${encodedBody}`;
-            
             window.open(githubUrl, '_blank');
         }
 
@@ -272,7 +257,7 @@ ${configDump}
                 let shell = await execShell('pm list packages -3 | cut -f 2 -d ":"');
                 let appsStr = "";
                 if (shell && shell.errno === 0 && shell.stdout) {
-                    appsStr = shell.stdout.trim().replace(/\\n/g, ',');
+                    appsStr = shell.stdout.trim().replace(/\n/g, ',');
                 } else {
                     let res = await fetch('/cgi-bin/api.sh?action=get_apps');
                     if (res.ok) {
@@ -292,18 +277,8 @@ ${configDump}
                             datalist.appendChild(option);
                         }
                     });
-                } else {
-                    // Local desktop mock
-                    const mockApps = ["com.tencent.ig", "com.whatsapp", "com.miHoYo.GenshinImpact", "com.activision.callofduty.shooter"];
-                    mockApps.forEach(app => {
-                        let option = document.createElement('option');
-                        option.value = app;
-                        datalist.appendChild(option);
-                    });
                 }
-            } catch (e) {
-                console.log("Could not fetch apps.");
-            }
+            } catch (e) {}
         }
 
         window.onload = () => {

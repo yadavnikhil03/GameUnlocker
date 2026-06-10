@@ -33,6 +33,10 @@ until [ "$(getprop sys.boot_completed)" = "1" ]; do
 done
 
 sleep 15
+chmod 0644 "$CONFIG_FILE"
+chcon u:object_r:system_file:s0 "$MODDIR"
+chcon u:object_r:system_file:s0 "$CONFIG_FILE"
+
 
 setprop debug.vendor.qti.game.fps 120
 setprop persist.vendor.qti.game.fps 120

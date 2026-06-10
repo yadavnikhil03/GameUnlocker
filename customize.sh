@@ -44,6 +44,39 @@ print_modname() {
 
 print_modname
 
+check_root() {
+  ui_print " [*] Checking Root Environment"
+  local count=0
+  local sol=""
+
+  if command -v apd >/dev/null; then
+    sol="APatch"
+    count=$((count + 1))
+  fi
+
+  if command -v ksud >/dev/null; then
+    sol="KernelSU"
+    count=$((count + 1))
+  fi
+
+  if command -v magisk >/dev/null; then
+    sol="Magisk"
+    count=$((count + 1))
+  fi
+
+  if [ $count -gt 1 ]; then
+    ui_print " [!] Error: Multiple Root Solutions Found!"
+    abort
+  elif [ $count -eq 0 ]; then
+    ui_print " [!] Error: No Supported Root Solution (Magisk/KSU/APatch)!"
+    abort
+  else
+    ui_print " [*] Detected: $sol"
+  fi
+}
+
+check_root
+
 on_install() {
   ui_print " [*] Extracting module files"
   unzip -o "$ZIPFILE" \
