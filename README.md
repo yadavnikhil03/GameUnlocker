@@ -1,10 +1,19 @@
 # FPS Unlocker (Zygisk)
 
-![Version](https://img.shields.io/badge/Version-2.0.5-blue.svg)
+![Version](https://img.shields.io/badge/Version-2.0.6--pre.1-blue.svg)
 ![Platform](https://img.shields.io/badge/Platform-Android-green.svg)
 ![Magisk](https://img.shields.io/badge/Magisk-Zygisk_Enabled-orange.svg)
 
 **FPS Unlocker** is an advanced Zygisk module designed to unlock higher frame rates in games and enhance overall gaming performance on Android devices, dynamically and safely.
+
+<div align="center">
+  <blockquote>
+    <h3>✨ Major Update & Pre-Release Testing</h3>
+    <p>We are thrilled to be back with a comprehensive overhaul of the GameUnlocker core! We sincerely appreciate the community's patience during our period of inactivity and apologize for the recent compatibility hurdles.</p>
+    <p>This latest <b>Pre-Release</b> entirely refactors the Zygisk implementation to ensure flawless compatibility, resolves persistent engine crashes in titles like PUBG/BGMI, and dynamically spoofs the cutting-edge <b>Samsung Galaxy S24 Ultra</b> profile for maximum frame rates.</p>
+    <p><i>We warmly invite you to test this build. Your feedback, bug reports, and pull requests are invaluable as we work together to polish this release.</i></p>
+  </blockquote>
+</div>
 
 ---
 
@@ -57,7 +66,11 @@
 
 ## Credits & Acknowledgments
 
-- Huge thanks to [AlirezaParsi](https://github.com/AlirezaParsi) and his [COPG (Call Of PUBG Gaming)](https://github.com/AlirezaParsi/COPG) project. The core Zygisk C++ spoofing engine and approach in this module were heavily inspired by and adapted from the COPG repository.
+We firmly believe in the power of the open-source community. This module would not be possible without the incredible work of others. We extend our deepest gratitude to:
+
+- **[AlirezaParsi](https://github.com/AlirezaParsi)**: For the architectural design of the [COPG (Call Of PUBG Gaming)](https://github.com/AlirezaParsi/COPG) project. The native C++ implementation of the Zygisk injection pipeline within our module leverages methodologies extensively researched and published within the COPG repository.
+- **[topjohnwu](https://github.com/topjohnwu) & the Magisk Development Team**: For the engineering of the Magisk root framework and the Zygisk API, which provide the essential hooking interfaces utilized by this module.
+- **[tiann](https://github.com/tiann) & the KernelSU Development Team**: For the continued development of KernelSU, providing an alternative, kernel-level privileged execution environment compatible with our runtime modifications.
 
 ---
 
