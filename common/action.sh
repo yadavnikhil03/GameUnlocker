@@ -40,10 +40,6 @@ if pm list packages | grep -q "io.github.a13e300.ksuwebui"; then
     echo "Launching natively inside KSUWebUI App..."
     su -c "am start -n \"io.github.a13e300.ksuwebui/.WebUIActivity\" -e id \"Game-Unlocker\""
     exit 0
-elif pm list packages | grep -q "com.dergoogler.mmrl"; then
-    echo "Launching natively inside MMRL App..."
-    su -c "am start -n \"com.dergoogler.mmrl/.ui.activity.webui.WebUIActivity\" -e MOD_ID \"Game-Unlocker\""
-    exit 0
 fi
 
 BB=$(find_busybox)

@@ -79,7 +79,7 @@ elif [ "$ACTION" = "get_apps_async" ]; then
             JSON_ARR="$JSON_ARR]"
             echo "{\"success\": true, \"apps\": $JSON_ARR}" > /data/local/tmp/gameunlocker_apps.json
         fi
-    ) &
+    ) >/dev/null 2>&1 &
     echo "{\"success\": true, \"message\": \"fetching\"}"
 elif [ "$ACTION" = "get_device_info" ]; then
     MODEL=$(getprop ro.product.model)
