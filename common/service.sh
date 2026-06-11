@@ -13,7 +13,13 @@ get_foreground_app() {
 }
 
 is_game_configured() {
-    [ -n "$1" ] && grep -q "\"$1\"" "$CONFIG_FILE"
+    [ -z "$1" ] && return 1
+    
+    case "$1" in
+        *launcher*|*systemui*|*android*|*miui*|*bbk*|*nexus*|*pixel*) return 1 ;;
+    esac
+
+    grep -q "\"$1\"" "$CONFIG_FILE"
 }
 
 apply_perf_mode() {
