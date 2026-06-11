@@ -66,14 +66,14 @@ jobs:
       - name: Compile AppList (Java Helper)
         run: |
           cd common
-          # Download Android stub JAR to compile against
-          curl -sL "https://raw.githubusercontent.com/SkattyDiver/android.jar/master/android-33/android.jar" -o android.jar
-          javac -source 1.8 -target 1.8 -cp android.jar AppList.java
+          # Use the natively installed android.jar from the GitHub Actions runner
+          ANDROID_JAR=$(ls -d $ANDROID_SDK_ROOT/platforms/android-*/android.jar | tail -n 1)
+          javac -source 1.8 -target 1.8 -cp "$ANDROID_JAR" AppList.java
           # Use d8 to convert class to dex
           BUILD_TOOLS_DIR=$(ls -d $ANDROID_SDK_ROOT/build-tools/* | tail -n 1)
           $BUILD_TOOLS_DIR/d8 AppList.class --output .
           mv classes.dex get_apps.dex
-          rm android.jar AppList.class
+          rm AppList.class
           cd ..
 
       - name: Prepare Module Directory
