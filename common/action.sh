@@ -5,45 +5,7 @@ CONFIG_FILE="$MODDIR/config.json"
 echo "=========================================="
 echo "    GameUnlocker App Manager (Magisk)     "
 echo "=========================================="
-echo ""
-echo "Select an action:"
-echo "  1) Open WebUI to Manage Games"
-echo "  2) Update Default Config (Requires Internet)"
-echo "  3) Cancel"
-echo ""
-read -p "Enter choice (1-3): " choice
-
-case "$choice" in
-  2)
-    echo "Downloading latest config..."
-    REMOTE_CONFIG="https://raw.githubusercontent.com/yadavnikhil03/GameUnlocker/main/common/config.json"
-    if command -v curl >/dev/null 2>&1; then
-        curl -s -L "$REMOTE_CONFIG" -o "$MODDIR/config_temp.json"
-    elif command -v wget >/dev/null 2>&1; then
-        wget -q -O "$MODDIR/config_temp.json" "$REMOTE_CONFIG"
-    else
-        echo "Error: curl or wget not found."
-        exit 1
-    fi
-    
-    if [ -f "$MODDIR/config_temp.json" ] && grep -q "{" "$MODDIR/config_temp.json"; then
-        mv "$MODDIR/config_temp.json" "$CONFIG_FILE"
-        chmod 0644 "$CONFIG_FILE"
-        echo "Config updated successfully! Reboot to apply."
-    else
-        echo "Failed to download valid config."
-        rm -f "$MODDIR/config_temp.json"
-    fi
-    exit 0
-    ;;
-  3)
-    echo "Cancelled."
-    exit 0
-    ;;
-  *)
-    echo "Starting WebUI Configuration..."
-    ;;
-esac
+echo "Starting WebUI Configuration..."
 
 find_busybox() {
     for candidate in /data/adb/ksu/bin/busybox /data/adb/magisk/busybox /data/adb/ap/bin/busybox /system/bin/busybox; do
