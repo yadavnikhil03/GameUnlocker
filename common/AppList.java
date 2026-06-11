@@ -1,6 +1,5 @@
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.os.IBinder;
 import java.lang.reflect.Method;
 import java.util.List;
 
