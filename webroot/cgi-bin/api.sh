@@ -52,27 +52,35 @@ elif [ "$ACTION" = "remove_game" ]; then
     fi
 elif [ "$ACTION" = "reset_config" ]; then
     echo "{\"success\": false, \"error\": \"Reset disabled, reinstall module instead\"}"
-elif [ "$ACTION" = "get_apps" ]; then
-    if [ -f "$MODDIR/common/get_apps.dex" ]; then
-        export CLASSPATH="$MODDIR/common/get_apps.dex"
-        APPS_JSON=$(app_process /system/bin AppList)
-        echo "{\"success\": true, \"apps\": $APPS_JSON}"
-    else
-        APPS_STR=$(pm list packages -3 | cut -f 2 -d ":" | tr '\n' ',' | sed 's/,$//')
-        JSON_ARR="["
-        IFS=','
-        first=true
-        for p in $APPS_STR; do
-            if [ "$first" = true ]; then
-                first=false
-            else
-                JSON_ARR="$JSON_ARR, "
-            fi
-            JSON_ARR="$JSON_ARR{\"package\":\"$p\",\"name\":\"$p\"}"
-        done
-        JSON_ARR="$JSON_ARR]"
-        echo "{\"success\": true, \"apps\": $JSON_ARR}"
-    fi
+elif [ "$ACTION" = "get_apps_async" ]; then
+    rm -f /data/local/tmp/gameunlocker_apps.json
+    (
+        APPS_JSON=""
+        if [ -f "$MODDIR/common/get_apps.dex" ]; then
+            export CLASSPATH="$MODDIR/common/get_apps.dex"
+            APPS_JSON=$(app_process /system/bin AppList 2>/dev/null)
+        fi
+        
+        if echo "$APPS_JSON" | grep -q '\[.*\]'; then
+            echo "{\"success\": true, \"apps\": $APPS_JSON}" > /data/local/tmp/gameunlocker_apps.json
+        else
+            APPS_STR=$(pm list packages -3 | cut -f 2 -d ":" | tr '\n' ',' | sed 's/,$//')
+            JSON_ARR="["
+            IFS=','
+            first=true
+            for p in $APPS_STR; do
+                if [ "$first" = true ]; then
+                    first=false
+                else
+                    JSON_ARR="$JSON_ARR, "
+                fi
+                JSON_ARR="$JSON_ARR{\"package\":\"$p\",\"name\":\"$p\"}"
+            done
+            JSON_ARR="$JSON_ARR]"
+            echo "{\"success\": true, \"apps\": $JSON_ARR}" > /data/local/tmp/gameunlocker_apps.json
+        fi
+    ) &
+    echo "{\"success\": true, \"message\": \"fetching\"}"
 elif [ "$ACTION" = "get_device_info" ]; then
     MODEL=$(getprop ro.product.model)
     ANDROID=$(getprop ro.build.version.release)

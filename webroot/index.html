@@ -510,17 +510,29 @@
         async function fetchApps() {
             try {
                 let appsObj = null;
-                let shell = await execShell('export QUERY_STRING="action=get_apps"; sh /data/adb/modules/Game-Unlocker/webroot/cgi-bin/api.sh');
+                // Trigger async fetch so KSU exec returns instantly
+                let triggerShell = await execShell('export QUERY_STRING="action=get_apps_async"; sh /data/adb/modules/Game-Unlocker/webroot/cgi-bin/api.sh');
                 
-                if (shell !== null && shell.errno === 0 && shell.stdout !== "MMRL_MOCK") {
-                    const output = shell.stdout.split('\n\n');
-                    if (output.length > 1) {
-                        appsObj = JSON.parse(output[1]);
+                if (triggerShell !== null && triggerShell.errno === 0 && triggerShell.stdout !== "MMRL_MOCK") {
+                    let retries = 20; // Wait up to 20 seconds
+                    while (retries > 0) {
+                        await new Promise(r => setTimeout(r, 1000));
+                        let pollShell = await execShell('cat /data/local/tmp/gameunlocker_apps.json');
+                        if (pollShell && pollShell.errno === 0 && pollShell.stdout.includes('"success"')) {
+                            appsObj = JSON.parse(pollShell.stdout);
+                            break;
+                        }
+                        retries--;
                     }
                 } else {
-                    let res = await fetch('/cgi-bin/api.sh?action=get_apps');
+                    let res = await fetch('/cgi-bin/api.sh?action=get_apps_async');
                     if (res.ok) {
-                        appsObj = await res.json();
+                        // For browser fallback, we just wait a bit and fetch directly since we can't poll shell
+                        await new Promise(r => setTimeout(r, 3000));
+                        let pollRes = await fetch('/data/local/tmp/gameunlocker_apps.json');
+                        if (pollRes.ok) {
+                            appsObj = await pollRes.json();
+                        }
                     }
                 }
 
@@ -529,7 +541,7 @@
                     window.installedAppsList.sort((a, b) => a.name.localeCompare(b.name, undefined, {sensitivity: 'base'}));
                     renderAppList();
                 } else {
-                    document.getElementById('appListContainer').innerHTML = "<div style='padding: 20px; text-align: center; color: var(--danger);'>Failed to fetch installed apps.</div>";
+                    document.getElementById('appListContainer').innerHTML = "<div style='padding: 20px; text-align: center; color: var(--danger);'>Failed to fetch installed apps. Ensure module is installed properly.</div>";
                 }
             } catch (e) {
                 document.getElementById('appListContainer').innerHTML = "<div style='padding: 20px; text-align: center; color: var(--danger);'>Error communicating with backend.</div>";
