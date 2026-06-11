@@ -22,6 +22,35 @@
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 #define LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
 
+#define GL_VENDOR   0x1F00
+#define GL_RENDERER 0x1F01
+
+static jstring (*orig_GLES20_glGetString)(JNIEnv*, jclass, jint);
+static jstring my_GLES20_glGetString(JNIEnv* env, jclass clazz, jint name) {
+    if (name == GL_VENDOR) {
+        return env->NewStringUTF("Qualcomm");
+    } else if (name == GL_RENDERER) {
+        return env->NewStringUTF("Adreno (TM) 750");
+    }
+    if (orig_GLES20_glGetString) {
+        return orig_GLES20_glGetString(env, clazz, name);
+    }
+    return nullptr;
+}
+
+static jstring (*orig_GLES30_glGetString)(JNIEnv*, jclass, jint);
+static jstring my_GLES30_glGetString(JNIEnv* env, jclass clazz, jint name) {
+    if (name == GL_VENDOR) {
+        return env->NewStringUTF("Qualcomm");
+    } else if (name == GL_RENDERER) {
+        return env->NewStringUTF("Adreno (TM) 750");
+    }
+    if (orig_GLES30_glGetString) {
+        return orig_GLES30_glGetString(env, clazz, name);
+    }
+    return nullptr;
+}
+
 struct JniString {
     JNIEnv* env;
     jstring jstr;
@@ -51,7 +80,7 @@ static bool readConfig(zygisk::Api* api, std::string& out) {
     int fd = openat(dirfd, "config.json", O_RDONLY);
     if (fd < 0) return false;
 
-    char buffer[16384]; // 16KB to fit larger config
+    char buffer[16384]; 
     memset(buffer, 0, sizeof(buffer));
     ssize_t bytes = read(fd, buffer, sizeof(buffer) - 1);
     close(fd);
@@ -252,11 +281,23 @@ public:
                 } else {
                     env->ExceptionClear();
                 }
+
+                LOGI("Injecting Advanced GPU Spoofing (Adreno 750)");
+                JNINativeMethod gles20_methods[] = {
+                    {"glGetString", "(I)Ljava/lang/String;", (void*)my_GLES20_glGetString}
+                };
+                api->hookJniNativeMethods(env, "android/opengl/GLES20", gles20_methods, 1);
+                *(void **)&orig_GLES20_glGetString = gles20_methods[0].fnPtr;
+
+                JNINativeMethod gles30_methods[] = {
+                    {"glGetString", "(I)Ljava/lang/String;", (void*)my_GLES30_glGetString}
+                };
+                api->hookJniNativeMethods(env, "android/opengl/GLES30", gles30_methods, 1);
+                *(void **)&orig_GLES30_glGetString = gles30_methods[0].fnPtr;
             }
 
             api->setOption(zygisk::Option::DLCLOSE_MODULE_LIBRARY);
         } else {
-            // Not a target app, ensure CPU is unmounted to protect banking apps
             executeCompanionCommand("unmount_spoof");
             api->setOption(zygisk::Option::DLCLOSE_MODULE_LIBRARY);
         }

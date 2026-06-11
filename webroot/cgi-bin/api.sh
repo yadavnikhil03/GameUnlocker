@@ -53,8 +53,26 @@ elif [ "$ACTION" = "remove_game" ]; then
 elif [ "$ACTION" = "reset_config" ]; then
     echo "{\"success\": false, \"error\": \"Reset disabled, reinstall module instead\"}"
 elif [ "$ACTION" = "get_apps" ]; then
-    APPS=$(pm list packages -3 | cut -f 2 -d ":" | tr '\n' ',')
-    echo "{\"success\": true, \"apps\": \"$APPS\"}"
+    if [ -f "$MODDIR/common/get_apps.dex" ]; then
+        export CLASSPATH="$MODDIR/common/get_apps.dex"
+        APPS_JSON=$(app_process /system/bin AppList)
+        echo "{\"success\": true, \"apps\": $APPS_JSON}"
+    else
+        APPS_STR=$(pm list packages -3 | cut -f 2 -d ":" | tr '\n' ',' | sed 's/,$//')
+        JSON_ARR="["
+        IFS=','
+        first=true
+        for p in $APPS_STR; do
+            if [ "$first" = true ]; then
+                first=false
+            else
+                JSON_ARR="$JSON_ARR, "
+            fi
+            JSON_ARR="$JSON_ARR{\"package\":\"$p\",\"name\":\"$p\"}"
+        done
+        JSON_ARR="$JSON_ARR]"
+        echo "{\"success\": true, \"apps\": $JSON_ARR}"
+    fi
 elif [ "$ACTION" = "get_device_info" ]; then
     MODEL=$(getprop ro.product.model)
     ANDROID=$(getprop ro.build.version.release)

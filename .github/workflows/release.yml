@@ -60,6 +60,22 @@ jobs:
           cd ..
           cp build_arm32/libgameunlocker.so zygisk/armeabi-v7a.so
 
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Compile AppList (Java Helper)
+        run: |
+          cd common
+          # Download Android stub JAR to compile against
+          curl -sL "https://raw.githubusercontent.com/SkattyDiver/android.jar/master/android-33/android.jar" -o android.jar
+          javac -source 1.8 -target 1.8 -cp android.jar AppList.java
+          # Use d8 to convert class to dex
+          BUILD_TOOLS_DIR=$(ls -d $ANDROID_SDK_ROOT/build-tools/* | tail -n 1)
+          $BUILD_TOOLS_DIR/d8 AppList.class --output .
+          mv classes.dex get_apps.dex
+          rm android.jar AppList.class
+          cd ..
+
       - name: Prepare Module Directory
         run: |
           mkdir -p build_zip
@@ -79,30 +95,35 @@ jobs:
           cd ..
 
       - name: Generate Keystore
+        id: keystore
         run: |
-          keytool -genkey -v -keystore release.jks -alias module_key -keyalg RSA -keysize 2048 -validity 10000 -storepass password -keypass password -dname "CN=GameUnlocker, OU=Dev, O=yadavnikhil03, L=Global, S=Global, C=US"
+          # Generate a secure, random 32-character password for this build session
+          RANDOM_PASS=$(openssl rand -base64 24)
+          echo "ks_pass=$RANDOM_PASS" >> $GITHUB_OUTPUT
+          keytool -genkey -v -keystore release.jks -alias module_key -keyalg RSA -keysize 2048 -validity 10000 -storepass "$RANDOM_PASS" -keypass "$RANDOM_PASS" -dname "CN=GameUnlocker, OU=Dev, O=yadavnikhil03, L=Global, S=Global, C=US"
 
       - name: Sign Module ZIP
+        id: sign
         run: |
-          jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore release.jks -storepass password -keypass password GameUnlocker-unsigned.zip module_key
+          jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore release.jks -storepass "${{ steps.keystore.outputs.ks_pass }}" -keypass "${{ steps.keystore.outputs.ks_pass }}" GameUnlocker-unsigned.zip module_key
           jarsigner -verify -verbose -certs GameUnlocker-unsigned.zip
           VERSION=$(grep '^version=' module.prop | cut -d= -f2)
           mv GameUnlocker-unsigned.zip "GameUnlocker_${VERSION}.zip"
-          echo "signed_zip=GameUnlocker_${VERSION}.zip" >> $GITHUB_ENV
+          echo "signed_zip=GameUnlocker_${VERSION}.zip" >> $GITHUB_OUTPUT
 
       - name: Read Module Version
         id: get_version
         run: |
           VERSION=$(grep '^version=' module.prop | cut -d= -f2)
-          echo "module_version=$VERSION" >> $GITHUB_ENV
+          echo "module_version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: ${{ env.signed_zip }}
-          name: "GameUnlocker ${{ env.module_version }}"
-          generate_release_notes: true
+          files: ${{ steps.sign.outputs.signed_zip }}
+          name: "GameUnlocker ${{ steps.get_version.outputs.module_version }}"
+          body_path: changelog.md
           draft: false
           prerelease: true
         env:

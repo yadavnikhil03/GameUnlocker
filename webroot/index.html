@@ -64,9 +64,10 @@
             <option value="PACKAGES_PIXEL_9_PRO">Google Pixel 9 Pro (Best for Genshin)</option>
             <option value="cpu_spoof_with_cpu">CPU Spoof Only (Fortnite/Apex)</option>
         </select>
-        <input type="text" id="pkgName" list="installedApps" placeholder="Select or type package (e.g., com.tencent.ig)">
-        <datalist id="installedApps"></datalist>
-        <button onclick="addGame()">Inject App to Config</button>
+        <div id="appListContainer" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--input-border); border-radius: 4px; padding: 10px; margin-bottom: 12px; background: var(--input-bg); font-size: 14px;">
+            Loading installed apps...
+        </div>
+        <button onclick="addSelectedGames()">Inject Selected Apps to Config</button>
         <button class="bug" onclick="reportBug()">🐛 Report Bug (Auto-Attach Logs)</button>
     </div>
     
@@ -134,6 +135,10 @@
                     }
 
                     document.getElementById('configView').innerHTML = html || "No games configured.";
+                    
+                    if (window.installedAppsList) {
+                        renderAppList();
+                    }
                 } else {
                     document.getElementById('configView').innerText = "Error reading config.json";
                 }
@@ -142,45 +147,44 @@
             }
         }
 
-        async function addGame() {
-            const pkg = document.getElementById('pkgName').value.trim();
+        async function addSelectedGames() {
             const profile = document.getElementById('profileSelect').value;
-            if (!pkg) return;
-
-            const pkgRegex = /^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z0-9_]+)+$/;
-            if (!pkgRegex.test(pkg)) {
-                alert('Security Error: Invalid package name format.');
+            const checkboxes = document.querySelectorAll('.app-checkbox:checked');
+            
+            if (checkboxes.length === 0) {
+                alert('Please select at least one app!');
                 return;
             }
 
-            try {
-                let success = false;
-                
-                let shell = null;
-                if(profile === "cpu_spoof_with_cpu") {
-                    shell = await execShell(`sed -i '/"with_cpu": \\\[/a \\    "${pkg}",' ${configPath}`);
-                } else {
-                    shell = await execShell(`sed -i 's/"${profile}": \\\[/"${profile}": \\\[\\n    "${pkg}",/' ${configPath}`);
-                }
-                
-                if (shell !== null) {
-                    success = (shell.errno === 0);
-                } else {
-                    let actualProfile = profile === "cpu_spoof_with_cpu" ? "with_cpu" : profile;
-                    let res = await fetch('/cgi-bin/api.sh?action=add_game&pkg=' + pkg + '&profile=' + actualProfile);
-                    let data = await res.json();
-                    success = data.success;
-                }
+            let successCount = 0;
+            for (let checkbox of checkboxes) {
+                const pkg = checkbox.value;
+                try {
+                    let shell = null;
+                    if(profile === "cpu_spoof_with_cpu") {
+                        shell = await execShell(`sed -i '/"with_cpu": \\\[/a \\    "${pkg}",' ${configPath}`);
+                    } else {
+                        shell = await execShell(`sed -i 's/"${profile}": \\\[/"${profile}": \\\[\\n    "${pkg}",/' ${configPath}`);
+                    }
+                    
+                    let success = false;
+                    if (shell !== null) {
+                        success = (shell.errno === 0);
+                    } else {
+                        let actualProfile = profile === "cpu_spoof_with_cpu" ? "with_cpu" : profile;
+                        let res = await fetch(`/cgi-bin/api.sh?action=add_game&pkg=${pkg}&profile=${actualProfile}`);
+                        let data = await res.json();
+                        success = data.success;
+                    }
+                    if (success) successCount++;
+                } catch (e) {}
+            }
 
-                if (success) {
-                    alert('Successfully added: ' + pkg + '\\nReboot to apply changes!');
-                    document.getElementById('pkgName').value = '';
-                    loadConfig();
-                } else {
-                    alert('Failed to modify config.');
-                }
-            } catch (e) {
-                alert('API error.');
+            if (successCount > 0) {
+                alert(`Successfully added ${successCount} apps!\\nReboot to apply changes.`);
+                loadConfig();
+            } else {
+                alert('Failed to modify config.');
             }
         }
 
@@ -251,34 +255,66 @@
             window.open(githubUrl, '_blank');
         }
 
+        function isAppConfigured(pkg) {
+            const cfg = window.currentConfig;
+            if (!cfg) return false;
+            let allConfigured = [];
+            if(cfg.PACKAGES_SAMSUNG_S24_ULTRA) allConfigured.push(...cfg.PACKAGES_SAMSUNG_S24_ULTRA);
+            if(cfg.PACKAGES_REDMAGIC_9_PRO) allConfigured.push(...cfg.PACKAGES_REDMAGIC_9_PRO);
+            if(cfg.PACKAGES_XIAOMI_11T_PRO) allConfigured.push(...cfg.PACKAGES_XIAOMI_11T_PRO);
+            if(cfg.PACKAGES_PIXEL_9_PRO) allConfigured.push(...cfg.PACKAGES_PIXEL_9_PRO);
+            if(cfg.cpu_spoof && cfg.cpu_spoof.with_cpu) allConfigured.push(...cfg.cpu_spoof.with_cpu);
+            return allConfigured.includes(pkg);
+        }
+
+        function renderAppList() {
+            const container = document.getElementById('appListContainer');
+            if (!window.installedAppsList) return;
+            
+            let html = "";
+            let count = 0;
+            window.installedAppsList.forEach(app => {
+                if (!isAppConfigured(app.package)) {
+                    html += `<label style="display:block; margin-bottom: 5px; cursor: pointer;">
+                        <input type="checkbox" class="app-checkbox" value="${app.package}"> 
+                        <b>${app.name}</b> <span style="color:#888; font-size:11px;">(${app.package})</span>
+                    </label>`;
+                    count++;
+                }
+            });
+            
+            if (count === 0) {
+                html = "All installed apps are already configured!";
+            }
+            container.innerHTML = html;
+        }
+
         async function fetchApps() {
-            const datalist = document.getElementById('installedApps');
             try {
-                let shell = await execShell('pm list packages -3 | cut -f 2 -d ":"');
-                let appsStr = "";
-                if (shell && shell.errno === 0 && shell.stdout) {
-                    appsStr = shell.stdout.trim().replace(/\n/g, ',');
+                let appsObj = null;
+                let shell = await execShell('export QUERY_STRING="action=get_apps"; sh /data/adb/modules/Game-Unlocker/webroot/cgi-bin/api.sh');
+                
+                if (shell !== null && shell.errno === 0) {
+                    const output = shell.stdout.split('\\n\\n');
+                    if (output.length > 1) {
+                        appsObj = JSON.parse(output[1]);
+                    }
                 } else {
                     let res = await fetch('/cgi-bin/api.sh?action=get_apps');
                     if (res.ok) {
-                        let data = await res.json();
-                        if (data.success) {
-                            appsStr = data.apps;
-                        }
+                        appsObj = await res.json();
                     }
                 }
 
-                if (appsStr !== "") {
-                    const apps = appsStr.split(',');
-                    apps.forEach(app => {
-                        if(app.trim() !== "") {
-                            let option = document.createElement('option');
-                            option.value = app.trim();
-                            datalist.appendChild(option);
-                        }
-                    });
+                if (appsObj && appsObj.success) {
+                    window.installedAppsList = appsObj.apps;
+                    renderAppList();
+                } else {
+                    document.getElementById('appListContainer').innerText = "Failed to fetch apps.";
                 }
-            } catch (e) {}
+            } catch (e) {
+                document.getElementById('appListContainer').innerText = "Error loading apps.";
+            }
         }
 
         window.onload = () => {
