@@ -308,6 +308,7 @@
 
                 if (appsObj && appsObj.success) {
                     window.installedAppsList = appsObj.apps;
+                    window.installedAppsList.sort((a, b) => a.name.localeCompare(b.name, undefined, {sensitivity: 'base'}));
                     renderAppList();
                 } else {
                     document.getElementById('appListContainer').innerText = "Failed to fetch apps.";

@@ -87,6 +87,7 @@ jobs:
           cp -r zygisk build_zip/
           cp customize.sh build_zip/
           cp module.prop build_zip/
+          cp uninstall.sh build_zip/ || true
           cp README.md build_zip/ || true
           cp LICENSE build_zip/ || true
           
