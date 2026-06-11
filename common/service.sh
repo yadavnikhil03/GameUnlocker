@@ -44,11 +44,6 @@ chcon u:object_r:system_file:s0 "$MODDIR"
 chcon u:object_r:system_file:s0 "$CONFIG_FILE"
 
 
-setprop debug.vendor.qti.game.fps 120
-setprop persist.vendor.qti.game.fps 120
-setprop ro.vendor.display.enable_fps_switch 1
-setprop touch.vendor.sampling_rate 240
-
 last_state="idle"
 last_pkg=""
 

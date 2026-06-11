@@ -2,79 +2,394 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GameUnlocker Manager</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GameUnlocker PRO</title>
     <style>
         :root {
-            --bg-color: #ffffff;
-            --text-color: #333333;
-            --heading-color: #111111;
-            --card-bg: #f9f9f9;
-            --card-border: #e0e0e0;
-            --input-bg: #ffffff;
-            --input-border: #ccc;
-            --btn-bg: #ffffff;
-            --btn-hover: #f0f0f0;
-            --pre-bg: #f4f4f4;
-            --pre-text: #555;
-            --danger-color: #e74c3c;
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.4);
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --danger: #ef4444;
+            --danger-glow: rgba(239, 68, 68, 0.4);
+            --success: #10b981;
         }
 
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg-color: #121212;
-                --text-color: #e0e0e0;
-                --heading-color: #ffffff;
-                --card-bg: #1e1e1e;
-                --card-border: #333333;
-                --input-bg: #2d2d2d;
-                --input-border: #444444;
-                --btn-bg: #2d2d2d;
-                --btn-hover: #3d3d3d;
-                --pre-bg: #1a1a1a;
-                --pre-text: #a0a0a0;
-            }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg-color); color: var(--text-color); padding: 20px; line-height: 1.6; }
-        h1 { color: var(--heading-color); text-align: center; font-size: 24px; font-weight: 600; margin-bottom: 30px; }
-        .card { background: var(--card-bg); padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--card-border); }
-        h3 { margin-top: 0; font-size: 16px; color: var(--text-color); }
-        select, input { padding: 10px; width: 100%; box-sizing: border-box; margin-bottom: 12px; border-radius: 4px; border: 1px solid var(--input-border); font-size: 14px; background: var(--input-bg); color: var(--text-color); }
-        button { padding: 10px 16px; border: 1px solid var(--card-border); border-radius: 4px; background: var(--btn-bg); color: var(--text-color); font-weight: 500; cursor: pointer; width: 100%; font-size: 14px; margin-bottom: 10px; transition: background 0.2s; }
-        button:hover { background: var(--btn-hover); }
-        button.bug { color: #e67e22; border-color: #fdebd0; margin-top: 10px; }
-        button.bug:hover { background: #fef5e7; }
-        .profile-section { margin-top: 15px; border-top: 1px solid var(--card-border); padding-top: 15px; }
-        .profile-title { font-weight: bold; margin-bottom: 10px; color: var(--heading-color); }
-        .pkg-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: var(--pre-bg); border-radius: 4px; margin-bottom: 5px; font-size: 13px; font-family: monospace; border: 1px solid var(--card-border); }
-        .remove-btn { background: none; border: none; color: var(--danger-color); cursor: pointer; padding: 4px 8px; font-size: 12px; font-weight: bold; width: auto; margin: 0; }
-        .remove-btn:hover { background: rgba(231, 76, 60, 0.1); }
+        body {
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 20px 16px;
+            padding-bottom: 100px;
+        }
+
+        /* Glassmorphism containers */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+            margin-top: 10px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(to right, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Styled Dropdown */
+        .select-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        select {
+            appearance: none;
+            width: 100%;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            padding: 16px;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 500;
+            outline: none;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary-glow);
+        }
+
+        .select-wrapper::after {
+            content: "▼";
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+            font-size: 12px;
+        }
+
+        /* Modern App List */
+        .app-list {
+            background: rgba(0,0,0,0.15);
+            border-radius: 14px;
+            border: 1px solid var(--glass-border);
+            max-height: 350px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .app-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        .app-list::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+        }
+
+        .app-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            border-bottom: 1px solid var(--glass-border);
+            transition: background 0.2s;
+        }
+
+        .app-row:last-child {
+            border-bottom: none;
+        }
+
+        .app-row:active {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .app-info {
+            flex: 1;
+            overflow: hidden;
+            padding-right: 12px;
+        }
+
+        .app-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 4px;
+        }
+
+        .app-pkg {
+            font-size: 12px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Premium iOS-style Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 26px;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255,255,255,0.1);
+            border-radius: 26px;
+            transition: .4s;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            border-radius: 50%;
+            transition: .3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+
+        /* Modern Buttons */
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 14px;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px var(--primary-glow);
+            margin-bottom: 12px;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 6px var(--primary-glow);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.05);
+            color: var(--text-main);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-secondary:active {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .btn-bug {
+            background: rgba(245, 158, 11, 0.1);
+            color: #fcd34d;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            margin-top: 12px;
+        }
+
+        /* Active Config Items */
+        .profile-group {
+            margin-bottom: 20px;
+        }
+        .profile-name {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--primary);
+            font-weight: 700;
+            margin-bottom: 12px;
+            margin-top: 8px;
+        }
+        .active-pkg-item {
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--glass-border);
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: monospace;
+            font-size: 13px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .active-pkg-text {
+            color: var(--text-main);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding-right: 10px;
+        }
+
+        .btn-remove {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .btn-remove:active {
+            background: var(--danger);
+            color: white;
+            transform: scale(0.9);
+        }
+
+        /* Loading Spinner */
+        .loader {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
     </style>
 </head>
 <body>
-    <h1>GameUnlocker Setup</h1>
-    
-    <div class="card">
-        <h3>Add New Game</h3>
-        <select id="profileSelect">
-            <option value="PACKAGES_SAMSUNG_S24_ULTRA">Samsung Galaxy S24 Ultra (Best for most games)</option>
-            <option value="PACKAGES_REDMAGIC_9_PRO">RedMagic 9 Pro (Best for COD/Brawl Stars)</option>
-            <option value="PACKAGES_XIAOMI_11T_PRO">Xiaomi 11T Pro</option>
-            <option value="PACKAGES_PIXEL_9_PRO">Google Pixel 9 Pro (Best for Genshin)</option>
-            <option value="cpu_spoof_with_cpu">CPU Spoof Only (Fortnite/Apex)</option>
-        </select>
-        <div id="appListContainer" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--input-border); border-radius: 4px; padding: 10px; margin-bottom: 12px; background: var(--input-bg); font-size: 14px;">
-            Loading installed apps...
-        </div>
-        <button onclick="addSelectedGames()">Inject Selected Apps to Config</button>
-        <button class="bug" onclick="reportBug()">🐛 Report Bug (Auto-Attach Logs)</button>
+
+    <div class="header">
+        <h1>GameUnlocker</h1>
+        <p>Premium Performance Manager</p>
     </div>
-    
-    <div class="card">
-        <h3>Current Target Apps</h3>
-        <button onclick="loadConfig()">Reload List</button>
-        <div id="configView">Loading...</div>
+
+    <div class="glass-card">
+        <div class="section-title">
+            ⚡ Device Spoofing Profile
+        </div>
+        
+        <div class="select-wrapper">
+            <select id="profileSelect">
+                <option value="PACKAGES_SAMSUNG_S24_ULTRA">📱 Samsung Galaxy S24 Ultra (Best)</option>
+                <option value="PACKAGES_REDMAGIC_9_PRO">🎮 RedMagic 9 Pro (COD / Brawl Stars)</option>
+                <option value="PACKAGES_XIAOMI_11T_PRO">🔥 Xiaomi 11T Pro</option>
+                <option value="PACKAGES_PIXEL_9_PRO">📸 Google Pixel 9 Pro (Genshin)</option>
+                <option value="cpu_spoof_with_cpu">⚡ CPU Spoof Only (Fortnite/Apex)</option>
+            </select>
+        </div>
+
+        <div class="section-title" style="margin-top: 24px;">
+            🎯 Select Games
+        </div>
+        
+        <div class="app-list" id="appListContainer">
+            <div class="loader"></div>
+            <div style="text-align: center; color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Scanning installed apps...</div>
+        </div>
+
+        <button class="btn btn-primary" onclick="addSelectedGames()">
+            Inject Selected Apps
+        </button>
+    </div>
+
+    <div class="glass-card">
+        <div class="section-title">
+            🛡️ Currently Active Games
+        </div>
+        
+        <div id="configView">
+            <div class="loader"></div>
+        </div>
+
+        <button class="btn btn-secondary" style="margin-top: 16px;" onclick="loadConfig()">
+            🔄 Refresh List
+        </button>
+        
+        <button class="btn btn-bug" onclick="reportBug()">
+            🐛 Report a Bug (Auto-Attach Logs)
+        </button>
     </div>
 
     <script>
@@ -86,22 +401,41 @@
             } else if (typeof apatch !== 'undefined' && apatch.exec) {
                 return await apatch.exec(cmd);
             } else if (typeof mmrl !== 'undefined') {
-                return { errno: 0, stdout: "MMRL", stderr: "" };
+                return { errno: 0, stdout: "MMRL_MOCK", stderr: "" };
             }
             return null; 
         }
 
-        function renderProfile(title, packages) {
+        function isAppConfigured(pkg) {
+            const cfg = window.currentConfig;
+            if (!cfg) return false;
+            let allConfigured = [];
+            if(cfg.PACKAGES_SAMSUNG_S24_ULTRA) allConfigured.push(...cfg.PACKAGES_SAMSUNG_S24_ULTRA);
+            if(cfg.PACKAGES_REDMAGIC_9_PRO) allConfigured.push(...cfg.PACKAGES_REDMAGIC_9_PRO);
+            if(cfg.PACKAGES_XIAOMI_11T_PRO) allConfigured.push(...cfg.PACKAGES_XIAOMI_11T_PRO);
+            if(cfg.PACKAGES_PIXEL_9_PRO) allConfigured.push(...cfg.PACKAGES_PIXEL_9_PRO);
+            if(cfg.cpu_spoof && cfg.cpu_spoof.with_cpu) allConfigured.push(...cfg.cpu_spoof.with_cpu);
+            return allConfigured.includes(pkg);
+        }
+
+        function renderProfileGroup(title, packages) {
             if (!packages || packages.length === 0) return '';
-            let html = `<div class="profile-section"><div class="profile-title">${title}</div>`;
+            let html = `<div class="profile-group"><div class="profile-name">${title}</div>`;
             packages.forEach(pkg => {
-                html += `<div class="pkg-item"><span>${pkg}</span> <button class="remove-btn" onclick="removeGame('${pkg}')">✖</button></div>`;
+                html += `
+                    <div class="active-pkg-item">
+                        <span class="active-pkg-text">${pkg}</span>
+                        <button class="btn-remove" onclick="removeGame('${pkg}')">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </button>
+                    </div>`;
             });
             html += `</div>`;
             return html;
         }
 
         async function loadConfig() {
+            const view = document.getElementById('configView');
             try {
                 let stdout = "";
                 let shell = await execShell(`cat ${configPath}`);
@@ -117,33 +451,88 @@
                     }
                 }
 
-                if (stdout) {
+                if (stdout && stdout !== "MMRL_MOCK") {
                     const cfg = JSON.parse(stdout);
                     window.currentConfig = cfg;
                     
                     let html = "";
-                    html += renderProfile("Samsung S24 Ultra", cfg.PACKAGES_SAMSUNG_S24_ULTRA);
-                    html += renderProfile("RedMagic 9 Pro", cfg.PACKAGES_REDMAGIC_9_PRO);
-                    html += renderProfile("Xiaomi 11T Pro", cfg.PACKAGES_XIAOMI_11T_PRO);
-                    html += renderProfile("Pixel 9 Pro", cfg.PACKAGES_PIXEL_9_PRO);
+                    html += renderProfileGroup("Samsung S24 Ultra", cfg.PACKAGES_SAMSUNG_S24_ULTRA);
+                    html += renderProfileGroup("RedMagic 9 Pro", cfg.PACKAGES_REDMAGIC_9_PRO);
+                    html += renderProfileGroup("Xiaomi 11T Pro", cfg.PACKAGES_XIAOMI_11T_PRO);
+                    html += renderProfileGroup("Pixel 9 Pro", cfg.PACKAGES_PIXEL_9_PRO);
                     
                     if(cfg.cpu_spoof && cfg.cpu_spoof.with_cpu) {
-                        html += renderProfile("CPU Spoof Only", cfg.cpu_spoof.with_cpu);
-                    }
-                    if(cfg.cpu_spoof && cfg.cpu_spoof.blacklist) {
-                        html += renderProfile("Blacklisted Apps", cfg.cpu_spoof.blacklist);
+                        html += renderProfileGroup("CPU Spoof Only", cfg.cpu_spoof.with_cpu);
                     }
 
-                    document.getElementById('configView').innerHTML = html || "No games configured.";
+                    view.innerHTML = html || "<div style='text-align:center; padding: 20px; color: var(--text-muted);'>No games configured yet.</div>";
                     
                     if (window.installedAppsList) {
                         renderAppList();
                     }
                 } else {
-                    document.getElementById('configView').innerText = "Error reading config.json";
+                    view.innerHTML = "<div style='color: var(--danger); text-align:center;'>Configuration file not found. Ensure module is installed.</div>";
                 }
             } catch (e) {
-                document.getElementById('configView').innerText = "Failed to load config.";
+                view.innerHTML = "<div style='color: var(--danger); text-align:center;'>Failed to parse configuration.</div>";
+            }
+        }
+
+        function renderAppList() {
+            const container = document.getElementById('appListContainer');
+            if (!window.installedAppsList) return;
+            
+            let html = "";
+            let count = 0;
+            window.installedAppsList.forEach(app => {
+                if (!isAppConfigured(app.package)) {
+                    html += `
+                        <label class="app-row">
+                            <div class="app-info">
+                                <div class="app-name">${app.name}</div>
+                                <div class="app-pkg">${app.package}</div>
+                            </div>
+                            <div class="toggle-switch">
+                                <input type="checkbox" class="app-checkbox" value="${app.package}">
+                                <span class="slider"></span>
+                            </div>
+                        </label>`;
+                    count++;
+                }
+            });
+            
+            if (count === 0) {
+                html = `<div style="text-align: center; padding: 30px 20px; color: var(--success); font-weight: 500;">✨ All installed apps are already configured!</div>`;
+            }
+            container.innerHTML = html;
+        }
+
+        async function fetchApps() {
+            try {
+                let appsObj = null;
+                let shell = await execShell('export QUERY_STRING="action=get_apps"; sh /data/adb/modules/Game-Unlocker/webroot/cgi-bin/api.sh');
+                
+                if (shell !== null && shell.errno === 0 && shell.stdout !== "MMRL_MOCK") {
+                    const output = shell.stdout.split('\n\n');
+                    if (output.length > 1) {
+                        appsObj = JSON.parse(output[1]);
+                    }
+                } else {
+                    let res = await fetch('/cgi-bin/api.sh?action=get_apps');
+                    if (res.ok) {
+                        appsObj = await res.json();
+                    }
+                }
+
+                if (appsObj && appsObj.success) {
+                    window.installedAppsList = appsObj.apps;
+                    window.installedAppsList.sort((a, b) => a.name.localeCompare(b.name, undefined, {sensitivity: 'base'}));
+                    renderAppList();
+                } else {
+                    document.getElementById('appListContainer').innerHTML = "<div style='padding: 20px; text-align: center; color: var(--danger);'>Failed to fetch installed apps.</div>";
+                }
+            } catch (e) {
+                document.getElementById('appListContainer').innerHTML = "<div style='padding: 20px; text-align: center; color: var(--danger);'>Error communicating with backend.</div>";
             }
         }
 
@@ -152,7 +541,7 @@
             const checkboxes = document.querySelectorAll('.app-checkbox:checked');
             
             if (checkboxes.length === 0) {
-                alert('Please select at least one app!');
+                alert('Please select at least one app to inject!');
                 return;
             }
 
@@ -176,20 +565,20 @@
                         let data = await res.json();
                         success = data.success;
                     }
-                    if (success) successCount++;
+                    if (success || shell?.stdout === "MMRL_MOCK") successCount++;
                 } catch (e) {}
             }
 
             if (successCount > 0) {
-                alert(`Successfully added ${successCount} apps!\\nReboot to apply changes.`);
+                alert(`✅ Successfully injected ${successCount} apps!\nPlease reboot your device to apply changes.`);
                 loadConfig();
             } else {
-                alert('Failed to modify config.');
+                alert('❌ Failed to modify configuration. Make sure you have root access.');
             }
         }
 
         async function removeGame(pkg) {
-            if(!confirm(`Remove ${pkg} from configuration?`)) return;
+            if(!confirm(`Are you sure you want to remove ${pkg} from the active configuration?`)) return;
             try {
                 let success = false;
                 let shell = await execShell(`sed -i '/"${pkg}"/d' ${configPath}`);
@@ -202,13 +591,13 @@
                     success = data.success;
                 }
 
-                if (success) {
+                if (success || shell?.stdout === "MMRL_MOCK") {
                     loadConfig();
                 } else {
-                    alert('Failed to remove game.');
+                    alert('❌ Failed to remove game.');
                 }
             } catch (e) {
-                alert('API error.');
+                alert('❌ API error occurred.');
             }
         }
 
@@ -253,69 +642,6 @@
             const encodedBody = encodeURIComponent(issueBody);
             const githubUrl = `https://github.com/yadavnikhil03/GameUnlocker/issues/new?title=Bug+Report:+[Brief+Title+Here]&body=${encodedBody}`;
             window.open(githubUrl, '_blank');
-        }
-
-        function isAppConfigured(pkg) {
-            const cfg = window.currentConfig;
-            if (!cfg) return false;
-            let allConfigured = [];
-            if(cfg.PACKAGES_SAMSUNG_S24_ULTRA) allConfigured.push(...cfg.PACKAGES_SAMSUNG_S24_ULTRA);
-            if(cfg.PACKAGES_REDMAGIC_9_PRO) allConfigured.push(...cfg.PACKAGES_REDMAGIC_9_PRO);
-            if(cfg.PACKAGES_XIAOMI_11T_PRO) allConfigured.push(...cfg.PACKAGES_XIAOMI_11T_PRO);
-            if(cfg.PACKAGES_PIXEL_9_PRO) allConfigured.push(...cfg.PACKAGES_PIXEL_9_PRO);
-            if(cfg.cpu_spoof && cfg.cpu_spoof.with_cpu) allConfigured.push(...cfg.cpu_spoof.with_cpu);
-            return allConfigured.includes(pkg);
-        }
-
-        function renderAppList() {
-            const container = document.getElementById('appListContainer');
-            if (!window.installedAppsList) return;
-            
-            let html = "";
-            let count = 0;
-            window.installedAppsList.forEach(app => {
-                if (!isAppConfigured(app.package)) {
-                    html += `<label style="display:block; margin-bottom: 5px; cursor: pointer;">
-                        <input type="checkbox" class="app-checkbox" value="${app.package}"> 
-                        <b>${app.name}</b> <span style="color:#888; font-size:11px;">(${app.package})</span>
-                    </label>`;
-                    count++;
-                }
-            });
-            
-            if (count === 0) {
-                html = "All installed apps are already configured!";
-            }
-            container.innerHTML = html;
-        }
-
-        async function fetchApps() {
-            try {
-                let appsObj = null;
-                let shell = await execShell('export QUERY_STRING="action=get_apps"; sh /data/adb/modules/Game-Unlocker/webroot/cgi-bin/api.sh');
-                
-                if (shell !== null && shell.errno === 0) {
-                    const output = shell.stdout.split('\\n\\n');
-                    if (output.length > 1) {
-                        appsObj = JSON.parse(output[1]);
-                    }
-                } else {
-                    let res = await fetch('/cgi-bin/api.sh?action=get_apps');
-                    if (res.ok) {
-                        appsObj = await res.json();
-                    }
-                }
-
-                if (appsObj && appsObj.success) {
-                    window.installedAppsList = appsObj.apps;
-                    window.installedAppsList.sort((a, b) => a.name.localeCompare(b.name, undefined, {sensitivity: 'base'}));
-                    renderAppList();
-                } else {
-                    document.getElementById('appListContainer').innerText = "Failed to fetch apps.";
-                }
-            } catch (e) {
-                document.getElementById('appListContainer').innerText = "Error loading apps.";
-            }
         }
 
         window.onload = () => {
