@@ -36,6 +36,12 @@ generate_random_port() {
     echo "$PORT"
 }
 
+if pm list packages | grep -q "io.github.a13e300.ksuwebui"; then
+    echo "Launching natively inside KSUWebUI App..."
+    su -c "am start -n \"io.github.a13e300.ksuwebui/.WebUIActivity\" -e id \"Game-Unlocker\""
+    exit 0
+fi
+
 BB=$(find_busybox)
 if [ -z "$BB" ]; then
     echo "Error: Busybox not found! Cannot start WebUI."
@@ -43,31 +49,24 @@ if [ -z "$BB" ]; then
 fi
 
 RANDOM_PORT=$(generate_random_port)
-
-# Ensure CGI-BIN executing permissions
 chmod -R 0755 "$MODDIR/webroot/cgi-bin"
 
-# Export PATH to ensure inner scripts use this valid busybox environment
 BB_DIR=$($BB dirname "$BB")
 export PATH="$BB_DIR:$PATH"
 
-# Clean old instances if still running
 "$BB" pkill -f "httpd -p 127.0.0.1:" >/dev/null 2>&1
 
-echo "Starting background server on port $RANDOM_PORT..."
+echo "Starting background server and opening browser..."
 
-# Launch busybox httpd bound to localhost exactly
-"$BB" httpd -p 127.0.0.1:$RANDOM_PORT -h "$MODDIR/webroot" >/dev/null 2>&1
+(
+    "$BB" httpd -p 127.0.0.1:$RANDOM_PORT -h "$MODDIR/webroot" >/dev/null 2>&1
+    sleep 300
+    "$BB" pkill -f "httpd -p 127.0.0.1:$RANDOM_PORT" >/dev/null 2>&1
+) &
 
-echo "Redirecting to browser..."
 sleep 1
 am start -a android.intent.action.VIEW -d "http://127.0.0.1:$RANDOM_PORT" >/dev/null 2>&1
 
 echo ""
-echo "Server will run in the background for 5 minutes."
-echo "You may safely close this terminal or swipe it away."
-
-# Sleep so the WebUI works locally, then automatically clean up the HTTP server to free memory
-sleep 300
-"$BB" pkill -f "httpd -p 127.0.0.1:$RANDOM_PORT" >/dev/null 2>&1
+echo "Done! The WebUI should now be open."
 exit 0

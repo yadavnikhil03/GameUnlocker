@@ -1,0 +1,133 @@
+name: Build and Release GameUnlocker
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build and Release Module
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Android NDK
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r25c
+
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v1.14
+        with:
+          cmake-version: '3.22.x'
+
+      - name: Build Zygisk Library (arm64-v8a)
+        run: |
+          mkdir -p build_arm64
+          cd build_arm64
+          cmake ../cpp \
+            -DCMAKE_TOOLCHAIN_FILE=${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake \
+            -DANDROID_ABI=arm64-v8a \
+            -DANDROID_PLATFORM=android-27 \
+            -DCMAKE_BUILD_TYPE=Release
+          make
+          cd ..
+          mkdir -p zygisk
+          cp build_arm64/libgameunlocker.so zygisk/arm64-v8a.so
+
+      - name: Build Zygisk Library (armeabi-v7a)
+        run: |
+          mkdir -p build_arm32
+          cd build_arm32
+          cmake ../cpp \
+            -DCMAKE_TOOLCHAIN_FILE=${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake \
+            -DANDROID_ABI=armeabi-v7a \
+            -DANDROID_PLATFORM=android-27 \
+            -DCMAKE_BUILD_TYPE=Release
+          make
+          cd ..
+          cp build_arm32/libgameunlocker.so zygisk/armeabi-v7a.so
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-34 build-tools;34.0.0'
+
+      - name: Compile AppList (Java Helper)
+        run: |
+          cd common
+          # Use the natively installed android.jar from the GitHub Actions runner
+          ANDROID_JAR=$(ls -d $ANDROID_SDK_ROOT/platforms/android-*/android.jar | tail -n 1)
+          javac -source 1.8 -target 1.8 -cp "$ANDROID_JAR" AppList.java
+          # Use d8 to convert class to dex
+          BUILD_TOOLS_DIR=$(ls -d $ANDROID_SDK_ROOT/build-tools/* | tail -n 1)
+          $BUILD_TOOLS_DIR/d8 AppList.class --output .
+          mv classes.dex get_apps.dex
+          rm AppList.class
+          cd ..
+
+      - name: Prepare Module Directory
+        run: |
+          mkdir -p build_zip
+          cp -r common build_zip/
+          cp -r webroot build_zip/
+          cp -r META-INF build_zip/
+          cp -r zygisk build_zip/
+          cp customize.sh build_zip/
+          cp module.prop build_zip/
+          cp uninstall.sh build_zip/ || true
+          cp README.md build_zip/ || true
+          cp LICENSE build_zip/ || true
+          
+      - name: Create Unsigned ZIP
+        run: |
+          cd build_zip
+          zip -r9 ../GameUnlocker-unsigned.zip ./*
+          cd ..
+
+      - name: Generate Keystore
+        id: keystore
+        run: |
+          # Generate a secure, random 32-character password for this build session
+          RANDOM_PASS=$(openssl rand -base64 24)
+          echo "ks_pass=$RANDOM_PASS" >> $GITHUB_OUTPUT
+          keytool -genkey -v -keystore release.jks -alias module_key -keyalg RSA -keysize 2048 -validity 10000 -storepass "$RANDOM_PASS" -keypass "$RANDOM_PASS" -dname "CN=GameUnlocker, OU=Dev, O=yadavnikhil03, L=Global, S=Global, C=US"
+
+      - name: Sign Module ZIP
+        id: sign
+        run: |
+          jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore release.jks -storepass "${{ steps.keystore.outputs.ks_pass }}" -keypass "${{ steps.keystore.outputs.ks_pass }}" GameUnlocker-unsigned.zip module_key
+          jarsigner -verify -verbose -certs GameUnlocker-unsigned.zip
+          VERSION=$(grep '^version=' module.prop | cut -d= -f2)
+          mv GameUnlocker-unsigned.zip "GameUnlocker_${VERSION}.zip"
+          echo "signed_zip=GameUnlocker_${VERSION}.zip" >> $GITHUB_OUTPUT
+
+      - name: Read Module Version
+        id: get_version
+        run: |
+          VERSION=$(grep '^version=' module.prop | cut -d= -f2)
+          echo "module_version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ steps.sign.outputs.signed_zip }}
+          name: "GameUnlocker ${{ steps.get_version.outputs.module_version }}"
+          tag_name: "${{ steps.get_version.outputs.module_version }}"
+          body_path: changelog.md
+          draft: false
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

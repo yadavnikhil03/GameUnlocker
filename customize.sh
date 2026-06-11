@@ -4,7 +4,10 @@ PROPFILE=true
 POSTFSDATA=true
 LATESTARTSERVICE=true
 
-Market_Name=`getprop ro.product.marketname`
+Market_Name=$(getprop ro.product.marketname)
+if [ -z "$Market_Name" ]; then
+    Market_Name="$(getprop ro.product.brand) $(getprop ro.product.model)"
+fi
 Device=`getprop ro.product.device`
 Model=`getprop ro.product.model`
 Version=`getprop ro.build.version.incremental`
@@ -40,12 +43,48 @@ print_modname() {
   ui_print ""
   ui_print " Starting installation..."
   ui_print ""
+  sleep 1
 }
 
 print_modname
 
+check_root() {
+  ui_print " [*] Checking Root Environment"
+  sleep 0.5
+  local count=0
+  local sol=""
+
+  if command -v apd >/dev/null; then
+    sol="APatch"
+    count=$((count + 1))
+  fi
+
+  if command -v ksud >/dev/null; then
+    sol="KernelSU"
+    count=$((count + 1))
+  fi
+
+  if command -v magisk >/dev/null; then
+    sol="Magisk"
+    count=$((count + 1))
+  fi
+
+  if [ $count -gt 1 ]; then
+    ui_print " [!] Error: Multiple Root Solutions Found!"
+    abort
+  elif [ $count -eq 0 ]; then
+    ui_print " [!] Error: No Supported Root Solution (Magisk/KSU/APatch)!"
+    abort
+  else
+    ui_print " [*] Detected: $sol"
+  fi
+}
+
+check_root
+
 on_install() {
   ui_print " [*] Extracting module files"
+  sleep 0.5
   unzip -o "$ZIPFILE" \
     'module.prop' \
     'common/*' \
@@ -61,6 +100,7 @@ set_permissions() {
 }
 
 ui_print " [*] Preparing package"
+sleep 0.5
 mv ${CommonPath}/* $MODPATH
 rm -rf ${CommonPath}
 
@@ -84,10 +124,12 @@ case "$CPU_ABI" in
 esac
 
 ui_print " [*] Zygisk library verified for $CPU_ABI"
+sleep 0.5
 
 ui_print " [*] Finalizing config files"
 chmod 0644 $MODPATH/config.json
 chmod 0444 $MODPATH/cpuinfo_spoof
+sleep 0.5
 
 ui_print ""
 ui_print " Installation complete"

@@ -1,5 +1,18 @@
 {
-  "PACKAGES_iQOO_Neo8_Pro": [
+  "cpu_spoof": {
+    "blacklist": [
+      "com.bbl.mobilebanking",
+      "com.sbi.YONO",
+      "com.hdfcbank.payzapp",
+      "com.csam.icici.bank.imobile"
+    ],
+    "with_cpu": [
+      "com.epicgames.fortnite",
+      "com.ea.gp.apexlegendsmobilefps",
+      "com.miraclegames.farlight84"
+    ]
+  },
+  "PACKAGES_SAMSUNG_S24_ULTRA": [
     "com.tencent.ig",
     "com.pubg.imobile",
     "com.pubg.imobilelite",
@@ -13,20 +26,73 @@
     "com.tencent.tmgp.pubgmhd",
     "com.riotgames.league.wildrift",
     "com.riotgames.league.wildrifttw",
-    "com.riotgames.league.wildriftvn"
+    "com.riotgames.league.wildriftvn",
+    "com.riotgames.valormobile",
+    "com.mobile.legends"
   ],
-  "PACKAGES_iQOO_Neo8_Pro_DEVICE": {
-    "MANUFACTURER": "Asus",
-    "BRAND": "asus",
-    "MODEL": "ZS673KS",
-    "DEVICE": "ASUS_I005_1",
-    "PRODUCT": "WW_I005D",
-    "FINGERPRINT": "asus/WW_I005D/ASUS_I005_1:11/RKQ1.201022.002/18.0840.2103.26-0:user/release-keys"
+  "PACKAGES_SAMSUNG_S24_ULTRA_DEVICE": {
+    "MANUFACTURER": "Samsung",
+    "BRAND": "samsung",
+    "MODEL": "SM-S928B",
+    "DEVICE": "e3q",
+    "PRODUCT": "e3qxx",
+    "FINGERPRINT": "samsung/e3qxx/e3q:14/UP1A.231005.007/S928BXXS1AXBG:user/release-keys"
   },
-  "cpu_spoof": {
-    "with_cpu": [
-      "com.epicgames.fortnite",
-      "com.ea.gp.apexlegendsmobilefps"
-    ]
+  "PACKAGES_REDMAGIC_9_PRO": [
+    "com.supercell.brawlstars",
+    "com.blizzard.diablo.immortal",
+    "com.netease.newspike",
+    "com.activision.callofduty.warzone",
+    "com.gamedevltd.destinywarfare",
+    "com.pikpok.dr2.play",
+    "com.CarXTech.highWay",
+    "com.nekki.shadowfight3",
+    "com.nekki.shadowfightarena",
+    "com.gameloft.android.ANMP.GloftA8HM",
+    "com.nekki.shadowfight",
+    "com.ea.game.nfs14_row",
+    "com.ea.games.r3_row",
+    "com.supercell.squad",
+    "com.blitzteam.battleprime",
+    "com.tencent.tmgp.gnyx",
+    "com.garena.game.df"
+  ],
+  "PACKAGES_REDMAGIC_9_PRO_DEVICE": {
+    "BRAND": "nubia",
+    "DEVICE": "REDMAGIC 9 Pro",
+    "MANUFACTURER": "ZTE",
+    "MODEL": "NX769J",
+    "FINGERPRINT": "nubia/NX769J/NX769J:14/UKQ1.230917.001/20240813.173312:user/release-keys",
+    "PRODUCT": "NX769J"
+  },
+  "PACKAGES_XIAOMI_11T_PRO": [
+    "com.levelinfinite.hotta.gp",
+    "com.supercell.clashofclans",
+    "com.vng.mlbbvn"
+  ],
+  "PACKAGES_XIAOMI_11T_PRO_DEVICE": {
+    "BRAND": "Xiaomi",
+    "DEVICE": "Xiaomi 11T Pro",
+    "MANUFACTURER": "Xiaomi",
+    "MODEL": "2107113SG",
+    "FINGERPRINT": "Xiaomi/2107113SI/Mi 11T Pro:13/RKQ1.211001.001/20230410:user/release-keys",
+    "PRODUCT": "2107113SG"
+  },
+  "PACKAGES_PIXEL_9_PRO": [
+    "com.kakaogames.ares",
+    "com.miHoYo.GenshinImpact",
+    "com.pearlabyss.blackdesertm.gl",
+    "com.miHoYo.Yuanshen",
+    "com.dts.freefireth",
+    "com.dts.freefiremax",
+    "com.nintendo.zaka"
+  ],
+  "PACKAGES_PIXEL_9_PRO_DEVICE": {
+    "BRAND": "google",
+    "DEVICE": "caiman",
+    "MANUFACTURER": "Google",
+    "MODEL": "Pixel 9 Pro",
+    "FINGERPRINT": "google/caiman/caiman:14/AD1A.240530.047/12093554:user/release-keys",
+    "PRODUCT": "caiman"
   }
 }

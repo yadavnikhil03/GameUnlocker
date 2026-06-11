@@ -1,1 +1,1 @@
-chore: Minor cleanup and formatting
+feat: CI/CD release workflow and AppList utility

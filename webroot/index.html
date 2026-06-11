@@ -2,33 +2,394 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GameUnlocker Manager</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GameUnlocker PRO</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f0f0f; color: #fff; padding: 20px; }
-        h1 { color: #00d2ff; text-align: center; }
-        .card { background: #1a1a1a; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        input { padding: 12px; width: 100%; box-sizing: border-box; margin-bottom: 12px; border-radius: 6px; border: 1px solid #333; background: #2a2a2a; color: #fff; font-size: 16px; }
-        button { padding: 12px 20px; border: none; border-radius: 6px; background: #00d2ff; color: #000; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px; margin-bottom: 10px; }
-        button.reset { background: #ff4757; color: white; }
-        pre { background: #000; padding: 15px; border-radius: 8px; overflow-x: auto; color: #00ea00; font-size: 14px; }
-        .error { color: #ff4757; }
+        :root {
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.4);
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --danger: #ef4444;
+            --danger-glow: rgba(239, 68, 68, 0.4);
+            --success: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 20px 16px;
+            padding-bottom: 100px;
+        }
+
+        /* Glassmorphism containers */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+            margin-top: 10px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(to right, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Styled Dropdown */
+        .select-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        select {
+            appearance: none;
+            width: 100%;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            padding: 16px;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 500;
+            outline: none;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary-glow);
+        }
+
+        .select-wrapper::after {
+            content: "▼";
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+            font-size: 12px;
+        }
+
+        /* Modern App List */
+        .app-list {
+            background: rgba(0,0,0,0.15);
+            border-radius: 14px;
+            border: 1px solid var(--glass-border);
+            max-height: 350px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .app-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        .app-list::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+        }
+
+        .app-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            border-bottom: 1px solid var(--glass-border);
+            transition: background 0.2s;
+        }
+
+        .app-row:last-child {
+            border-bottom: none;
+        }
+
+        .app-row:active {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .app-info {
+            flex: 1;
+            overflow: hidden;
+            padding-right: 12px;
+        }
+
+        .app-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 4px;
+        }
+
+        .app-pkg {
+            font-size: 12px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Premium iOS-style Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 26px;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255,255,255,0.1);
+            border-radius: 26px;
+            transition: .4s;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            border-radius: 50%;
+            transition: .3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+
+        /* Modern Buttons */
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 14px;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px var(--primary-glow);
+            margin-bottom: 12px;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 6px var(--primary-glow);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.05);
+            color: var(--text-main);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-secondary:active {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .btn-bug {
+            background: rgba(245, 158, 11, 0.1);
+            color: #fcd34d;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            margin-top: 12px;
+        }
+
+        /* Active Config Items */
+        .profile-group {
+            margin-bottom: 20px;
+        }
+        .profile-name {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--primary);
+            font-weight: 700;
+            margin-bottom: 12px;
+            margin-top: 8px;
+        }
+        .active-pkg-item {
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--glass-border);
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: monospace;
+            font-size: 13px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .active-pkg-text {
+            color: var(--text-main);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding-right: 10px;
+        }
+
+        .btn-remove {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .btn-remove:active {
+            background: var(--danger);
+            color: white;
+            transform: scale(0.9);
+        }
+
+        /* Loading Spinner */
+        .loader {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
     </style>
 </head>
 <body>
-    <h1>GameUnlocker Setup</h1>
-    
-    <div class="card">
-        <h3>Add New Game</h3>
-        <input type="text" id="pkgName" placeholder="e.g., com.activision.callofduty.shooter">
-        <button onclick="addGame()">Inject App to Config</button>
+
+    <div class="header">
+        <h1>GameUnlocker</h1>
+        <p>Premium Performance Manager</p>
     </div>
-    
-    <div class="card">
-        <h3>Current Target Apps</h3>
-        <button onclick="loadConfig()">Reload List</button>
-        <button class="reset" onclick="resetConfig()">Reset to Defaults</button>
-        <pre id="configView">Loading...</pre>
+
+    <div class="glass-card">
+        <div class="section-title">
+            ⚡ Device Spoofing Profile
+        </div>
+        
+        <div class="select-wrapper">
+            <select id="profileSelect">
+                <option value="PACKAGES_SAMSUNG_S24_ULTRA">📱 Samsung Galaxy S24 Ultra (Best)</option>
+                <option value="PACKAGES_REDMAGIC_9_PRO">🎮 RedMagic 9 Pro (COD / Brawl Stars)</option>
+                <option value="PACKAGES_XIAOMI_11T_PRO">🔥 Xiaomi 11T Pro</option>
+                <option value="PACKAGES_PIXEL_9_PRO">📸 Google Pixel 9 Pro (Genshin)</option>
+                <option value="cpu_spoof_with_cpu">⚡ CPU Spoof Only (Fortnite/Apex)</option>
+            </select>
+        </div>
+
+        <div class="section-title" style="margin-top: 24px;">
+            🎯 Select Games
+        </div>
+        
+        <div class="app-list" id="appListContainer">
+            <div class="loader"></div>
+            <div style="text-align: center; color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Scanning installed apps...</div>
+        </div>
+
+        <button class="btn btn-primary" onclick="addSelectedGames()">
+            Inject Selected Apps
+        </button>
+    </div>
+
+    <div class="glass-card">
+        <div class="section-title">
+            🛡️ Currently Active Games
+        </div>
+        
+        <div id="configView">
+            <div class="loader"></div>
+        </div>
+
+        <button class="btn btn-secondary" style="margin-top: 16px;" onclick="loadConfig()">
+            🔄 Refresh List
+        </button>
+        
+        <button class="btn btn-bug" onclick="reportBug()">
+            🐛 Report a Bug (Auto-Attach Logs)
+        </button>
     </div>
 
     <script>
@@ -40,12 +401,41 @@
             } else if (typeof apatch !== 'undefined' && apatch.exec) {
                 return await apatch.exec(cmd);
             } else if (typeof mmrl !== 'undefined') {
-                return { errno: 0, stdout: "MMRL triggered. Not fully mapped.", stderr: "" };
+                return { errno: 0, stdout: "MMRL_MOCK", stderr: "" };
             }
-            return null; // Fallback to HTTP API
+            return null; 
+        }
+
+        function isAppConfigured(pkg) {
+            const cfg = window.currentConfig;
+            if (!cfg) return false;
+            let allConfigured = [];
+            if(cfg.PACKAGES_SAMSUNG_S24_ULTRA) allConfigured.push(...cfg.PACKAGES_SAMSUNG_S24_ULTRA);
+            if(cfg.PACKAGES_REDMAGIC_9_PRO) allConfigured.push(...cfg.PACKAGES_REDMAGIC_9_PRO);
+            if(cfg.PACKAGES_XIAOMI_11T_PRO) allConfigured.push(...cfg.PACKAGES_XIAOMI_11T_PRO);
+            if(cfg.PACKAGES_PIXEL_9_PRO) allConfigured.push(...cfg.PACKAGES_PIXEL_9_PRO);
+            if(cfg.cpu_spoof && cfg.cpu_spoof.with_cpu) allConfigured.push(...cfg.cpu_spoof.with_cpu);
+            return allConfigured.includes(pkg);
+        }
+
+        function renderProfileGroup(title, packages) {
+            if (!packages || packages.length === 0) return '';
+            let html = `<div class="profile-group"><div class="profile-name">${title}</div>`;
+            packages.forEach(pkg => {
+                html += `
+                    <div class="active-pkg-item">
+                        <span class="active-pkg-text">${pkg}</span>
+                        <button class="btn-remove" onclick="removeGame('${pkg}')">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </button>
+                    </div>`;
+            });
+            html += `</div>`;
+            return html;
         }
 
         async function loadConfig() {
+            const view = document.getElementById('configView');
             try {
                 let stdout = "";
                 let shell = await execShell(`cat ${configPath}`);
@@ -53,77 +443,223 @@
                 if (shell !== null) {
                     if (shell.errno === 0) stdout = shell.stdout;
                 } else {
-                    // Fallback to Magisk CGI-BIN API
-                    let res = await fetch('/cgi-bin/api.sh?action=get_config');
-                    stdout = await res.text();
+                    try {
+                        let res = await fetch('/cgi-bin/api.sh?action=get_config');
+                        stdout = await res.text();
+                    } catch (fetchErr) {
+                        stdout = '{"PACKAGES_SAMSUNG_S24_ULTRA":["com.example.game"]}';
+                    }
                 }
 
-                if (stdout) {
+                if (stdout && stdout !== "MMRL_MOCK") {
                     const cfg = JSON.parse(stdout);
-                    document.getElementById('configView').innerText = JSON.stringify(cfg.PACKAGES_iQOO_Neo8_Pro, null, 2);
-                    document.getElementById('configView').classList.remove('error');
+                    window.currentConfig = cfg;
+                    
+                    let html = "";
+                    html += renderProfileGroup("Samsung S24 Ultra", cfg.PACKAGES_SAMSUNG_S24_ULTRA);
+                    html += renderProfileGroup("RedMagic 9 Pro", cfg.PACKAGES_REDMAGIC_9_PRO);
+                    html += renderProfileGroup("Xiaomi 11T Pro", cfg.PACKAGES_XIAOMI_11T_PRO);
+                    html += renderProfileGroup("Pixel 9 Pro", cfg.PACKAGES_PIXEL_9_PRO);
+                    
+                    if(cfg.cpu_spoof && cfg.cpu_spoof.with_cpu) {
+                        html += renderProfileGroup("CPU Spoof Only", cfg.cpu_spoof.with_cpu);
+                    }
+
+                    view.innerHTML = html || "<div style='text-align:center; padding: 20px; color: var(--text-muted);'>No games configured yet.</div>";
+                    
+                    if (window.installedAppsList) {
+                        renderAppList();
+                    }
                 } else {
-                    document.getElementById('configView').innerText = "Error reading config.json";
+                    view.innerHTML = "<div style='color: var(--danger); text-align:center;'>Configuration file not found. Ensure module is installed.</div>";
                 }
             } catch (e) {
-                document.getElementById('configView').innerText = "Failed to load config. Connection Error.";
-                document.getElementById('configView').classList.add('error');
+                view.innerHTML = "<div style='color: var(--danger); text-align:center;'>Failed to parse configuration.</div>";
             }
         }
 
-        async function addGame() {
-            const pkg = document.getElementById('pkgName').value.trim();
-            if (!pkg) return;
+        function renderAppList() {
+            const container = document.getElementById('appListContainer');
+            if (!window.installedAppsList) return;
+            
+            let html = "";
+            let count = 0;
+            window.installedAppsList.forEach(app => {
+                if (!isAppConfigured(app.package)) {
+                    html += `
+                        <label class="app-row">
+                            <div class="app-info">
+                                <div class="app-name">${app.name}</div>
+                                <div class="app-pkg">${app.package}</div>
+                            </div>
+                            <div class="toggle-switch">
+                                <input type="checkbox" class="app-checkbox" value="${app.package}">
+                                <span class="slider"></span>
+                            </div>
+                        </label>`;
+                    count++;
+                }
+            });
+            
+            if (count === 0) {
+                html = `<div style="text-align: center; padding: 30px 20px; color: var(--success); font-weight: 500;">✨ All installed apps are already configured!</div>`;
+            }
+            container.innerHTML = html;
+        }
+
+        async function fetchApps() {
+            try {
+                let appsObj = null;
+                // Trigger async fetch so KSU exec returns instantly
+                let triggerShell = await execShell('export QUERY_STRING="action=get_apps_async"; sh /data/adb/modules/Game-Unlocker/webroot/cgi-bin/api.sh');
+                
+                if (triggerShell !== null && triggerShell.errno === 0 && triggerShell.stdout !== "MMRL_MOCK") {
+                    let retries = 20; // Wait up to 20 seconds
+                    while (retries > 0) {
+                        await new Promise(r => setTimeout(r, 1000));
+                        let pollShell = await execShell('cat /data/local/tmp/gameunlocker_apps.json');
+                        if (pollShell && pollShell.errno === 0 && pollShell.stdout.includes('"success"')) {
+                            appsObj = JSON.parse(pollShell.stdout);
+                            break;
+                        }
+                        retries--;
+                    }
+                } else {
+                    let res = await fetch('/cgi-bin/api.sh?action=get_apps_async');
+                    if (res.ok) {
+                        // For browser fallback, we just wait a bit and fetch directly since we can't poll shell
+                        await new Promise(r => setTimeout(r, 3000));
+                        let pollRes = await fetch('/data/local/tmp/gameunlocker_apps.json');
+                        if (pollRes.ok) {
+                            appsObj = await pollRes.json();
+                        }
+                    }
+                }
+
+                if (appsObj && appsObj.success) {
+                    window.installedAppsList = appsObj.apps;
+                    window.installedAppsList.sort((a, b) => a.name.localeCompare(b.name, undefined, {sensitivity: 'base'}));
+                    renderAppList();
+                } else {
+                    document.getElementById('appListContainer').innerHTML = "<div style='padding: 20px; text-align: center; color: var(--danger);'>Failed to fetch installed apps. Ensure module is installed properly.</div>";
+                }
+            } catch (e) {
+                document.getElementById('appListContainer').innerHTML = "<div style='padding: 20px; text-align: center; color: var(--danger);'>Error communicating with backend.</div>";
+            }
+        }
+
+        async function addSelectedGames() {
+            const profile = document.getElementById('profileSelect').value;
+            const checkboxes = document.querySelectorAll('.app-checkbox:checked');
+            
+            if (checkboxes.length === 0) {
+                alert('Please select at least one app to inject!');
+                return;
+            }
+
+            let successCount = 0;
+            for (let checkbox of checkboxes) {
+                const pkg = checkbox.value;
+                try {
+                    let shell = null;
+                    if(profile === "cpu_spoof_with_cpu") {
+                        shell = await execShell(`sed -i '/"with_cpu": \\\[/a \\    "${pkg}",' ${configPath}`);
+                    } else {
+                        shell = await execShell(`sed -i 's/"${profile}": \\\[/"${profile}": \\\[\\n    "${pkg}",/' ${configPath}`);
+                    }
+                    
+                    let success = false;
+                    if (shell !== null) {
+                        success = (shell.errno === 0);
+                    } else {
+                        let actualProfile = profile === "cpu_spoof_with_cpu" ? "with_cpu" : profile;
+                        let res = await fetch(`/cgi-bin/api.sh?action=add_game&pkg=${pkg}&profile=${actualProfile}`);
+                        let data = await res.json();
+                        success = data.success;
+                    }
+                    if (success || shell?.stdout === "MMRL_MOCK") successCount++;
+                } catch (e) {}
+            }
+
+            if (successCount > 0) {
+                alert(`✅ Successfully injected ${successCount} apps!\nPlease reboot your device to apply changes.`);
+                loadConfig();
+            } else {
+                alert('❌ Failed to modify configuration. Make sure you have root access.');
+            }
+        }
+
+        async function removeGame(pkg) {
+            if(!confirm(`Are you sure you want to remove ${pkg} from the active configuration?`)) return;
             try {
                 let success = false;
-                let shell = await execShell(`sed -i 's/"PACKAGES_iQOO_Neo8_Pro": \\\[/"PACKAGES_iQOO_Neo8_Pro": \\\[\\n    "${pkg}",/' ${configPath}`);
+                let shell = await execShell(`sed -i '/"${pkg}"/d' ${configPath}`);
                 
                 if (shell !== null) {
                     success = (shell.errno === 0);
                 } else {
-                    // Fallback to Magisk CGI-BIN API
-                    let res = await fetch('/cgi-bin/api.sh?action=add_game&pkg=' + pkg);
+                    let res = await fetch('/cgi-bin/api.sh?action=remove_game&pkg=' + pkg);
                     let data = await res.json();
                     success = data.success;
                 }
 
-                if (success) {
-                    alert('Successfully added: ' + pkg + '\\nReboot to apply changes!');
-                    document.getElementById('pkgName').value = '';
+                if (success || shell?.stdout === "MMRL_MOCK") {
                     loadConfig();
                 } else {
-                    alert('Failed to modify config.');
+                    alert('❌ Failed to remove game.');
                 }
             } catch (e) {
-                alert('API error.');
+                alert('❌ API error occurred.');
             }
         }
 
-        async function resetConfig() {
-            if(!confirm("Reset configuration to default?")) return;
+        async function reportBug() {
+            let model = "Unknown";
+            let android = "Unknown";
+            let logSnippet = "No recent logs found.";
+            let configDump = JSON.stringify(window.currentConfig || {}, null, 2);
+
             try {
-                let success = false;
-                let shell = await execShell(`cat <<EOF > ${configPath}\\n{\\n"PACKAGES_iQOO_Neo8_Pro":["com.tencent.ig","com.pubg.imobile","com.pubg.imidas","com.pubg.krmobile","com.vng.pubgmobile","com.rekoo.pubgm","com.tencent.tmgp.pubgmhd","com.riotgames.league.wildrift","com.riotgames.league.wildrifttw","com.riotgames.league.wildriftvn"],"PACKAGES_iQOO_Neo8_Pro_DEVICE":{"MANUFACTURER":"vivo","BRAND":"vivo","MODEL":"V2302A","DEVICE":"V2302A","PRODUCT":"V2302A","FINGERPRINT":"vivo/V2302A/V2302A:13/TP1A.220624.014/compil02251912:user/release-keys"},"cpu_spoof":{"with_cpu":["com.epicgames.fortnite","com.ea.gp.apexlegendsmobilefps"]}}\\n}\\nEOF`);
-                
-                if (shell !== null) {
-                    success = (shell.errno === 0);
-                } else {
-                    // Fallback to Magisk CGI-BIN API
-                    let res = await fetch('/cgi-bin/api.sh?action=reset_config');
-                    let data = await res.json();
-                    success = data.success;
-                }
+                let mShell = await execShell('getprop ro.product.model');
+                if (mShell && mShell.errno === 0) {
+                    model = mShell.stdout.trim();
+                    let aShell = await execShell('getprop ro.build.version.release');
+                    if (aShell && aShell.errno === 0) android = aShell.stdout.trim();
 
-                if(success) {
-                    alert("Config reset!");
-                    loadConfig();
+                    await execShell('logcat -d -s GameUnlocker > /sdcard/Download/GameUnlocker_Logs.txt');
+                    let logShell = await execShell('logcat -d -s GameUnlocker -t 20');
+                    if (logShell && logShell.errno === 0 && logShell.stdout.trim() !== "") {
+                        logSnippet = logShell.stdout.trim();
+                    }
+                } else {
+                    let resInfo = await fetch('/cgi-bin/api.sh?action=get_device_info');
+                    if (resInfo.ok) {
+                        let dataInfo = await resInfo.json();
+                        if (dataInfo.success) {
+                            model = dataInfo.model;
+                            android = dataInfo.android;
+                        }
+                    }
+                    let resLogs = await fetch('/cgi-bin/api.sh?action=generate_logs');
+                    if (resLogs.ok) {
+                        let dataLogs = await resLogs.json();
+                        if (dataLogs.success) {
+                            logSnippet = atob(dataLogs.snippet);
+                        }
+                    }
                 }
-            } catch(e) {
-                alert('API error.');
-            }
+            } catch (e) {}
+
+            const issueBody = `### 🐛 Bug Description\n\n### 🔄 Steps to Reproduce\n1. \n2. \n3. \n\n### 📱 Device Information\n- **Model:** ${model}\n- **Android Version:** ${android}\n\n---\n### 🛠 Diagnostics\n\n> [!IMPORTANT]\n> 📂 **A full log file has been saved to your phone at \`/sdcard/Download/GameUnlocker_Logs.txt\`. Please drag and drop that file anywhere in this text box to attach it!**\n\n<details>\n<summary><b>Show Recent Log Snippet</b></summary>\n\n\`\`\`log\n${logSnippet}\n\`\`\`\n</details>\n\n<details>\n<summary><b>Show Configuration Dump</b></summary>\n\n\`\`\`json\n${configDump}\n\`\`\`\n</details>`;
+            const encodedBody = encodeURIComponent(issueBody);
+            const githubUrl = `https://github.com/yadavnikhil03/GameUnlocker/issues/new?title=Bug+Report:+[Brief+Title+Here]&body=${encodedBody}`;
+            window.open(githubUrl, '_blank');
         }
 
-        window.onload = loadConfig;
+        window.onload = () => {
+            loadConfig();
+            fetchApps();
+        };
     </script>
 </body>
 </html>
