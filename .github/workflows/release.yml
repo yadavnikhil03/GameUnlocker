@@ -119,10 +119,10 @@ jobs:
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
         with:
           files: ${{ steps.sign.outputs.signed_zip }}
           name: "GameUnlocker ${{ steps.get_version.outputs.module_version }}"
+          tag_name: "${{ steps.get_version.outputs.module_version }}"
           body_path: changelog.md
           draft: false
           prerelease: true
