@@ -8,10 +8,18 @@ add_compile_options(-Os -flto -ffunction-sections -fdata-sections)
 add_link_options(-flto -Wl,--gc-sections)
 
 add_library(gameunlocker SHARED
-            spoof_module.cpp)
+            main.cpp
+            Config.cpp
+            Companion.cpp
+            Spoofer.cpp
+            GpuHook.cpp
+            HookManager.cpp
+            RoutingEngine.cpp)
 
 find_library(log-lib log)
 target_link_libraries(gameunlocker ${log-lib})
+
+target_include_directories(gameunlocker PRIVATE include)
 
 set_target_properties(gameunlocker PROPERTIES
     LINK_FLAGS "-Wl,--exclude-libs,ALL"
