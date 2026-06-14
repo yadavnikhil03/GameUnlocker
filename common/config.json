@@ -1,4 +1,298 @@
 {
+  "profiles": {
+    "SAMSUNG_S24_ULTRA": {
+      "MANUFACTURER": "Samsung",
+      "BRAND": "samsung",
+      "MODEL": "SM-S928B",
+      "DEVICE": "e3q",
+      "PRODUCT": "e3qxx",
+      "FINGERPRINT": "samsung/e3qxx/e3q:14/UP1A.231005.007/S928BXXS1AXBG:user/release-keys"
+    },
+    "REDMAGIC_9_PRO": {
+      "BRAND": "nubia",
+      "DEVICE": "REDMAGIC 9 Pro",
+      "MANUFACTURER": "ZTE",
+      "MODEL": "NX769J",
+      "FINGERPRINT": "nubia/NX769J/NX769J:14/UKQ1.230917.001/20240813.173312:user/release-keys",
+      "PRODUCT": "NX769J"
+    },
+    "XIAOMI_11T_PRO": {
+      "BRAND": "Xiaomi",
+      "DEVICE": "Xiaomi 11T Pro",
+      "MANUFACTURER": "Xiaomi",
+      "MODEL": "2107113SG",
+      "FINGERPRINT": "Xiaomi/2107113SI/Mi 11T Pro:13/RKQ1.211001.001/20230410:user/release-keys",
+      "PRODUCT": "2107113SG"
+    },
+    "PIXEL_9_PRO": {
+      "BRAND": "google",
+      "DEVICE": "caiman",
+      "MANUFACTURER": "Google",
+      "MODEL": "Pixel 9 Pro",
+      "FINGERPRINT": "google/caiman/caiman:14/AD1A.240530.047/12093554:user/release-keys",
+      "PRODUCT": "caiman"
+    }
+  },
+  "routing_rules": [
+    {
+      "type": "exact",
+      "pattern": "com.tencent.ig",
+      "profile": "SAMSUNG_S24_ULTRA",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.pubg.imobile",
+      "profile": "SAMSUNG_S24_ULTRA",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.pubg.imobilelite",
+      "profile": "SAMSUNG_S24_ULTRA",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.pubg.imobile.india",
+      "profile": "SAMSUNG_S24_ULTRA",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.pubg.imobile.battlegroundsindia",
+      "profile": "SAMSUNG_S24_ULTRA",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.pubg.imobile.in",
+      "profile": "SAMSUNG_S24_ULTRA",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.pubg.imidas",
+      "profile": "SAMSUNG_S24_ULTRA",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.pubg.krmobile",
+      "profile": "SAMSUNG_S24_ULTRA",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.vng.pubgmobile",
+      "profile": "SAMSUNG_S24_ULTRA",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.rekoo.pubgm",
+      "profile": "SAMSUNG_S24_ULTRA",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.tencent.tmgp.pubgmhd",
+      "profile": "SAMSUNG_S24_ULTRA",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.riotgames.league.wildrift",
+      "profile": "SAMSUNG_S24_ULTRA",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.riotgames.league.wildrifttw",
+      "profile": "SAMSUNG_S24_ULTRA",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.riotgames.league.wildriftvn",
+      "profile": "SAMSUNG_S24_ULTRA",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.riotgames.valormobile",
+      "profile": "SAMSUNG_S24_ULTRA",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.mobile.legends",
+      "profile": "SAMSUNG_S24_ULTRA",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.supercell.brawlstars",
+      "profile": "REDMAGIC_9_PRO",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.blizzard.diablo.immortal",
+      "profile": "REDMAGIC_9_PRO",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.netease.newspike",
+      "profile": "REDMAGIC_9_PRO",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.activision.callofduty.warzone",
+      "profile": "REDMAGIC_9_PRO",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.gamedevltd.destinywarfare",
+      "profile": "REDMAGIC_9_PRO",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.pikpok.dr2.play",
+      "profile": "REDMAGIC_9_PRO",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.CarXTech.highWay",
+      "profile": "REDMAGIC_9_PRO",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.nekki.shadowfight3",
+      "profile": "REDMAGIC_9_PRO",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.nekki.shadowfightarena",
+      "profile": "REDMAGIC_9_PRO",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.gameloft.android.ANMP.GloftA8HM",
+      "profile": "REDMAGIC_9_PRO",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.nekki.shadowfight",
+      "profile": "REDMAGIC_9_PRO",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.ea.game.nfs14_row",
+      "profile": "REDMAGIC_9_PRO",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.ea.games.r3_row",
+      "profile": "REDMAGIC_9_PRO",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.supercell.squad",
+      "profile": "REDMAGIC_9_PRO",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.blitzteam.battleprime",
+      "profile": "REDMAGIC_9_PRO",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.tencent.tmgp.gnyx",
+      "profile": "REDMAGIC_9_PRO",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.garena.game.df",
+      "profile": "REDMAGIC_9_PRO",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.levelinfinite.hotta.gp",
+      "profile": "XIAOMI_11T_PRO",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.supercell.clashofclans",
+      "profile": "XIAOMI_11T_PRO",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.vng.mlbbvn",
+      "profile": "XIAOMI_11T_PRO",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.kakaogames.ares",
+      "profile": "PIXEL_9_PRO",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.miHoYo.GenshinImpact",
+      "profile": "PIXEL_9_PRO",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.pearlabyss.blackdesertm.gl",
+      "profile": "PIXEL_9_PRO",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.miHoYo.Yuanshen",
+      "profile": "PIXEL_9_PRO",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.dts.freefireth",
+      "profile": "PIXEL_9_PRO",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.dts.freefiremax",
+      "profile": "PIXEL_9_PRO",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.nintendo.zaka",
+      "profile": "PIXEL_9_PRO",
+      "priority": 50
+    }
+  ],
   "cpu_spoof": {
     "blacklist": [
       "com.bbl.mobilebanking",
@@ -11,88 +305,5 @@
       "com.ea.gp.apexlegendsmobilefps",
       "com.miraclegames.farlight84"
     ]
-  },
-  "PACKAGES_SAMSUNG_S24_ULTRA": [
-    "com.tencent.ig",
-    "com.pubg.imobile",
-    "com.pubg.imobilelite",
-    "com.pubg.imobile.india",
-    "com.pubg.imobile.battlegroundsindia",
-    "com.pubg.imobile.in",
-    "com.pubg.imidas",
-    "com.pubg.krmobile",
-    "com.vng.pubgmobile",
-    "com.rekoo.pubgm",
-    "com.tencent.tmgp.pubgmhd",
-    "com.riotgames.league.wildrift",
-    "com.riotgames.league.wildrifttw",
-    "com.riotgames.league.wildriftvn",
-    "com.riotgames.valormobile",
-    "com.mobile.legends"
-  ],
-  "PACKAGES_SAMSUNG_S24_ULTRA_DEVICE": {
-    "MANUFACTURER": "Samsung",
-    "BRAND": "samsung",
-    "MODEL": "SM-S928B",
-    "DEVICE": "e3q",
-    "PRODUCT": "e3qxx",
-    "FINGERPRINT": "samsung/e3qxx/e3q:14/UP1A.231005.007/S928BXXS1AXBG:user/release-keys"
-  },
-  "PACKAGES_REDMAGIC_9_PRO": [
-    "com.supercell.brawlstars",
-    "com.blizzard.diablo.immortal",
-    "com.netease.newspike",
-    "com.activision.callofduty.warzone",
-    "com.gamedevltd.destinywarfare",
-    "com.pikpok.dr2.play",
-    "com.CarXTech.highWay",
-    "com.nekki.shadowfight3",
-    "com.nekki.shadowfightarena",
-    "com.gameloft.android.ANMP.GloftA8HM",
-    "com.nekki.shadowfight",
-    "com.ea.game.nfs14_row",
-    "com.ea.games.r3_row",
-    "com.supercell.squad",
-    "com.blitzteam.battleprime",
-    "com.tencent.tmgp.gnyx",
-    "com.garena.game.df"
-  ],
-  "PACKAGES_REDMAGIC_9_PRO_DEVICE": {
-    "BRAND": "nubia",
-    "DEVICE": "REDMAGIC 9 Pro",
-    "MANUFACTURER": "ZTE",
-    "MODEL": "NX769J",
-    "FINGERPRINT": "nubia/NX769J/NX769J:14/UKQ1.230917.001/20240813.173312:user/release-keys",
-    "PRODUCT": "NX769J"
-  },
-  "PACKAGES_XIAOMI_11T_PRO": [
-    "com.levelinfinite.hotta.gp",
-    "com.supercell.clashofclans",
-    "com.vng.mlbbvn"
-  ],
-  "PACKAGES_XIAOMI_11T_PRO_DEVICE": {
-    "BRAND": "Xiaomi",
-    "DEVICE": "Xiaomi 11T Pro",
-    "MANUFACTURER": "Xiaomi",
-    "MODEL": "2107113SG",
-    "FINGERPRINT": "Xiaomi/2107113SI/Mi 11T Pro:13/RKQ1.211001.001/20230410:user/release-keys",
-    "PRODUCT": "2107113SG"
-  },
-  "PACKAGES_PIXEL_9_PRO": [
-    "com.kakaogames.ares",
-    "com.miHoYo.GenshinImpact",
-    "com.pearlabyss.blackdesertm.gl",
-    "com.miHoYo.Yuanshen",
-    "com.dts.freefireth",
-    "com.dts.freefiremax",
-    "com.nintendo.zaka"
-  ],
-  "PACKAGES_PIXEL_9_PRO_DEVICE": {
-    "BRAND": "google",
-    "DEVICE": "caiman",
-    "MANUFACTURER": "Google",
-    "MODEL": "Pixel 9 Pro",
-    "FINGERPRINT": "google/caiman/caiman:14/AD1A.240530.047/12093554:user/release-keys",
-    "PRODUCT": "caiman"
   }
 }

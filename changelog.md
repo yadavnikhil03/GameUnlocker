@@ -1,44 +1,27 @@
-# Changelog
+# GameUnlocker Zygisk Module
+#### **Support & Issues**:
+- https://github.com/yadavnikhil03/GameUnlocker/issues
+---
 
-## v2.1.0 (2026-06-11)
+## v2.1.0-pre.1
+### A Complete Reimagining
+*   **Native WebUI:** The entire interface was rebuilt from the ground up to support modern MMRL and KernelSU standards. We completely dropped the legacy `action.sh` and CGI-BIN web server. It now loads instantly with zero background daemons.
+*   **Native Root JS Integration:** Replaced hacky Java compilation (`AppList.java`) with lightning-fast native `pm list packages` fetching using KSU/MMRL root JavaScript execution (`ksu.exec()`).
+*   **C++ Hooking Engine Overhaul:** Fixed a critical architectural flaw that previously caused games to crash (SIGSEGV) when Zygisk unmapped our module. The injection is now 100% memory-safe and persistent for the lifetime of the game.
+*   **Dynamic Routing Rules:** The configuration engine was completely rewritten. It now supports a scalable array of `routing_rules` (exact, prefix, wildcard) with an O(1) performance lookup cache for lightning-fast matching.
+*   **Plugin-Friendly Hooks:** Decoupled the monolithic C++ code into modular `IHook` plugins (like `GpuHook`), allowing effortless expansion of new spoofing logic in the future.
 
-### Added
-- Multi-device profile spoofing (Samsung S24 Ultra, RedMagic 9 Pro, Xiaomi 11T Pro, Pixel 9 Pro)
-- 50+ new game packages out of the box
-- Dynamic per-app device spoofing in Zygisk module
-- CPU spoof unmount support for banking app safety
-- Remote config update via Action button
-- Root solution detection (Magisk/KernelSU/APatch)
-- Zygisk implementation detection (Zygisk Next/ReZygisk/NeoZygisk)
-- Game removal from WebUI
-- Multi-profile game list display in WebUI
-- Clean uninstall script
-- SELinux context fix on boot
+### Simpler, Safer Spoofing
+*   **Clean Zygisk Integration:** Removed all global stack-allocations that could potentially leak. Hook states are now carefully managed on the heap, and PLT hook commitment is correctly handled.
+*   **Legacy Cleanup:** Removed all deprecated scripts, significantly reducing the final module size and install complexity.
 
-### Fixed
-- CPU spoof persisting after game exit (banking app risk)
-- SELinux denial on config.json read
-- No cleanup on module uninstall
-
-### Changed
-- Config format now supports multiple device profiles per game
-- Action button now offers config update before launching WebUI
+### Note
+*   This is a massive overhaul to stabilize the module for production use. Please report anything unexpected in the GitHub issues.
 
 ---
 
-## v2.0.6-pre.1
-
-### Added
-- Initial Zygisk C++ implementation
-- Samsung S24 Ultra device spoofing
-- WebUI for game management
-- Bug report with auto-attached logs
-- Smart thermal management
-- CPU info spoofing via mount bind
-
-### Supported Games
-- PUBG Mobile / BGMI variants
-- Wild Rift
-- Valorant Mobile
-- Fortnite (CPU spoof)
-- Apex Legends Mobile (CPU spoof)
+## v2.0.5
+### Improvements
+*   Initial Zygisk C++ implementation ported over from standard shell scripts.
+*   Introduced Samsung S24 Ultra device spoofing profile.
+*   Added an experimental WebUI for game management.

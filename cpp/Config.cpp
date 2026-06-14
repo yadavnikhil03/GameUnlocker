@@ -1,0 +1,134 @@
+#include "Config.hpp"
+#include "raii.hpp"
+#include "logger.hpp"
+#include <nlohmann/json.hpp>
+#include <fcntl.h>
+#include <cstring>
+#include <vector>
+
+using json = nlohmann::json;
+
+namespace gameunlocker {
+
+ConfigManager::ConfigManager(const Context& ctx) : ctx_(ctx) {}
+
+bool ConfigManager::load() {
+    int dirfd = ctx_.getModuleDirFd();
+    if (dirfd < 0) return false;
+
+    FdWrapper fd(openat(dirfd, "config.json", O_RDONLY));
+    if (!fd.isValid()) return false;
+
+    char buffer[16384]; 
+    memset(buffer, 0, sizeof(buffer));
+    ssize_t bytes = read(fd.get(), buffer, sizeof(buffer) - 1);
+
+    if (bytes <= 0) return false;
+
+    std::string raw(buffer, static_cast<size_t>(bytes));
+    return parseJson(raw);
+}
+
+bool ConfigManager::parseJson(const std::string& jsonString) {
+    try {
+        json j = json::parse(jsonString);
+
+        if (j.contains("profiles") && j["profiles"].is_object()) {
+            for (auto& [key, val] : j["profiles"].items()) {
+                if (!val.is_object()) continue;
+
+                DeviceProfile profile;
+                if (!val.contains("MANUFACTURER") || !val.contains("BRAND") || 
+                    !val.contains("MODEL") || !val.contains("DEVICE") || 
+                    !val.contains("PRODUCT") || !val.contains("FINGERPRINT")) {
+                    continue;
+                }
+
+                profile.manufacturer = val["MANUFACTURER"].get<std::string>();
+                profile.brand = val["BRAND"].get<std::string>();
+                profile.model = val["MODEL"].get<std::string>();
+                profile.device = val["DEVICE"].get<std::string>();
+                profile.product = val["PRODUCT"].get<std::string>();
+                profile.fingerprint = val["FINGERPRINT"].get<std::string>();
+
+                if (val.contains("BRAND_FOR_DEVICE")) {
+                    profile.brand_for_device = val["BRAND_FOR_DEVICE"].get<std::string>();
+                }
+
+                config_.profiles[key] = profile;
+            }
+        }
+
+        if (j.contains("routing_rules") && j["routing_rules"].is_array()) {
+            for (const auto& ruleJson : j["routing_rules"]) {
+                if (!ruleJson.is_object() || !ruleJson.contains("type") || 
+                    !ruleJson.contains("pattern") || !ruleJson.contains("profile") || 
+                    !ruleJson.contains("priority")) {
+                    continue;
+                }
+
+                RoutingRule rule;
+                std::string typeStr = ruleJson["type"].get<std::string>();
+                
+                if (typeStr == "exact") rule.type = MatchType::EXACT;
+                else if (typeStr == "prefix") rule.type = MatchType::PREFIX;
+                else if (typeStr == "suffix") rule.type = MatchType::SUFFIX;
+                else if (typeStr == "wildcard") rule.type = MatchType::WILDCARD;
+                else continue;
+
+                rule.pattern = ruleJson["pattern"].get<std::string>();
+                rule.profile = ruleJson["profile"].get<std::string>();
+                rule.priority = ruleJson["priority"].get<int>();
+
+                routingEngine_.addRule(rule);
+            }
+            routingEngine_.sortRules();
+        }
+
+        if (j.contains("cpu_spoof") && j["cpu_spoof"].is_object()) {
+            if (j["cpu_spoof"].contains("with_cpu") && j["cpu_spoof"]["with_cpu"].is_array()) {
+                for (const auto& pkg : j["cpu_spoof"]["with_cpu"]) {
+                    if (pkg.is_string()) {
+                        config_.cpuSpoofApps.insert(pkg.get<std::string>());
+                    }
+                }
+            }
+            if (j["cpu_spoof"].contains("blacklist") && j["cpu_spoof"]["blacklist"].is_array()) {
+                for (const auto& pkg : j["cpu_spoof"]["blacklist"]) {
+                    if (pkg.is_string()) {
+                        config_.blacklistedApps.insert(pkg.get<std::string>());
+                    }
+                }
+            }
+        }
+
+        return true;
+    } catch (const json::parse_error& e) {
+        LOGE("Failed to parse config.json: %s", e.what());
+        return false;
+    } catch (const json::type_error& e) {
+        LOGE("Type error in config.json: %s", e.what());
+        return false;
+    }
+}
+
+bool ConfigManager::isAppBlacklisted(const std::string& appName) const {
+    return config_.blacklistedApps.find(appName) != config_.blacklistedApps.end();
+}
+
+bool ConfigManager::isCpuSpoofApp(const std::string& appName) const {
+    return config_.cpuSpoofApps.find(appName) != config_.cpuSpoofApps.end();
+}
+
+std::optional<DeviceProfile> ConfigManager::getProfileForApp(const std::string& appName) {
+    auto profileNameOpt = routingEngine_.resolveProfile(appName);
+    if (profileNameOpt.has_value()) {
+        auto profileIt = config_.profiles.find(profileNameOpt.value());
+        if (profileIt != config_.profiles.end()) {
+            return profileIt->second;
+        }
+    }
+    return std::nullopt;
+}
+
+} // namespace gameunlocker
