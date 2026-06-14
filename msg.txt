@@ -1,1 +1,1 @@
-feat: CI/CD release workflow and AppList utility
+refactor(core): Implement dynamic HookManager, Spoofer, and Routing Engine

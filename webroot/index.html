@@ -352,10 +352,10 @@
         
         <div class="select-wrapper">
             <select id="profileSelect">
-                <option value="PACKAGES_SAMSUNG_S24_ULTRA">📱 Samsung Galaxy S24 Ultra (Best)</option>
-                <option value="PACKAGES_REDMAGIC_9_PRO">🎮 RedMagic 9 Pro (COD / Brawl Stars)</option>
-                <option value="PACKAGES_XIAOMI_11T_PRO">🔥 Xiaomi 11T Pro</option>
-                <option value="PACKAGES_PIXEL_9_PRO">📸 Google Pixel 9 Pro (Genshin)</option>
+                <option value="SAMSUNG_S24_ULTRA">📱 Samsung Galaxy S24 Ultra (Best)</option>
+                <option value="REDMAGIC_9_PRO">🎮 RedMagic 9 Pro (COD / Brawl Stars)</option>
+                <option value="XIAOMI_11T_PRO">🔥 Xiaomi 11T Pro</option>
+                <option value="PIXEL_9_PRO">📸 Google Pixel 9 Pro (Genshin)</option>
                 <option value="cpu_spoof_with_cpu">⚡ CPU Spoof Only (Fortnite/Apex)</option>
             </select>
         </div>
@@ -376,7 +376,7 @@
 
     <div class="glass-card">
         <div class="section-title">
-            🛡️ Currently Active Games
+            🛡️ Currently Active Routing Rules
         </div>
         
         <div id="configView">
@@ -395,37 +395,67 @@
     <script>
         const configPath = "/data/adb/modules/Game-Unlocker/config.json";
 
-        async function execShell(cmd) {
-            if (typeof ksu !== 'undefined' && ksu.exec) {
-                return await ksu.exec(cmd);
-            } else if (typeof apatch !== 'undefined' && apatch.exec) {
-                return await apatch.exec(cmd);
-            } else if (typeof mmrl !== 'undefined') {
-                return { errno: 0, stdout: "MMRL_MOCK", stderr: "" };
-            }
-            return null; 
+        function execShell(cmd) {
+            return new Promise(resolve => {
+                const cb = `exec_cb_${Date.now()}_${Math.floor(Math.random() * 1e6)}`;
+                window[cb] = (errno, stdout, stderr) => {
+                    delete window[cb];
+                    resolve({ errno: errno, stdout: stdout || "", stderr: stderr || "" });
+                };
+                
+                try {
+                    if (typeof mmrl !== 'undefined' && mmrl.exec) {
+                        // Some versions of MMRL support promise or callback
+                        let res = mmrl.exec(cmd, '{}', cb);
+                        if (res instanceof Promise) {
+                            res.then(r => { delete window[cb]; resolve(r); }).catch(e => { delete window[cb]; resolve({errno:1, stdout:"", stderr:String(e)}); });
+                        }
+                    } else if (typeof ksu !== 'undefined' && ksu.exec) {
+                        ksu.exec(cmd, '{}', cb);
+                    } else if (typeof apatch !== 'undefined' && apatch.exec) {
+                        apatch.exec(cmd, '{}', cb);
+                    } else {
+                        delete window[cb];
+                        resolve({ errno: 1, stdout: "", stderr: "NATIVE_EXECUTION_UNAVAILABLE" });
+                    }
+                } catch(e) {
+                    delete window[cb];
+                    resolve({ errno: -1, stdout: "", stderr: String(e) });
+                }
+            });
         }
 
         function isAppConfigured(pkg) {
             const cfg = window.currentConfig;
             if (!cfg) return false;
             let allConfigured = [];
-            if(cfg.PACKAGES_SAMSUNG_S24_ULTRA) allConfigured.push(...cfg.PACKAGES_SAMSUNG_S24_ULTRA);
-            if(cfg.PACKAGES_REDMAGIC_9_PRO) allConfigured.push(...cfg.PACKAGES_REDMAGIC_9_PRO);
-            if(cfg.PACKAGES_XIAOMI_11T_PRO) allConfigured.push(...cfg.PACKAGES_XIAOMI_11T_PRO);
-            if(cfg.PACKAGES_PIXEL_9_PRO) allConfigured.push(...cfg.PACKAGES_PIXEL_9_PRO);
-            if(cfg.cpu_spoof && cfg.cpu_spoof.with_cpu) allConfigured.push(...cfg.cpu_spoof.with_cpu);
+            
+            if(cfg.routing_rules) {
+                cfg.routing_rules.forEach(rule => {
+                    allConfigured.push(rule.pattern);
+                });
+            }
+
+            if(cfg.cpu_spoof && cfg.cpu_spoof.with_cpu) {
+                allConfigured.push(...cfg.cpu_spoof.with_cpu);
+            }
             return allConfigured.includes(pkg);
         }
 
-        function renderProfileGroup(title, packages) {
-            if (!packages || packages.length === 0) return '';
+        function renderProfileGroup(title, items, isCpuSpoof = false) {
+            if (!items || items.length === 0) return '';
             let html = `<div class="profile-group"><div class="profile-name">${title}</div>`;
-            packages.forEach(pkg => {
+            items.forEach(item => {
+                let pkg = isCpuSpoof ? item : item.pattern;
+                let display = isCpuSpoof ? pkg : `${item.type.toUpperCase()}: ${pkg} → ${item.profile}`;
+                
+                // For json deletion, pass exactly what to remove
+                let deleteArg = isCpuSpoof ? pkg : pkg;
+                
                 html += `
                     <div class="active-pkg-item">
-                        <span class="active-pkg-text">${pkg}</span>
-                        <button class="btn-remove" onclick="removeGame('${pkg}')">
+                        <span class="active-pkg-text">${display}</span>
+                        <button class="btn-remove" onclick="removeGame('${deleteArg}', ${isCpuSpoof})">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                         </button>
                     </div>`;
@@ -440,29 +470,25 @@
                 let stdout = "";
                 let shell = await execShell(`cat ${configPath}`);
                 
-                if (shell !== null) {
-                    if (shell.errno === 0) stdout = shell.stdout;
+                if (shell && shell.errno === 0) {
+                    stdout = shell.stdout;
                 } else {
-                    try {
-                        let res = await fetch('/cgi-bin/api.sh?action=get_config');
-                        stdout = await res.text();
-                    } catch (fetchErr) {
-                        stdout = '{"PACKAGES_SAMSUNG_S24_ULTRA":["com.example.game"]}';
-                    }
+                    view.innerHTML = "<div style='color: var(--danger); text-align:center;'>Configuration file not found. Ensure module is installed and root access is granted.</div>";
+                    return;
                 }
 
-                if (stdout && stdout !== "MMRL_MOCK") {
+                if (stdout) {
                     const cfg = JSON.parse(stdout);
                     window.currentConfig = cfg;
                     
                     let html = "";
-                    html += renderProfileGroup("Samsung S24 Ultra", cfg.PACKAGES_SAMSUNG_S24_ULTRA);
-                    html += renderProfileGroup("RedMagic 9 Pro", cfg.PACKAGES_REDMAGIC_9_PRO);
-                    html += renderProfileGroup("Xiaomi 11T Pro", cfg.PACKAGES_XIAOMI_11T_PRO);
-                    html += renderProfileGroup("Pixel 9 Pro", cfg.PACKAGES_PIXEL_9_PRO);
                     
-                    if(cfg.cpu_spoof && cfg.cpu_spoof.with_cpu) {
-                        html += renderProfileGroup("CPU Spoof Only", cfg.cpu_spoof.with_cpu);
+                    if(cfg.routing_rules && cfg.routing_rules.length > 0) {
+                        html += renderProfileGroup("Dynamic Routing Rules", cfg.routing_rules, false);
+                    }
+                    
+                    if(cfg.cpu_spoof && cfg.cpu_spoof.with_cpu && cfg.cpu_spoof.with_cpu.length > 0) {
+                        html += renderProfileGroup("CPU Spoof Only", cfg.cpu_spoof.with_cpu, true);
                     }
 
                     view.innerHTML = html || "<div style='text-align:center; padding: 20px; color: var(--text-muted);'>No games configured yet.</div>";
@@ -470,11 +496,9 @@
                     if (window.installedAppsList) {
                         renderAppList();
                     }
-                } else {
-                    view.innerHTML = "<div style='color: var(--danger); text-align:center;'>Configuration file not found. Ensure module is installed.</div>";
                 }
             } catch (e) {
-                view.innerHTML = "<div style='color: var(--danger); text-align:center;'>Failed to parse configuration.</div>";
+                view.innerHTML = "<div style='color: var(--danger); text-align:center;'>Failed to parse configuration. " + e + "</div>";
             }
         }
 
@@ -484,16 +508,22 @@
             
             let html = "";
             let count = 0;
-            window.installedAppsList.forEach(app => {
-                if (!isAppConfigured(app.package)) {
+            window.installedAppsList.forEach(pkg => {
+                if (!isAppConfigured(pkg)) {
+                    // Try to generate a clean name from the package name since getting real names is slow
+                    let parts = pkg.split('.');
+                    let friendlyName = parts[parts.length - 1];
+                    if (friendlyName.length < 3 && parts.length > 1) friendlyName = parts[parts.length - 2];
+                    friendlyName = friendlyName.charAt(0).toUpperCase() + friendlyName.slice(1);
+
                     html += `
                         <label class="app-row">
                             <div class="app-info">
-                                <div class="app-name">${app.name}</div>
-                                <div class="app-pkg">${app.package}</div>
+                                <div class="app-name">${friendlyName}</div>
+                                <div class="app-pkg">${pkg}</div>
                             </div>
                             <div class="toggle-switch">
-                                <input type="checkbox" class="app-checkbox" value="${app.package}">
+                                <input type="checkbox" class="app-checkbox" value="${pkg}">
                                 <span class="slider"></span>
                             </div>
                         </label>`;
@@ -502,49 +532,30 @@
             });
             
             if (count === 0) {
-                html = `<div style="text-align: center; padding: 30px 20px; color: var(--success); font-weight: 500;">✨ All installed apps are already configured!</div>`;
+                html = `<div style="text-align: center; padding: 30px 20px; color: var(--success); font-weight: 500;">✨ All installed user apps are already configured!</div>`;
             }
             container.innerHTML = html;
         }
 
         async function fetchApps() {
             try {
-                let appsObj = null;
-                // Trigger async fetch so KSU exec returns instantly
-                let triggerShell = await execShell('export QUERY_STRING="action=get_apps_async"; sh /data/adb/modules/Game-Unlocker/webroot/cgi-bin/api.sh');
-                
-                if (triggerShell !== null && triggerShell.errno === 0 && triggerShell.stdout !== "MMRL_MOCK") {
-                    let retries = 20; // Wait up to 20 seconds
-                    while (retries > 0) {
-                        await new Promise(r => setTimeout(r, 1000));
-                        let pollShell = await execShell('cat /data/local/tmp/gameunlocker_apps.json');
-                        if (pollShell && pollShell.errno === 0 && pollShell.stdout.includes('"success"')) {
-                            appsObj = JSON.parse(pollShell.stdout);
-                            break;
-                        }
-                        retries--;
-                    }
-                } else {
-                    let res = await fetch('/cgi-bin/api.sh?action=get_apps_async');
-                    if (res.ok) {
-                        // For browser fallback, we just wait a bit and fetch directly since we can't poll shell
-                        await new Promise(r => setTimeout(r, 3000));
-                        let pollRes = await fetch('/data/local/tmp/gameunlocker_apps.json');
-                        if (pollRes.ok) {
-                            appsObj = await pollRes.json();
-                        }
-                    }
-                }
-
-                if (appsObj && appsObj.success) {
-                    window.installedAppsList = appsObj.apps;
-                    window.installedAppsList.sort((a, b) => a.name.localeCompare(b.name, undefined, {sensitivity: 'base'}));
+                // Fetch non-system third-party packages natively without using pipes (|), 
+                // as some KSU/MMRL bridges hang on compound commands.
+                let shell = await execShell('pm list packages -3');
+                if (shell && shell.errno === 0 && shell.stdout) {
+                    let rawApps = shell.stdout.split('\n')
+                        .map(s => s.trim())
+                        .filter(s => s.startsWith('package:'))
+                        .map(s => s.replace('package:', '').trim())
+                        .filter(s => s.length > 0);
+                        
+                    window.installedAppsList = rawApps.sort();
                     renderAppList();
                 } else {
-                    document.getElementById('appListContainer').innerHTML = "<div style='padding: 20px; text-align: center; color: var(--danger);'>Failed to fetch installed apps. Ensure module is installed properly.</div>";
+                    document.getElementById('appListContainer').innerHTML = "<div style='padding: 20px; text-align: center; color: var(--danger);'>Failed to fetch installed apps natively. Grant root access.</div>";
                 }
             } catch (e) {
-                document.getElementById('appListContainer').innerHTML = "<div style='padding: 20px; text-align: center; color: var(--danger);'>Error communicating with backend.</div>";
+                document.getElementById('appListContainer').innerHTML = "<div style='padding: 20px; text-align: center; color: var(--danger);'>Error executing package list.</div>";
             }
         }
 
@@ -558,55 +569,70 @@
             }
 
             let successCount = 0;
-            for (let checkbox of checkboxes) {
-                const pkg = checkbox.value;
-                try {
-                    let shell = null;
-                    if(profile === "cpu_spoof_with_cpu") {
-                        shell = await execShell(`sed -i '/"with_cpu": \\\[/a \\    "${pkg}",' ${configPath}`);
-                    } else {
-                        shell = await execShell(`sed -i 's/"${profile}": \\\[/"${profile}": \\\[\\n    "${pkg}",/' ${configPath}`);
-                    }
-                    
-                    let success = false;
-                    if (shell !== null) {
-                        success = (shell.errno === 0);
-                    } else {
-                        let actualProfile = profile === "cpu_spoof_with_cpu" ? "with_cpu" : profile;
-                        let res = await fetch(`/cgi-bin/api.sh?action=add_game&pkg=${pkg}&profile=${actualProfile}`);
-                        let data = await res.json();
-                        success = data.success;
-                    }
-                    if (success || shell?.stdout === "MMRL_MOCK") successCount++;
-                } catch (e) {}
-            }
+            
+            // We use jq or manual json parsing?
+            // Actually, sed is brittle for JSON. We can just update the JSON in memory and echo it back!
+            try {
+                let cfg = window.currentConfig;
+                if (!cfg.routing_rules) cfg.routing_rules = [];
+                if (!cfg.cpu_spoof) cfg.cpu_spoof = { blacklist: [], with_cpu: [] };
+                if (!cfg.cpu_spoof.with_cpu) cfg.cpu_spoof.with_cpu = [];
 
-            if (successCount > 0) {
-                alert(`✅ Successfully injected ${successCount} apps!\nPlease reboot your device to apply changes.`);
-                loadConfig();
-            } else {
-                alert('❌ Failed to modify configuration. Make sure you have root access.');
+                for (let checkbox of checkboxes) {
+                    const pkg = checkbox.value;
+                    if(profile === "cpu_spoof_with_cpu") {
+                        if (!cfg.cpu_spoof.with_cpu.includes(pkg)) {
+                            cfg.cpu_spoof.with_cpu.push(pkg);
+                        }
+                    } else {
+                        // Check if rule already exists
+                        let exists = cfg.routing_rules.find(r => r.pattern === pkg);
+                        if (!exists) {
+                            cfg.routing_rules.push({
+                                type: "exact",
+                                pattern: pkg,
+                                profile: profile,
+                                priority: 50
+                            });
+                        }
+                    }
+                    successCount++;
+                }
+
+                // Write the JSON back to the file using a safe heredoc
+                let jsonStr = JSON.stringify(cfg, null, 2).replace(/'/g, "'\\''");
+                let writeCmd = `cat << 'EOF' > ${configPath}\n${JSON.stringify(cfg, null, 2)}\nEOF\n`;
+                let shell = await execShell(writeCmd);
+
+                if (shell && shell.errno === 0) {
+                    alert(`✅ Successfully injected ${successCount} apps!\nPlease reboot your device to apply changes.`);
+                    loadConfig();
+                } else {
+                    alert('❌ Failed to write configuration. Make sure you have root access.');
+                }
+            } catch (e) {
+                alert('❌ Error during configuration update: ' + e);
             }
         }
 
-        async function removeGame(pkg) {
+        async function removeGame(pkg, isCpuSpoof) {
             if(!confirm(`Are you sure you want to remove ${pkg} from the active configuration?`)) return;
             try {
-                let success = false;
-                let shell = await execShell(`sed -i '/"${pkg}"/d' ${configPath}`);
+                let cfg = window.currentConfig;
                 
-                if (shell !== null) {
-                    success = (shell.errno === 0);
+                if (isCpuSpoof) {
+                    cfg.cpu_spoof.with_cpu = cfg.cpu_spoof.with_cpu.filter(p => p !== pkg);
                 } else {
-                    let res = await fetch('/cgi-bin/api.sh?action=remove_game&pkg=' + pkg);
-                    let data = await res.json();
-                    success = data.success;
+                    cfg.routing_rules = cfg.routing_rules.filter(r => r.pattern !== pkg);
                 }
 
-                if (success || shell?.stdout === "MMRL_MOCK") {
+                let writeCmd = `cat << 'EOF' > ${configPath}\n${JSON.stringify(cfg, null, 2)}\nEOF\n`;
+                let shell = await execShell(writeCmd);
+
+                if (shell && shell.errno === 0) {
                     loadConfig();
                 } else {
-                    alert('❌ Failed to remove game.');
+                    alert('❌ Failed to remove game from config.');
                 }
             } catch (e) {
                 alert('❌ API error occurred.');
@@ -630,22 +656,6 @@
                     let logShell = await execShell('logcat -d -s GameUnlocker -t 20');
                     if (logShell && logShell.errno === 0 && logShell.stdout.trim() !== "") {
                         logSnippet = logShell.stdout.trim();
-                    }
-                } else {
-                    let resInfo = await fetch('/cgi-bin/api.sh?action=get_device_info');
-                    if (resInfo.ok) {
-                        let dataInfo = await resInfo.json();
-                        if (dataInfo.success) {
-                            model = dataInfo.model;
-                            android = dataInfo.android;
-                        }
-                    }
-                    let resLogs = await fetch('/cgi-bin/api.sh?action=generate_logs');
-                    if (resLogs.ok) {
-                        let dataLogs = await resLogs.json();
-                        if (dataLogs.success) {
-                            logSnippet = atob(dataLogs.snippet);
-                        }
                     }
                 }
             } catch (e) {}
