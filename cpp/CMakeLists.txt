@@ -13,6 +13,7 @@ add_library(gameunlocker SHARED
             Companion.cpp
             Spoofer.cpp
             GpuHook.cpp
+            SysPropHook.cpp
             HookManager.cpp
             RoutingEngine.cpp)
 

@@ -4,6 +4,7 @@
 #include "Companion.hpp"
 #include "Spoofer.hpp"
 #include "HookManager.hpp"
+#include "SysPropHook.hpp"
 #include "logger.hpp"
 #include "raii.hpp"
 
@@ -72,6 +73,7 @@ public:
                 spoofer.applyDeviceSpoof(profileOpt.value());
             }
 
+            SysPropHook::setProfile(profileOpt);
             hookManager_->initialize(profileOpt);
             hookManager_->enableHooks();
 
