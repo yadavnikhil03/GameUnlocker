@@ -338,7 +338,7 @@
             margin-top: 8px;
         }
         .active-pkg-item {
-            background-color: var(--background);
+            background-color: var(--card);
             border: 1px solid var(--border);
             padding: 12px 16px;
             border-radius: calc(var(--radius) - 2px);
@@ -346,17 +346,60 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-            font-size: 12px;
             animation: fadeIn 0.3s ease;
+            transition: border-color 0.2s, background-color 0.2s;
         }
         
-        .active-pkg-text {
+        .active-pkg-item:hover {
+            border-color: var(--ring);
+            background-color: var(--muted);
+        }
+
+        .pkg-left {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            overflow: hidden;
+            padding-right: 12px;
+        }
+        .pkg-app-name {
+            font-size: 14px;
+            font-weight: 600;
             color: var(--foreground);
+            white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+        .pkg-id {
+            font-size: 11px;
+            color: var(--muted-foreground);
             white-space: nowrap;
-            padding-right: 12px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .pkg-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+        .pkg-badge {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .badge-profile {
+            background-color: rgba(74, 222, 128, 0.15);
+            color: #4ade80;
+            border: 1px solid rgba(74, 222, 128, 0.2);
+        }
+        .badge-cpu {
+            background-color: rgba(96, 165, 250, 0.15);
+            color: #60a5fa;
+            border: 1px solid rgba(96, 165, 250, 0.2);
         }
 
         .btn-remove {
@@ -589,21 +632,47 @@
             return allConfigured.includes(pkg);
         }
 
+        function extractAppName(pkg) {
+            let parts = pkg.split('.');
+            let friendlyName = parts[parts.length - 1];
+            if (friendlyName.length < 3 && parts.length > 1) friendlyName = parts[parts.length - 2];
+            return friendlyName.charAt(0).toUpperCase() + friendlyName.slice(1);
+        }
+
+        function getProfileFriendlyName(profileId) {
+            const map = {
+                "SAMSUNG_S24_ULTRA": "S24 Ultra",
+                "REDMAGIC_9_PRO": "RedMagic 9",
+                "XIAOMI_11T_PRO": "Xiaomi 11T",
+                "PIXEL_9_PRO": "Pixel 9 Pro",
+                "cpu_spoof_with_cpu": "CPU Only"
+            };
+            return map[profileId] || profileId;
+        }
+
         function renderProfileGroup(title, items, isCpuSpoof = false) {
             if (!items || items.length === 0) return '';
             let html = `<div class="profile-group"><div class="profile-name">${title}</div>`;
             items.forEach(item => {
                 let pkg = isCpuSpoof ? item : item.pattern;
-                let display = isCpuSpoof ? pkg : `${item.type.toUpperCase()}: ${pkg} → ${item.profile}`;
+                let appName = extractAppName(pkg);
+                let badgeText = isCpuSpoof ? "CPU SPOOF" : getProfileFriendlyName(item.profile);
+                let badgeClass = isCpuSpoof ? "badge-cpu" : "badge-profile";
                 
                 let deleteArg = pkg;
                 
                 html += `
                     <div class="active-pkg-item">
-                        <span class="active-pkg-text">${display}</span>
-                        <button class="btn-remove" onclick="removeGame('${deleteArg}', ${isCpuSpoof})">
-                            <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                        </button>
+                        <div class="pkg-left">
+                            <div class="pkg-app-name">${appName}</div>
+                            <div class="pkg-id">${pkg}</div>
+                        </div>
+                        <div class="pkg-right">
+                            <span class="pkg-badge ${badgeClass}">${badgeText}</span>
+                            <button class="btn-remove" onclick="removeGame('${deleteArg}', ${isCpuSpoof})" title="Remove">
+                                <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                            </button>
+                        </div>
                     </div>`;
             });
             html += `</div>`;
@@ -656,10 +725,7 @@
             let count = 0;
             window.installedAppsList.forEach(pkg => {
                 if (!isAppConfigured(pkg)) {
-                    let parts = pkg.split('.');
-                    let friendlyName = parts[parts.length - 1];
-                    if (friendlyName.length < 3 && parts.length > 1) friendlyName = parts[parts.length - 2];
-                    friendlyName = friendlyName.charAt(0).toUpperCase() + friendlyName.slice(1);
+                    let friendlyName = extractAppName(pkg);
 
                     html += `
                         <label class="app-row">
@@ -686,7 +752,7 @@
             try {
                 let shell = await execShell('pm list packages -3');
                 if (shell && shell.errno === 0 && shell.stdout) {
-                    let rawApps = shell.stdout.split('\\n')
+                    let rawApps = shell.stdout.split('\n')
                         .map(s => s.trim())
                         .filter(s => s.startsWith('package:'))
                         .map(s => s.replace('package:', '').trim())
@@ -816,26 +882,15 @@
 
                 body.innerHTML = `<div style="display:flex; align-items:center; gap:8px;"><div class="loader" style="margin:0; width:16px; height:16px;"></div> Saving logs to Downloads...</div>`;
 
-                // Export logcat
-                await execShell('logcat -d -s GameUnlocker > /sdcard/Download/GameUnlocker_Logs.txt');
+                let logShell = await execShell('logcat -d -s GameUnlocker');
+                if (logShell && logShell.stdout && logShell.stdout.trim() !== "") {
+                    logSnippet = logShell.stdout.trim();
+                } else {
+                    logSnippet = "Logcat is empty. Make sure module is enabled and a game has been launched.";
+                }
                 
-                // Verify log save using ls
-                let lsShell = await execShell('ls -lh /sdcard/Download/GameUnlocker_Logs.txt');
-                if (lsShell && lsShell.errno === 0) {
-                    logFileStatus = lsShell.stdout.trim();
-                } else {
-                    logFileStatus = "Failed to locate log file. Check storage permissions.";
-                }
+                logFileStatus = "Logs successfully generated inside the app.";
 
-                let fileShell = await execShell('cat /sdcard/Download/GameUnlocker_Logs.txt');
-                if (fileShell && fileShell.stdout && fileShell.stdout.trim() !== "") {
-                    logSnippet = fileShell.stdout.trim();
-                    if (logSnippet.length > 2500) {
-                        logSnippet = "... [Log truncated] ...\n" + logSnippet.substring(logSnippet.length - 2500);
-                    }
-                } else {
-                    logSnippet = "Logcat is empty. Make sure module is enabled.";
-                }
             } catch (e) {
                 logFileStatus = "Shell error: " + String(e);
             }
@@ -844,10 +899,7 @@
                               "**To Reproduce**\nSteps to reproduce the behavior:\n1. \n2. \n\n" +
                               "**Environment**\n- Device: " + model + "\n- OS: Android " + android + "\n\n" +
                               "**Logs & Configuration**\n" +
-                              "> **Important:** Please attach the full log file from `/sdcard/Download/GameUnlocker_Logs.txt` to this issue!\n\n" +
-                              "<details>\n<summary>GameUnlocker Execution Logs</summary>\n\n" +
-                              "```log\n" + logSnippet + "\n```\n" +
-                              "</details>\n\n" +
+                              "> **Important:** Please attach the `GameUnlocker_Logs.txt` file that was just downloaded to your device!\n\n" +
                               "<details>\n<summary>Module Configuration Dump</summary>\n\n" +
                               "```json\n" + configDump + "\n```\n" +
                               "</details>";
@@ -856,13 +908,33 @@
             
             body.innerHTML = `
                 <div style="color: var(--foreground); font-weight: 500; margin-bottom: 12px;">Diagnostics Complete!</div>
-                <div>A full log file has been exported to your Downloads folder:</div>
-                <div class="terminal-box">${logFileStatus}</div>
-                <div style="margin-top: 16px; font-weight: 500; color: #facc15;">⚠️ Please attach this text file manually when the GitHub issue page opens!</div>
+                <div style="font-size: 13px; color: var(--muted-foreground); margin-bottom: 8px;">Please copy the logs below and paste them into the GitHub issue manually:</div>
+                <textarea id="logOutputArea" class="terminal-box" style="width: 100%; height: 120px; resize: none; margin-bottom: 12px;" readonly>${logSnippet}</textarea>
+                <div style="display: flex; gap: 8px;">
+                    <button id="copyLogsBtn" class="btn btn-outline" style="flex: 1;" onclick="copyLogs()">
+                        <svg class="icon icon-sm" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                        Copy Logs
+                    </button>
+                </div>
             `;
             
             cancelBtn.style.display = 'none';
             proceedBtn.style.display = 'inline-flex';
+        }
+
+        function copyLogs() {
+            const txt = document.getElementById('logOutputArea');
+            const btn = document.getElementById('copyLogsBtn');
+            txt.select();
+            document.execCommand("copy");
+            btn.innerHTML = `<svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg> Copied!`;
+            btn.style.backgroundColor = "rgba(74, 222, 128, 0.15)";
+            btn.style.color = "#4ade80";
+            btn.style.borderColor = "rgba(74, 222, 128, 0.2)";
+            setTimeout(() => {
+                btn.innerHTML = `<svg class="icon icon-sm" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg> Copy Logs`;
+                btn.style = "flex: 1;";
+            }, 2000);
         }
 
         window.onload = () => {
