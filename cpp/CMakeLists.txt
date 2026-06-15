@@ -16,6 +16,8 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(bhook)
 
+target_compile_options(bytehook PRIVATE -Wno-error -Wno-declaration-after-statement -Wno-everything)
+
 add_library(gameunlocker SHARED
             main.cpp
             Config.cpp
