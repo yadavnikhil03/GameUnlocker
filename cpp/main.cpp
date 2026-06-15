@@ -45,7 +45,7 @@ public:
 
         Context ctx(api_, env_);
         CompanionManager companion(ctx);
-        hookManager_ = std::make_unique<HookManager>(ctx);
+        HookManager hookManager(ctx);
 
         if (ConfigManager::isAppBlacklisted(pkgStr)) {
             api_->setOption(zygisk::Option::DLCLOSE_MODULE_LIBRARY);
@@ -68,10 +68,10 @@ public:
             activeProfile_ = profileOpt;
 
             SysPropHook::setProfile(profileOpt);
-            hookManager_->initialize(profileOpt);
-            hookManager_->enableHooks();
+            hookManager.initialize(profileOpt);
+            hookManager.enableHooks();
 
-            if (hookManager_->hasActiveHooks()) {
+            if (hookManager.hasActiveHooks()) {
                 api_->pltHookCommit();
             } else {
                 api_->setOption(zygisk::Option::DLCLOSE_MODULE_LIBRARY);
@@ -95,7 +95,6 @@ public:
 private:
     zygisk::Api* api_ = nullptr;
     JNIEnv* env_ = nullptr;
-    std::unique_ptr<HookManager> hookManager_;
     std::optional<DeviceProfile> activeProfile_ = std::nullopt;
 };
 
