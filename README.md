@@ -31,8 +31,11 @@
 
 1. Download the latest `GameUnlocker-Zygisk.zip` from the [Releases](../../releases) page.
 	- Do **not** use GitHub "Download ZIP" source archives. They may not include compiled `zygisk/*.so` binaries.
-2. Make sure **Zygisk** is enabled in your Magisk / KernelSU app.
-3. Open **Magisk Manager** / **KernelSU**
+2. Install a standalone Zygisk implementation if you haven't already. GameUnlocker is **incompatible** with built-in Magisk Zygisk. You must use one of the following:
+   - [ZygiskNext](https://github.com/Dr-TSNG/ZygiskNext)
+   - [ReZygisk](https://github.com/PerformanC/ReZygisk)
+   - [NeoZygisk](https://github.com/RikkaApps/Riru/releases) (or similar)
+3. Open **Magisk Manager**, **KernelSU**, or **APatch**.
 4. Tap on **Modules** > **Install from storage**
 5. Select the downloaded `.zip` file.
 6. **Reboot** your device.
