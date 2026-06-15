@@ -22,6 +22,9 @@ public:
     void onLoad(zygisk::Api* api, JNIEnv* env) override {
         api_ = api;
         env_ = env;
+        
+        Context ctx(api_, env_);
+        ConfigManager::globalInit(ctx);
     }
 
     void preAppSpecialize(zygisk::AppSpecializeArgs* args) override {
@@ -41,23 +44,16 @@ public:
         }
 
         Context ctx(api_, env_);
-        ConfigManager config(ctx);
         CompanionManager companion(ctx);
-        Spoofer spoofer(ctx);
         hookManager_ = std::make_unique<HookManager>(ctx);
 
-        if (!config.load()) {
+        if (ConfigManager::isAppBlacklisted(pkgStr)) {
             api_->setOption(zygisk::Option::DLCLOSE_MODULE_LIBRARY);
             return;
         }
 
-        if (config.isAppBlacklisted(pkgStr)) {
-            api_->setOption(zygisk::Option::DLCLOSE_MODULE_LIBRARY);
-            return;
-        }
-
-        std::optional<DeviceProfile> profileOpt = config.getProfileForApp(pkgStr);
-        bool appNeedsCpuSpoof = config.isCpuSpoofApp(pkgStr);
+        std::optional<DeviceProfile> profileOpt = ConfigManager::getProfileForApp(pkgStr);
+        bool appNeedsCpuSpoof = ConfigManager::isCpuSpoofApp(pkgStr);
 
         if (profileOpt.has_value() || appNeedsCpuSpoof) {
             LOGI("GameUnlocker Target Detected: %s [Profile: %s]", pkgStr.c_str(), profileOpt.has_value() ? "Active" : "None");
@@ -69,9 +65,7 @@ public:
                 companion.unmountSpoof();
             }
         
-            if (profileOpt.has_value()) {
-                spoofer.applyDeviceSpoof(profileOpt.value());
-            }
+            activeProfile_ = profileOpt;
 
             SysPropHook::setProfile(profileOpt);
             hookManager_->initialize(profileOpt);
@@ -88,10 +82,21 @@ public:
         }
     }
 
+    void postAppSpecialize(const zygisk::AppSpecializeArgs* args) override {
+        if (!api_ || !env_) return;
+
+        if (activeProfile_.has_value()) {
+            Context ctx(api_, env_);
+            Spoofer spoofer(ctx);
+            spoofer.applyDeviceSpoof(activeProfile_.value());
+        }
+    }
+
 private:
     zygisk::Api* api_ = nullptr;
     JNIEnv* env_ = nullptr;
     std::unique_ptr<HookManager> hookManager_;
+    std::optional<DeviceProfile> activeProfile_ = std::nullopt;
 };
 
 } 

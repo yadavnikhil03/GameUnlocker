@@ -10,10 +10,14 @@ using json = nlohmann::json;
 
 namespace gameunlocker {
 
-ConfigManager::ConfigManager(const Context& ctx) : ctx_(ctx) {}
+GameUnlockerConfig ConfigManager::config_;
+RoutingEngine ConfigManager::routingEngine_;
+bool ConfigManager::isLoaded_ = false;
 
-bool ConfigManager::load() {
-    int dirfd = ctx_.getModuleDirFd();
+bool ConfigManager::globalInit(const Context& ctx) {
+    if (isLoaded_) return true;
+
+    int dirfd = ctx.getModuleDirFd();
     if (dirfd < 0) return false;
 
     FdWrapper fd(openat(dirfd, "config.json", O_RDONLY));
@@ -26,7 +30,8 @@ bool ConfigManager::load() {
     if (bytes <= 0) return false;
 
     std::string raw(buffer, static_cast<size_t>(bytes));
-    return parseJson(raw);
+    isLoaded_ = parseJson(raw);
+    return isLoaded_;
 }
 
 bool ConfigManager::parseJson(const std::string& jsonString) {
@@ -112,15 +117,18 @@ bool ConfigManager::parseJson(const std::string& jsonString) {
     }
 }
 
-bool ConfigManager::isAppBlacklisted(const std::string& appName) const {
+bool ConfigManager::isAppBlacklisted(const std::string& appName) {
+    if (!isLoaded_) return false;
     return config_.blacklistedApps.find(appName) != config_.blacklistedApps.end();
 }
 
-bool ConfigManager::isCpuSpoofApp(const std::string& appName) const {
+bool ConfigManager::isCpuSpoofApp(const std::string& appName) {
+    if (!isLoaded_) return false;
     return config_.cpuSpoofApps.find(appName) != config_.cpuSpoofApps.end();
 }
 
 std::optional<DeviceProfile> ConfigManager::getProfileForApp(const std::string& appName) {
+    if (!isLoaded_) return std::nullopt;
     auto profileNameOpt = routingEngine_.resolveProfile(appName);
     if (profileNameOpt.has_value()) {
         auto profileIt = config_.profiles.find(profileNameOpt.value());

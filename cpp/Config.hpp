@@ -10,22 +10,18 @@ namespace gameunlocker {
 
 class ConfigManager {
 public:
-    explicit ConfigManager(const Context& ctx);
+    static bool globalInit(const Context& ctx);
 
-    bool load();
-
-    bool isAppBlacklisted(const std::string& appName) const;
-
-    bool isCpuSpoofApp(const std::string& appName) const;
-
-    std::optional<DeviceProfile> getProfileForApp(const std::string& appName);
+    static bool isAppBlacklisted(const std::string& appName);
+    static bool isCpuSpoofApp(const std::string& appName);
+    static std::optional<DeviceProfile> getProfileForApp(const std::string& appName);
 
 private:
-    const Context& ctx_;
-    GameUnlockerConfig config_;
-    RoutingEngine routingEngine_;
+    static GameUnlockerConfig config_;
+    static RoutingEngine routingEngine_;
+    static bool isLoaded_;
 
-    bool parseJson(const std::string& jsonString);
+    static bool parseJson(const std::string& jsonString);
 };
 
 } // namespace gameunlocker
