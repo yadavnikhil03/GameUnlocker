@@ -89,7 +89,10 @@ static void my_system_property_read(const void* pi, unsigned* serial, char* name
 
 bool SysPropHook::onEnable(const Context& ctx) {
     zygisk::Api* api = ctx.getApi();
-    if (!api) return false;
+    if (!api) {
+        LOGE("SysPropHook::onEnable failed: zygisk API is null");
+        return false;
+    }
 
     api->pltHookRegister(".*", "__system_property_get", (void*)my_system_property_get, (void**)&orig_property_get);
     api->pltHookRegister(".*", "__system_property_read_callback", (void*)my_system_property_read_callback, (void**)&orig_property_read_callback);

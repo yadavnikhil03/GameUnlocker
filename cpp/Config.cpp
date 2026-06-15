@@ -18,16 +18,25 @@ bool ConfigManager::globalInit(const Context& ctx) {
     if (isLoaded_) return true;
 
     int dirfd = ctx.getModuleDirFd();
-    if (dirfd < 0) return false;
+    if (dirfd < 0) {
+        LOGE("ConfigManager::globalInit failed: module dir fd is invalid");
+        return false;
+    }
 
     FdWrapper fd(openat(dirfd, "config.json", O_RDONLY));
-    if (!fd.isValid()) return false;
+    if (!fd.isValid()) {
+        LOGE("ConfigManager::globalInit failed: could not open config.json");
+        return false;
+    }
 
     char buffer[16384]; 
     memset(buffer, 0, sizeof(buffer));
     ssize_t bytes = read(fd.get(), buffer, sizeof(buffer) - 1);
 
-    if (bytes <= 0) return false;
+    if (bytes <= 0) {
+        LOGE("ConfigManager::globalInit failed: config.json is empty or read error");
+        return false;
+    }
 
     std::string raw(buffer, static_cast<size_t>(bytes));
     isLoaded_ = parseJson(raw);
