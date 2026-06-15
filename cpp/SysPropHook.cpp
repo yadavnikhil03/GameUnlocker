@@ -47,6 +47,7 @@ static bool getSpoofedValue(const char* name, std::string& outValue) {
 static int my_system_property_get(const char* name, char* value) {
     std::string spoofedVal;
     if (getSpoofedValue(name, spoofedVal)) {
+        LOGD("SysPropHook: Intercepted __system_property_get for '%s', returning spoofed value '%s'", name, spoofedVal.c_str());
         strncpy(value, spoofedVal.c_str(), 91);
         value[91] = '\0';
         return (int)strlen(value);
@@ -62,6 +63,7 @@ static void my_read_cb(void* cookie, const char* name, const char* value, uint32
     
     std::string spoofedVal;
     if (getSpoofedValue(name, spoofedVal)) {
+        LOGD("SysPropHook: Intercepted read_cb for '%s', returning spoofed value '%s'", name, spoofedVal.c_str());
         tls_app_callback(cookie, name, spoofedVal.c_str(), serial);
         return;
     }
@@ -83,6 +85,7 @@ static void my_system_property_read(const void* pi, unsigned* serial, char* name
     
     std::string spoofedVal;
     if (getSpoofedValue(name, spoofedVal)) {
+        LOGD("SysPropHook: Intercepted __system_property_read for '%s', injecting spoofed value '%s'", name, spoofedVal.c_str());
         strncpy(value, spoofedVal.c_str(), 91);
         value[91] = '\0';
     }

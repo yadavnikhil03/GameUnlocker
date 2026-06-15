@@ -392,6 +392,73 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+        
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            width: 90%;
+            max-width: 400px;
+            padding: 24px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transform: scale(0.95);
+            transition: transform 0.2s ease;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-body {
+            font-size: 14px;
+            color: var(--muted-foreground);
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+
+        .terminal-box {
+            background-color: #000;
+            border-radius: 6px;
+            padding: 12px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #4ade80;
+            margin-top: 12px;
+            max-height: 120px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
     </style>
 </head>
 <body>
@@ -449,10 +516,27 @@
                 Refresh List
             </button>
             
-            <button class="btn btn-outline btn-destructive" onclick="reportBug()" style="margin-top: 0;">
+            <button id="bugBtn" class="btn btn-outline btn-destructive" onclick="reportBug()" style="margin-top: 0;">
                 <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg>
                 Report a Bug
             </button>
+        </div>
+    </div>
+
+    <!-- Bug Report Modal -->
+    <div class="modal-overlay" id="bugModal">
+        <div class="modal-content">
+            <div class="modal-title">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg>
+                Bug Reporter
+            </div>
+            <div class="modal-body" id="bugModalBody">
+                Preparing diagnostics...
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                <button class="btn btn-outline" style="width: auto;" onclick="closeBugModal()" id="bugModalCancel">Cancel</button>
+                <button class="btn btn-primary" style="width: auto; display: none;" id="bugModalProceed" onclick="proceedToGitHub()">Open GitHub</button>
+            </div>
         </div>
     </div>
 
@@ -693,31 +777,92 @@
             }
         }
 
+        let generatedGithubUrl = "";
+
+        function closeBugModal() {
+            document.getElementById('bugModal').classList.remove('active');
+        }
+
+        function proceedToGitHub() {
+            if (generatedGithubUrl) {
+                window.open(generatedGithubUrl, '_blank');
+            }
+            closeBugModal();
+        }
+
         async function reportBug() {
+            const modal = document.getElementById('bugModal');
+            const body = document.getElementById('bugModalBody');
+            const cancelBtn = document.getElementById('bugModalCancel');
+            const proceedBtn = document.getElementById('bugModalProceed');
+            
+            modal.classList.add('active');
+            proceedBtn.style.display = 'none';
+            cancelBtn.style.display = 'inline-flex';
+            body.innerHTML = `<div style="display:flex; align-items:center; gap:8px;"><div class="loader" style="margin:0; width:16px; height:16px;"></div> Fetching device info...</div>`;
+
             let model = "Unknown";
             let android = "Unknown";
             let logSnippet = "No recent logs found.";
             let configDump = JSON.stringify(window.currentConfig || {}, null, 2);
+            let logFileStatus = "";
 
             try {
-                let mShell = await execShell('getprop ro.product.model');
-                if (mShell && mShell.errno === 0) {
-                    model = mShell.stdout.trim();
-                    let aShell = await execShell('getprop ro.build.version.release');
-                    if (aShell && aShell.errno === 0) android = aShell.stdout.trim();
+                let mShell = await execShell('echo "$(getprop ro.product.manufacturer) $(getprop ro.product.model)"');
+                if (mShell && mShell.stdout && mShell.stdout.trim() !== "") model = mShell.stdout.trim();
+                
+                let aShell = await execShell('echo "$(getprop ro.build.version.release) (API $(getprop ro.build.version.sdk))"');
+                if (aShell && aShell.stdout && aShell.stdout.trim() !== "") android = aShell.stdout.trim();
 
-                    await execShell('logcat -d -s GameUnlocker > /sdcard/Download/GameUnlocker_Logs.txt');
-                    let logShell = await execShell('logcat -d -s GameUnlocker -t 20');
-                    if (logShell && logShell.errno === 0 && logShell.stdout.trim() !== "") {
-                        logSnippet = logShell.stdout.trim();
-                    }
+                body.innerHTML = `<div style="display:flex; align-items:center; gap:8px;"><div class="loader" style="margin:0; width:16px; height:16px;"></div> Saving logs to Downloads...</div>`;
+
+                // Export logcat
+                await execShell('logcat -d -s GameUnlocker > /sdcard/Download/GameUnlocker_Logs.txt');
+                
+                // Verify log save using ls
+                let lsShell = await execShell('ls -lh /sdcard/Download/GameUnlocker_Logs.txt');
+                if (lsShell && lsShell.errno === 0) {
+                    logFileStatus = lsShell.stdout.trim();
+                } else {
+                    logFileStatus = "Failed to locate log file. Check storage permissions.";
                 }
-            } catch (e) {}
 
-            const issueBody = `**Describe the issue**\nA clear and concise description of what the bug is.\n\n**To Reproduce**\nSteps to reproduce the behavior:\n1. \n2. \n3. \n\n**Expected behavior**\nA clear and concise description of what you expected to happen.\n\n**Environment**\n- Device: ${model}\n- OS: Android ${android}\n\n**Logs & Configuration**\n*Please attach the log file generated at: /sdcard/Download/GameUnlocker_Logs.txt*\n\n<details>\n<summary>Module Configuration Dump</summary>\n\n\`\`\`json\n${configDump}\n\`\`\`\n</details>`;
-            const encodedBody = encodeURIComponent(issueBody);
-            const githubUrl = `https://github.com/yadavnikhil03/GameUnlocker/issues/new?title=Bug+Report:+[Brief+Title+Here]&body=${encodedBody}`;
-            window.open(githubUrl, '_blank');
+                let fileShell = await execShell('cat /sdcard/Download/GameUnlocker_Logs.txt');
+                if (fileShell && fileShell.stdout && fileShell.stdout.trim() !== "") {
+                    logSnippet = fileShell.stdout.trim();
+                    if (logSnippet.length > 2500) {
+                        logSnippet = "... [Log truncated] ...\n" + logSnippet.substring(logSnippet.length - 2500);
+                    }
+                } else {
+                    logSnippet = "Logcat is empty. Make sure module is enabled.";
+                }
+            } catch (e) {
+                logFileStatus = "Shell error: " + String(e);
+            }
+
+            const issueBody = "**Describe the issue**\nA clear and concise description of what the bug is.\n\n" +
+                              "**To Reproduce**\nSteps to reproduce the behavior:\n1. \n2. \n\n" +
+                              "**Environment**\n- Device: " + model + "\n- OS: Android " + android + "\n\n" +
+                              "**Logs & Configuration**\n" +
+                              "> **Important:** Please attach the full log file from `/sdcard/Download/GameUnlocker_Logs.txt` to this issue!\n\n" +
+                              "<details>\n<summary>GameUnlocker Execution Logs</summary>\n\n" +
+                              "```log\n" + logSnippet + "\n```\n" +
+                              "</details>\n\n" +
+                              "<details>\n<summary>Module Configuration Dump</summary>\n\n" +
+                              "```json\n" + configDump + "\n```\n" +
+                              "</details>";
+            
+            generatedGithubUrl = `https://github.com/yadavnikhil03/GameUnlocker/issues/new?title=Bug+Report:+[Brief+Title+Here]&body=${encodeURIComponent(issueBody)}`;
+            
+            body.innerHTML = `
+                <div style="color: var(--foreground); font-weight: 500; margin-bottom: 12px;">Diagnostics Complete!</div>
+                <div>A full log file has been exported to your Downloads folder:</div>
+                <div class="terminal-box">${logFileStatus}</div>
+                <div style="margin-top: 16px; font-weight: 500; color: #facc15;">⚠️ Please attach this text file manually when the GitHub issue page opens!</div>
+            `;
+            
+            cancelBtn.style.display = 'none';
+            proceedBtn.style.display = 'inline-flex';
         }
 
         window.onload = () => {

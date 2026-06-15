@@ -61,6 +61,8 @@ void Spoofer::applyDeviceSpoof(const DeviceProfile& profile) {
     if (profile.brand_for_device.has_value()) {
         setStringField(buildClass, "BRAND_FOR_DEVICE", profile.brand_for_device.value());
     }
+    
+    LOGI("Spoofer: Successfully applied Java device spoofing profile (Model: %s)", profile.model.c_str());
 }
 
 } 
