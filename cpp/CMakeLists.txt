@@ -12,6 +12,7 @@ FetchContent_Declare(
   bhook
   GIT_REPOSITORY https://github.com/bytedance/bhook.git
   GIT_TAG        v1.0.8
+  SOURCE_SUBDIR  bytehook/src/main/cpp
 )
 FetchContent_MakeAvailable(bhook)
 
@@ -26,7 +27,7 @@ add_library(gameunlocker SHARED
             RoutingEngine.cpp)
 
 find_library(log-lib log)
-target_link_libraries(gameunlocker ${log-lib} bhook)
+target_link_libraries(gameunlocker ${log-lib} bytehook)
 
 target_include_directories(gameunlocker PRIVATE include)
 
