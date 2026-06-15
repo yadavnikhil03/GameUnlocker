@@ -2,6 +2,7 @@
 #include "HookRegistry.hpp"
 #include "logger.hpp"
 #include <string.h>
+#include <bytehook.h>
 
 namespace gameunlocker {
 
@@ -87,18 +88,27 @@ static void my_system_property_read(const void* pi, unsigned* serial, char* name
     }
 }
 
-bool SysPropHook::onEnable(const Context& ctx) {
-    zygisk::Api* api = ctx.getApi();
-    if (!api) {
-        LOGE("SysPropHook::onEnable failed: zygisk API is null");
-        return false;
+static void on_hooked(bytehook_stub_t task_stub, int status_code, const char *caller_path_name,
+                      const char *sym_name, void *new_func, void *prev_func, void *arg) {
+    if (status_code == BYTEHOOK_STATUS_CODE_OK && prev_func) {
+        if (strcmp(sym_name, "__system_property_get") == 0 && !orig_property_get) {
+            orig_property_get = (prop_get_t)prev_func;
+        } else if (strcmp(sym_name, "__system_property_read_callback") == 0 && !orig_property_read_callback) {
+            orig_property_read_callback = (prop_read_t)prev_func;
+        } else if (strcmp(sym_name, "__system_property_read") == 0 && !orig_property_read) {
+            orig_property_read = (prop_read_old_t)prev_func;
+        }
     }
+}
 
-    api->pltHookRegister(".*", "__system_property_get", (void*)my_system_property_get, (void**)&orig_property_get);
-    api->pltHookRegister(".*", "__system_property_read_callback", (void*)my_system_property_read_callback, (void**)&orig_property_read_callback);
-    api->pltHookRegister(".*", "__system_property_read", (void*)my_system_property_read, (void**)&orig_property_read);
+bool SysPropHook::onEnable(const Context& ctx) {
+    bytehook_init(BYTEHOOK_MODE_AUTOMATIC, false);
 
-    LOGI("SysPropHook registered for __system_property* functions");
+    bytehook_hook_all(NULL, "__system_property_get", (void*)my_system_property_get, on_hooked, NULL);
+    bytehook_hook_all(NULL, "__system_property_read_callback", (void*)my_system_property_read_callback, on_hooked, NULL);
+    bytehook_hook_all(NULL, "__system_property_read", (void*)my_system_property_read, on_hooked, NULL);
+
+    LOGI("SysPropHook registered for __system_property* functions via bytehook");
     return true;
 }
 

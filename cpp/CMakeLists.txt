@@ -7,6 +7,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_compile_options(-Os -flto -ffunction-sections -fdata-sections)
 add_link_options(-flto -Wl,--gc-sections)
 
+include(FetchContent)
+FetchContent_Declare(
+  bhook
+  GIT_REPOSITORY https://github.com/bytedance/bhook.git
+  GIT_TAG        v1.0.8
+)
+FetchContent_MakeAvailable(bhook)
+
 add_library(gameunlocker SHARED
             main.cpp
             Config.cpp
@@ -18,7 +26,7 @@ add_library(gameunlocker SHARED
             RoutingEngine.cpp)
 
 find_library(log-lib log)
-target_link_libraries(gameunlocker ${log-lib})
+target_link_libraries(gameunlocker ${log-lib} bhook)
 
 target_include_directories(gameunlocker PRIVATE include)
 
