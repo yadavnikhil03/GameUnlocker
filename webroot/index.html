@@ -4,132 +4,175 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>GameUnlocker PRO</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #6366f1;
-            --primary-glow: rgba(99, 102, 241, 0.4);
-            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-            --glass-bg: rgba(255, 255, 255, 0.03);
-            --glass-border: rgba(255, 255, 255, 0.08);
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --danger: #ef4444;
-            --danger-glow: rgba(239, 68, 68, 0.4);
-            --success: #10b981;
+           
+            --background: #09090b;
+            --foreground: #fafafa;
+            
+            --card: #121214;
+            --card-foreground: #fafafa;
+            
+            --popover: #09090b;
+            --popover-foreground: #fafafa;
+            
+            --primary: #fafafa;
+            --primary-foreground: #18181b;
+            
+            --secondary: #27272a;
+            --secondary-foreground: #fafafa;
+            
+            --muted: #27272a;
+            --muted-foreground: #a1a1aa;
+            
+            --accent: #27272a;
+            --accent-foreground: #fafafa;
+            
+            --destructive: #7f1d1d;
+            --destructive-foreground: #fafafa;
+
+            --border: #27272a;
+            --input: #27272a;
+            --ring: #d4d4d8;
+            
+            --radius: 0.75rem;
+            --brand-gradient: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 100%);
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            background: var(--bg-gradient);
-            background-attachment: fixed;
-            color: var(--text-main);
+            background-color: var(--background);
+            color: var(--foreground);
             min-height: 100vh;
-            padding: 20px 16px;
+            padding: 24px 16px;
             padding-bottom: 100px;
+            font-size: 14px;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
         }
+        .icon {
+            width: 18px;
+            height: 18px;
+            stroke-width: 2;
+            stroke: currentColor;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        
+        .icon-sm { width: 14px; height: 14px; }
+        .icon-lg { width: 24px; height: 24px; }
 
-        /* Glassmorphism containers */
-        .glass-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
+        .card {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
             padding: 24px;
             margin-bottom: 24px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.2s ease;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 32px;
-            margin-top: 10px;
+            margin-bottom: 36px;
+            margin-top: 12px;
         }
 
         .header h1 {
-            font-size: 32px;
+            font-size: 28px;
             font-weight: 800;
-            background: linear-gradient(to right, #818cf8, #c084fc);
+            background: var(--brand-gradient);
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
-            letter-spacing: -0.5px;
-            margin-bottom: 8px;
+            letter-spacing: -0.05em;
+            margin-bottom: 6px;
         }
 
         .header p {
-            color: var(--text-muted);
+            color: var(--muted-foreground);
             font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 0.02em;
         }
 
         .section-title {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
             margin-bottom: 16px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            color: var(--foreground);
         }
 
-        /* Styled Dropdown */
         .select-wrapper {
             position: relative;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
 
         select {
             appearance: none;
             width: 100%;
-            background: rgba(0,0,0,0.2);
-            border: 1px solid var(--glass-border);
-            color: var(--text-main);
-            padding: 16px;
-            border-radius: 14px;
-            font-size: 15px;
+            background-color: var(--background);
+            border: 1px solid var(--input);
+            color: var(--foreground);
+            padding: 12px 16px;
+            border-radius: calc(var(--radius) - 2px);
+            font-size: 14px;
             font-weight: 500;
             outline: none;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            cursor: pointer;
         }
 
         select:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 2px var(--primary-glow);
+            border-color: var(--ring);
+            box-shadow: 0 0 0 1px var(--ring);
         }
 
         .select-wrapper::after {
-            content: "▼";
+            content: "";
             position: absolute;
             right: 16px;
             top: 50%;
             transform: translateY(-50%);
-            color: var(--text-muted);
+            width: 16px;
+            height: 16px;
             pointer-events: none;
-            font-size: 12px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+            background-size: contain;
+            background-repeat: no-repeat;
         }
 
-        /* Modern App List */
         .app-list {
-            background: rgba(0,0,0,0.15);
-            border-radius: 14px;
-            border: 1px solid var(--glass-border);
-            max-height: 350px;
+            background-color: var(--background);
+            border-radius: calc(var(--radius) - 2px);
+            border: 1px solid var(--border);
+            max-height: 380px;
             overflow-y: auto;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
 
         .app-list::-webkit-scrollbar {
             width: 6px;
         }
+        .app-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
         .app-list::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.2);
+            background: var(--muted);
             border-radius: 10px;
         }
 
@@ -137,48 +180,52 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 16px;
-            border-bottom: 1px solid var(--glass-border);
-            transition: background 0.2s;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            transition: background-color 0.2s;
+            cursor: pointer;
         }
 
         .app-row:last-child {
             border-bottom: none;
         }
 
+        .app-row:hover {
+            background-color: var(--muted);
+        }
+
         .app-row:active {
-            background: rgba(255,255,255,0.05);
+            background-color: var(--accent);
         }
 
         .app-info {
             flex: 1;
             overflow: hidden;
-            padding-right: 12px;
+            padding-right: 16px;
         }
 
         .app-name {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 600;
-            color: var(--text-main);
+            color: var(--foreground);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
 
         .app-pkg {
             font-size: 12px;
-            color: var(--text-muted);
+            color: var(--muted-foreground);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
-        /* Premium iOS-style Toggle Switch */
         .toggle-switch {
             position: relative;
-            width: 48px;
-            height: 26px;
+            width: 44px;
+            height: 24px;
             flex-shrink: 0;
         }
 
@@ -192,10 +239,9 @@
             position: absolute;
             cursor: pointer;
             top: 0; left: 0; right: 0; bottom: 0;
-            background-color: rgba(255,255,255,0.1);
-            border-radius: 26px;
-            transition: .4s;
-            border: 1px solid rgba(255,255,255,0.1);
+            background-color: var(--input);
+            border-radius: 24px;
+            transition: 0.2s;
         }
 
         .slider:before {
@@ -207,107 +253,119 @@
             bottom: 2px;
             background-color: white;
             border-radius: 50%;
-            transition: .3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: 0.2s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
 
         input:checked + .slider {
             background-color: var(--primary);
-            border-color: var(--primary);
-            box-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        input:focus-visible + .slider {
+            box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
         }
 
         input:checked + .slider:before {
-            transform: translateX(22px);
+            transform: translateX(20px);
+            background-color: var(--primary-foreground);
         }
 
-        /* Modern Buttons */
         .btn {
-            width: 100%;
-            padding: 16px;
-            border-radius: 14px;
-            border: none;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
+            width: 100%;
+            padding: 10px 16px;
+            border-radius: calc(var(--radius) - 2px);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
             gap: 8px;
+            border: 1px solid transparent;
+            height: 40px;
         }
 
         .btn-primary {
-            background: var(--primary);
-            color: white;
-            box-shadow: 0 4px 12px var(--primary-glow);
-            margin-bottom: 12px;
+            background-color: var(--primary);
+            color: var(--primary-foreground);
+        }
+
+        .btn-primary:hover {
+            background-color: #e4e4e7;
         }
 
         .btn-primary:active {
             transform: scale(0.98);
-            box-shadow: 0 2px 6px var(--primary-glow);
         }
 
-        .btn-secondary {
-            background: rgba(255,255,255,0.05);
-            color: var(--text-main);
-            border: 1px solid var(--glass-border);
+        .btn-outline {
+            background-color: transparent;
+            color: var(--foreground);
+            border: 1px solid var(--border);
         }
 
-        .btn-secondary:active {
-            background: rgba(255,255,255,0.1);
+        .btn-outline:hover {
+            background-color: var(--accent);
+            color: var(--accent-foreground);
         }
 
-        .btn-bug {
-            background: rgba(245, 158, 11, 0.1);
-            color: #fcd34d;
-            border: 1px solid rgba(245, 158, 11, 0.2);
+        .btn-outline:active {
+            transform: scale(0.98);
+        }
+
+        .btn-destructive {
+            background-color: transparent;
+            color: #f87171;
+            border: 1px solid #7f1d1d;
             margin-top: 12px;
         }
 
-        /* Active Config Items */
+        .btn-destructive:hover {
+            background-color: #7f1d1d;
+            color: #fca5a5;
+}
         .profile-group {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
         .profile-name {
-            font-size: 13px;
+            font-size: 12px;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--primary);
-            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: var(--muted-foreground);
+            font-weight: 600;
             margin-bottom: 12px;
             margin-top: 8px;
         }
         .active-pkg-item {
-            background: rgba(0,0,0,0.2);
-            border: 1px solid var(--glass-border);
+            background-color: var(--background);
+            border: 1px solid var(--border);
             padding: 12px 16px;
-            border-radius: 12px;
+            border-radius: calc(var(--radius) - 2px);
             margin-bottom: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-family: monospace;
-            font-size: 13px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 12px;
             animation: fadeIn 0.3s ease;
         }
         
         .active-pkg-text {
-            color: var(--text-main);
+            color: var(--foreground);
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            padding-right: 10px;
+            padding-right: 12px;
         }
 
         .btn-remove {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
+            background: transparent;
+            color: var(--muted-foreground);
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -316,25 +374,23 @@
             flex-shrink: 0;
         }
 
-        .btn-remove:active {
-            background: var(--danger);
-            color: white;
-            transform: scale(0.9);
+        .btn-remove:hover {
+            background-color: var(--destructive);
+            color: var(--destructive-foreground);
         }
 
-        /* Loading Spinner */
         .loader {
-            border: 3px solid rgba(255,255,255,0.1);
-            border-top: 3px solid var(--primary);
+            border: 2px solid var(--muted);
+            border-top: 2px solid var(--foreground);
             border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
+            width: 20px;
+            height: 20px;
+            animation: spin 0.8s linear infinite;
+            margin: 24px auto;
         }
 
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
     </style>
 </head>
@@ -342,54 +398,62 @@
 
     <div class="header">
         <h1>GameUnlocker</h1>
-        <p>Premium Performance Manager</p>
+        <p>Settings Manager</p>
     </div>
 
-    <div class="glass-card">
+    <div class="card">
         <div class="section-title">
-            ⚡ Device Spoofing Profile
+            <svg class="icon" viewBox="0 0 24 24"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
+            Device Spoofing Profile
         </div>
         
         <div class="select-wrapper">
             <select id="profileSelect">
-                <option value="SAMSUNG_S24_ULTRA">📱 Samsung Galaxy S24 Ultra (Best)</option>
-                <option value="REDMAGIC_9_PRO">🎮 RedMagic 9 Pro (COD / Brawl Stars)</option>
-                <option value="XIAOMI_11T_PRO">🔥 Xiaomi 11T Pro</option>
-                <option value="PIXEL_9_PRO">📸 Google Pixel 9 Pro (Genshin)</option>
-                <option value="cpu_spoof_with_cpu">⚡ CPU Spoof Only (Fortnite/Apex)</option>
+                <option value="SAMSUNG_S24_ULTRA">Samsung Galaxy S24 Ultra (Best)</option>
+                <option value="REDMAGIC_9_PRO">RedMagic 9 Pro (COD / Brawl Stars)</option>
+                <option value="XIAOMI_11T_PRO">Xiaomi 11T Pro</option>
+                <option value="PIXEL_9_PRO">Google Pixel 9 Pro (Genshin)</option>
+                <option value="cpu_spoof_with_cpu">CPU Spoof Only (Fortnite/Apex)</option>
             </select>
         </div>
 
-        <div class="section-title" style="margin-top: 24px;">
-            🎯 Select Games
+        <div class="section-title" style="margin-top: 32px;">
+            <svg class="icon" viewBox="0 0 24 24"><line x1="6" x2="10" y1="12" y2="12"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="15" x2="15.01" y1="13" y2="13"/><line x1="18" x2="18.01" y1="11" y2="11"/><rect width="20" height="12" x="2" y="6" rx="2"/></svg>
+            Select Games
         </div>
         
         <div class="app-list" id="appListContainer">
             <div class="loader"></div>
-            <div style="text-align: center; color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Scanning installed apps...</div>
+            <div style="text-align: center; color: var(--muted-foreground); font-size: 13px; margin-bottom: 24px;">Scanning installed apps...</div>
         </div>
 
         <button class="btn btn-primary" onclick="addSelectedGames()">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
             Inject Selected Apps
         </button>
     </div>
 
-    <div class="glass-card">
+    <div class="card">
         <div class="section-title">
-            🛡️ Currently Active Routing Rules
+            <svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Active Routing Rules
         </div>
         
         <div id="configView">
             <div class="loader"></div>
         </div>
 
-        <button class="btn btn-secondary" style="margin-top: 16px;" onclick="loadConfig()">
-            🔄 Refresh List
-        </button>
-        
-        <button class="btn btn-bug" onclick="reportBug()">
-            🐛 Report a Bug (Auto-Attach Logs)
-        </button>
+        <div style="display: flex; gap: 12px; margin-top: 20px;">
+            <button class="btn btn-outline" onclick="loadConfig()">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                Refresh List
+            </button>
+            
+            <button class="btn btn-outline btn-destructive" onclick="reportBug()" style="margin-top: 0;">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg>
+                Report a Bug
+            </button>
+        </div>
     </div>
 
     <script>
@@ -405,7 +469,6 @@
                 
                 try {
                     if (typeof mmrl !== 'undefined' && mmrl.exec) {
-                        // Some versions of MMRL support promise or callback
                         let res = mmrl.exec(cmd, '{}', cb);
                         if (res instanceof Promise) {
                             res.then(r => { delete window[cb]; resolve(r); }).catch(e => { delete window[cb]; resolve({errno:1, stdout:"", stderr:String(e)}); });
@@ -449,14 +512,13 @@
                 let pkg = isCpuSpoof ? item : item.pattern;
                 let display = isCpuSpoof ? pkg : `${item.type.toUpperCase()}: ${pkg} → ${item.profile}`;
                 
-                // For json deletion, pass exactly what to remove
-                let deleteArg = isCpuSpoof ? pkg : pkg;
+                let deleteArg = pkg;
                 
                 html += `
                     <div class="active-pkg-item">
                         <span class="active-pkg-text">${display}</span>
                         <button class="btn-remove" onclick="removeGame('${deleteArg}', ${isCpuSpoof})">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                            <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                         </button>
                     </div>`;
             });
@@ -473,7 +535,7 @@
                 if (shell && shell.errno === 0) {
                     stdout = shell.stdout;
                 } else {
-                    view.innerHTML = "<div style='color: var(--danger); text-align:center;'>Configuration file not found. Ensure module is installed and root access is granted.</div>";
+                    view.innerHTML = "<div style='color: var(--destructive); text-align:center; font-size:13px; padding:16px;'>Configuration file not found. Ensure module is installed and root access is granted.</div>";
                     return;
                 }
 
@@ -491,14 +553,14 @@
                         html += renderProfileGroup("CPU Spoof Only", cfg.cpu_spoof.with_cpu, true);
                     }
 
-                    view.innerHTML = html || "<div style='text-align:center; padding: 20px; color: var(--text-muted);'>No games configured yet.</div>";
+                    view.innerHTML = html || "<div style='text-align:center; padding: 24px; color: var(--muted-foreground); font-size:13px;'>No games configured yet.</div>";
                     
                     if (window.installedAppsList) {
                         renderAppList();
                     }
                 }
             } catch (e) {
-                view.innerHTML = "<div style='color: var(--danger); text-align:center;'>Failed to parse configuration. " + e + "</div>";
+                view.innerHTML = "<div style='color: var(--destructive); text-align:center; font-size:13px; padding:16px;'>Failed to parse configuration.<br/>" + e + "</div>";
             }
         }
 
@@ -510,7 +572,6 @@
             let count = 0;
             window.installedAppsList.forEach(pkg => {
                 if (!isAppConfigured(pkg)) {
-                    // Try to generate a clean name from the package name since getting real names is slow
                     let parts = pkg.split('.');
                     let friendlyName = parts[parts.length - 1];
                     if (friendlyName.length < 3 && parts.length > 1) friendlyName = parts[parts.length - 2];
@@ -532,18 +593,16 @@
             });
             
             if (count === 0) {
-                html = `<div style="text-align: center; padding: 30px 20px; color: var(--success); font-weight: 500;">✨ All installed user apps are already configured!</div>`;
+                html = `<div style="text-align: center; padding: 32px 20px; color: var(--foreground); font-weight: 500; font-size: 13px;">All installed user apps are already configured.</div>`;
             }
             container.innerHTML = html;
         }
 
         async function fetchApps() {
             try {
-                // Fetch non-system third-party packages natively without using pipes (|), 
-                // as some KSU/MMRL bridges hang on compound commands.
                 let shell = await execShell('pm list packages -3');
                 if (shell && shell.errno === 0 && shell.stdout) {
-                    let rawApps = shell.stdout.split('\n')
+                    let rawApps = shell.stdout.split('\\n')
                         .map(s => s.trim())
                         .filter(s => s.startsWith('package:'))
                         .map(s => s.replace('package:', '').trim())
@@ -552,10 +611,10 @@
                     window.installedAppsList = rawApps.sort();
                     renderAppList();
                 } else {
-                    document.getElementById('appListContainer').innerHTML = "<div style='padding: 20px; text-align: center; color: var(--danger);'>Failed to fetch installed apps natively. Grant root access.</div>";
+                    document.getElementById('appListContainer').innerHTML = "<div style='padding: 24px; text-align: center; color: var(--destructive); font-size:13px;'>Failed to fetch installed apps natively. Grant root access.</div>";
                 }
             } catch (e) {
-                document.getElementById('appListContainer').innerHTML = "<div style='padding: 20px; text-align: center; color: var(--danger);'>Error executing package list.</div>";
+                document.getElementById('appListContainer').innerHTML = "<div style='padding: 24px; text-align: center; color: var(--destructive); font-size:13px;'>Error executing package list.</div>";
             }
         }
 
@@ -564,14 +623,12 @@
             const checkboxes = document.querySelectorAll('.app-checkbox:checked');
             
             if (checkboxes.length === 0) {
-                alert('Please select at least one app to inject!');
+                alert('Please select at least one app to inject.');
                 return;
             }
 
             let successCount = 0;
             
-            // We use jq or manual json parsing?
-            // Actually, sed is brittle for JSON. We can just update the JSON in memory and echo it back!
             try {
                 let cfg = window.currentConfig;
                 if (!cfg.routing_rules) cfg.routing_rules = [];
@@ -585,7 +642,6 @@
                             cfg.cpu_spoof.with_cpu.push(pkg);
                         }
                     } else {
-                        // Check if rule already exists
                         let exists = cfg.routing_rules.find(r => r.pattern === pkg);
                         if (!exists) {
                             cfg.routing_rules.push({
@@ -599,19 +655,17 @@
                     successCount++;
                 }
 
-                // Write the JSON back to the file using a safe heredoc
-                let jsonStr = JSON.stringify(cfg, null, 2).replace(/'/g, "'\\''");
                 let writeCmd = `cat << 'EOF' > ${configPath}\n${JSON.stringify(cfg, null, 2)}\nEOF\n`;
                 let shell = await execShell(writeCmd);
 
                 if (shell && shell.errno === 0) {
-                    alert(`✅ Successfully injected ${successCount} apps!\nPlease reboot your device to apply changes.`);
+                    alert(`Successfully injected ${successCount} apps.\\nPlease reboot your device to apply changes.`);
                     loadConfig();
                 } else {
-                    alert('❌ Failed to write configuration. Make sure you have root access.');
+                    alert('Failed to write configuration. Make sure you have root access.');
                 }
             } catch (e) {
-                alert('❌ Error during configuration update: ' + e);
+                alert('Error during configuration update: ' + e);
             }
         }
 
@@ -632,10 +686,10 @@
                 if (shell && shell.errno === 0) {
                     loadConfig();
                 } else {
-                    alert('❌ Failed to remove game from config.');
+                    alert('Failed to remove game from config.');
                 }
             } catch (e) {
-                alert('❌ API error occurred.');
+                alert('API error occurred.');
             }
         }
 
@@ -660,7 +714,7 @@
                 }
             } catch (e) {}
 
-            const issueBody = `### 🐛 Bug Description\n\n### 🔄 Steps to Reproduce\n1. \n2. \n3. \n\n### 📱 Device Information\n- **Model:** ${model}\n- **Android Version:** ${android}\n\n---\n### 🛠 Diagnostics\n\n> [!IMPORTANT]\n> 📂 **A full log file has been saved to your phone at \`/sdcard/Download/GameUnlocker_Logs.txt\`. Please drag and drop that file anywhere in this text box to attach it!**\n\n<details>\n<summary><b>Show Recent Log Snippet</b></summary>\n\n\`\`\`log\n${logSnippet}\n\`\`\`\n</details>\n\n<details>\n<summary><b>Show Configuration Dump</b></summary>\n\n\`\`\`json\n${configDump}\n\`\`\`\n</details>`;
+            const issueBody = `**Describe the issue**\nA clear and concise description of what the bug is.\n\n**To Reproduce**\nSteps to reproduce the behavior:\n1. \n2. \n3. \n\n**Expected behavior**\nA clear and concise description of what you expected to happen.\n\n**Environment**\n- Device: ${model}\n- OS: Android ${android}\n\n**Logs & Configuration**\n*Please attach the log file generated at: /sdcard/Download/GameUnlocker_Logs.txt*\n\n<details>\n<summary>Module Configuration Dump</summary>\n\n\`\`\`json\n${configDump}\n\`\`\`\n</details>`;
             const encodedBody = encodeURIComponent(issueBody);
             const githubUrl = `https://github.com/yadavnikhil03/GameUnlocker/issues/new?title=Bug+Report:+[Brief+Title+Here]&body=${encodedBody}`;
             window.open(githubUrl, '_blank');
