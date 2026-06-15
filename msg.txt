@@ -1,1 +1,1 @@
-refactor(core): Implement dynamic HookManager, Spoofer, and Routing Engine
+fix(core): System property hooks, Zygisk memory safety, and UI improvements

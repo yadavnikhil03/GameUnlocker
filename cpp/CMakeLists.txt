@@ -7,17 +7,33 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_compile_options(-Os -flto -ffunction-sections -fdata-sections)
 add_link_options(-flto -Wl,--gc-sections)
 
+include(FetchContent)
+FetchContent_Declare(
+  bhook
+  GIT_REPOSITORY https://github.com/bytedance/bhook.git
+  GIT_TAG        v1.0.8
+  SOURCE_SUBDIR  bytehook/src/main/cpp
+)
+FetchContent_MakeAvailable(bhook)
+
+target_compile_options(bytehook PRIVATE -Wno-error -Wno-declaration-after-statement -Wno-everything)
+set_target_properties(bytehook PROPERTIES 
+    INTERFACE_COMPILE_OPTIONS ""
+    INTERFACE_LINK_OPTIONS ""
+)
+
 add_library(gameunlocker SHARED
             main.cpp
             Config.cpp
             Companion.cpp
             Spoofer.cpp
             GpuHook.cpp
+            SysPropHook.cpp
             HookManager.cpp
             RoutingEngine.cpp)
 
 find_library(log-lib log)
-target_link_libraries(gameunlocker ${log-lib})
+target_link_libraries(gameunlocker ${log-lib} bytehook)
 
 target_include_directories(gameunlocker PRIVATE include)
 

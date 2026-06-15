@@ -4,75 +4,46 @@
 ![Platform](https://img.shields.io/badge/Platform-Android-green.svg)
 ![Magisk](https://img.shields.io/badge/Magisk-Zygisk_Enabled-orange.svg)
 
-**FPS Unlocker** is an advanced Zygisk module designed to unlock higher frame rates in games and enhance overall gaming performance on Android devices, dynamically and safely.
-
-<div align="center">
-  <blockquote>
-    <h3>✨ Major Update & Pre-Release Testing</h3>
-    <p>We are thrilled to be back with a comprehensive overhaul of the GameUnlocker core! We sincerely appreciate the community's patience during our period of inactivity and apologize for the recent compatibility hurdles.</p>
-    <p>This latest <b>Pre-Release</b> entirely refactors the Zygisk implementation to ensure flawless compatibility, resolves persistent engine crashes in titles like PUBG/BGMI, and dynamically spoofs the cutting-edge <b>Samsung Galaxy S24 Ultra</b> profile for maximum frame rates.</p>
-    <p><i>We warmly invite you to test this build. Your feedback, bug reports, and pull requests are invaluable as we work together to polish this release.</i></p>
-  </blockquote>
-</div>
-
----
+FPS Unlocker is a Zygisk module that bypasses game frame rate locks by dynamically spoofing device hardware strings via native C++ hooking.
 
 ## Features
 
-- Unlocks **60/90/120 FPS** in supported games using advanced `/proc/cpuinfo` binding.
-- **Dynamic Device Spoofing** via Zygisk C++ per-app hooking (Keeps banking apps safe!)
-- **Smart Thermal Management**: Only overrides thermal throttling while you are actively playing a game, restoring normal parameters automatically when closed.
-- Reduced **input lag** and forced performance rendering.
-- JSON based `config.json` for easy management of spoofed games.
-
----
+- **WebUI Configuration**: Manage settings directly through a local web dashboard (No terminal commands required).
+- **Zygisk Injection**: Per-app native hooking using `bytehook` ensuring banking apps remain untouched.
+- **Hardware Spoofing Profiles**: Choose between Galaxy S24 Ultra, RedMagic 9 Pro, Xiaomi 11T Pro, or Pixel 9 Pro.
+- **CPU Spoof Only**: Unlock frame rates via `/proc/cpuinfo` binding without altering OS branding strings.
+- **Smart Thermal Management**: Overrides thermal throttling only while configured games are active.
+- **Automated Diagnostics**: Built-in bug reporter that directly captures and extracts module logcats from the root namespace.
 
 ## Installation
 
-1. Download the latest `GameUnlocker-Zygisk.zip` from the [Releases](../../releases) page.
-	- Do **not** use GitHub "Download ZIP" source archives. They may not include compiled `zygisk/*.so` binaries.
-2. Make sure **Zygisk** is enabled in your Magisk / KernelSU app.
-3. Open **Magisk Manager** / **KernelSU**
-4. Tap on **Modules** > **Install from storage**
-5. Select the downloaded `.zip` file.
-6. **Reboot** your device.
+1. Download the latest `GameUnlocker-Zygisk.zip` from [Releases](../../releases).
+2. Install a standalone Zygisk implementation (GameUnlocker is incompatible with built-in Magisk Zygisk).
+   - [ZygiskNext](https://github.com/Dr-TSNG/ZygiskNext)
+   - [ReZygisk](https://github.com/PerformanC/ReZygisk)
+3. Flash the `.zip` via your root manager (KernelSU, APatch, or Magisk).
+4. Reboot device.
 
-## How to Add Your Games
+## Configuration
 
-1. Open your Magisk or KernelSU app.
-2. Go to the **Modules** tab and find Game Unlocker.
-3. Tap the **Action** button. 
-4. This will pop open our WebUI! 
-5. Under **Add New Game**, simply tap the text box, select your game from the dropdown list of apps installed on your phone, and hit **"Inject App to Config"**.
-6. **Reboot** your phone one last time, and boom—your game is fully unlocked and ready to play! 
+The module is configured entirely via the WebUI.
 
-*Tip: If you ever run into a problem, just open the WebUI again and click the **🐛 Report Bug** button. It will grab all the logs needed to help you!*
+- **KernelSU / APatch:** Tap the module in your app list to launch the WebUI.
+- **Magisk:** Install [WebUI-X](https://github.com/MMRLApp/WebUI-X-Portable/releases) or [MMRL](https://github.com/DerGoogler/MMRL) to access the dashboard.
 
-## Contact & Support
+Select your target profile, check the games to inject, and reboot to apply.
 
-**Developer:** [@yadavnikhil03](https://github.com/yadavnikhil03)
-**Issues:** Please report bugs via [GitHub Issues](../../issues)
+## Support
 
----
+Report bugs via [GitHub Issues](../../issues). Please generate and attach a logcat using the "Report Bug" button in the WebUI.
 
-## Credits & Acknowledgments
+## Credits
 
-We firmly believe in the power of the open-source community. This module would not be possible without the incredible work of others. We extend our deepest gratitude to:
-
-- **[AlirezaParsi](https://github.com/AlirezaParsi)**: For the architectural design of the [COPG (Call Of PUBG Gaming)](https://github.com/AlirezaParsi/COPG) project. The native C++ implementation of the Zygisk injection pipeline within our module leverages methodologies extensively researched and published within the COPG repository.
-- **[topjohnwu](https://github.com/topjohnwu) & the Magisk Development Team**: For the engineering of the Magisk root framework and the Zygisk API, which provide the essential hooking interfaces utilized by this module.
-- **[tiann](https://github.com/tiann) & the KernelSU Development Team**: For the continued development of KernelSU, providing an alternative, kernel-level privileged execution environment compatible with our runtime modifications.
-
----
-
-## Open-Source Compliance
-
-- This repository is open source under the project license.
-- If you fork or redistribute this project, keep attribution and license files intact.
-- See [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) for third-party attribution and reuse expectations.
-
----
+- **[AlirezaParsi](https://github.com/Ali
+rezaParsi)**: For the COPG project architecture which forms the foundation of the Zygisk injection pipeline used here.
+- **[topjohnwu](https://github.com/topjohnwu)**: Magisk framework and Zygisk API.
+- **[tiann](https://github.com/tiann)**: KernelSU development.
 
 ## License
 
-This project is licensed under the **MIT License** – see the [LICENSE](./LICENSE) file for details.
+MIT License. See [LICENSE](./LICENSE) and [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) for details.

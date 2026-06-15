@@ -82,6 +82,25 @@ check_root() {
 
 check_root
 
+check_zygisk_implementation() {
+  ui_print " [*] Checking Zygisk Implementation"
+  sleep 0.5
+  
+  if [ ! -d "/data/adb/modules/zygisksu" ] && \
+     [ ! -d "/data/adb/modules/rezygisk" ] && \
+     [ ! -d "/data/adb/modules/neozygisk" ] && \
+     [ ! -d "/data/adb/modules/zygisk_next" ]; then
+    ui_print " [!] Error: No standalone Zygisk implementation found!"
+    ui_print " [!] GameUnlocker is incompatible with built-in Magisk Zygisk."
+    ui_print " [!] Please install ZygiskNext, ReZygisk, or NeoZygisk first."
+    abort
+  else
+    ui_print " [*] Standalone Zygisk detected."
+  fi
+}
+
+check_zygisk_implementation
+
 on_install() {
   ui_print " [*] Extracting module files"
   sleep 0.5
