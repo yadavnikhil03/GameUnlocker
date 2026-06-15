@@ -17,7 +17,10 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(bhook)
 
 target_compile_options(bytehook PRIVATE -Wno-error -Wno-declaration-after-statement -Wno-everything)
-set_target_properties(bytehook PROPERTIES INTERFACE_COMPILE_OPTIONS "")
+set_target_properties(bytehook PROPERTIES 
+    INTERFACE_COMPILE_OPTIONS ""
+    INTERFACE_LINK_OPTIONS ""
+)
 
 add_library(gameunlocker SHARED
             main.cpp
