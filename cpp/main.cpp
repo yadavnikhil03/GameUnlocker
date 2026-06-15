@@ -7,6 +7,13 @@
 #include "logger.hpp"
 #include "raii.hpp"
 
+JavaVM* g_vm = nullptr;
+
+extern "C" jint JNI_OnLoad(JavaVM* vm, void*) {
+    g_vm = vm;
+    return JNI_VERSION_1_6;
+}
+
 namespace gameunlocker {
 
 class AppLifecycle : public zygisk::ModuleBase {
