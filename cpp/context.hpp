@@ -10,6 +10,12 @@ namespace gameunlocker {
 class Context {
 public:
     Context(zygisk::Api* api, JNIEnv* env) : api_(api), env_(env) {}
+    
+    ~Context() {
+        if (g_vm && attached_) {
+            g_vm->DetachCurrentThread();
+        }
+    }
 
     zygisk::Api* getApi() const { return api_; }
     
@@ -20,6 +26,7 @@ public:
                 return env;
             }
             if (g_vm->AttachCurrentThread(&env, nullptr) == JNI_OK) {
+                attached_ = true;
                 return env;
             }
         }
@@ -36,6 +43,7 @@ public:
 private:
     zygisk::Api* api_;
     JNIEnv* env_;
+    mutable bool attached_ = false;
 };
 
 } // namespace gameunlocker
