@@ -147,7 +147,6 @@ sleep 0.5
 
 ui_print " [*] Finalizing config files"
 chmod 0644 $MODPATH/config.json
-chmod 0444 $MODPATH/cpuinfo_spoof
 sleep 0.5
 
 ui_print ""

@@ -10,7 +10,7 @@
 
 JavaVM* g_vm = nullptr;
 
-extern "C" jint JNI_OnLoad(JavaVM* vm, void*) {
+extern "C" JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void*) {
     g_vm = vm;
     return JNI_VERSION_1_6;
 }
@@ -44,7 +44,6 @@ public:
         }
 
         Context ctx(api_, env_);
-        CompanionManager companion(ctx);
         HookManager hookManager(ctx);
 
         if (ConfigManager::isAppBlacklisted(pkgStr)) {
@@ -56,18 +55,9 @@ public:
         bool appNeedsCpuSpoof = ConfigManager::isCpuSpoofApp(pkgStr);
 
         if (profileOpt.has_value() || appNeedsCpuSpoof) {
-            LOGI("GameUnlocker Target Detected: %s [Profile: %s]", pkgStr.c_str(), profileOpt.has_value() ? "Active" : "None");
-
-            std::string modulePath = companion.resolveModulePath();
-            if (appNeedsCpuSpoof && !modulePath.empty()) {
-                companion.mountSpoof(modulePath + "/cpuinfo_spoof");
-            } else if (!appNeedsCpuSpoof) {
-                companion.unmountSpoof();
-            }
-        
-            activeProfile_ = profileOpt;
-
-            SysPropHook::setProfile(profileOpt);
+            LOGI("GameUnlocker Target Detected: %s [Profile: %s, CPU Spoof: %d]", pkgStr.c_str(), profileOpt.has_value() ? "Active" : "None", appNeedsCpuSpoof);
+            
+            SysPropHook::setProfile(profileOpt, appNeedsCpuSpoof);
             hookManager.initialize(profileOpt);
             hookManager.enableHooks();
 
@@ -76,26 +66,22 @@ public:
             } else {
                 api_->setOption(zygisk::Option::DLCLOSE_MODULE_LIBRARY);
             }
+
+            if (profileOpt.has_value()) {
+                Spoofer spoofer(ctx);
+                spoofer.applyDeviceSpoof(profileOpt.value());
+            }
         } else {
-            companion.unmountSpoof();
             api_->setOption(zygisk::Option::DLCLOSE_MODULE_LIBRARY);
         }
     }
 
     void postAppSpecialize(const zygisk::AppSpecializeArgs* args) override {
-        if (!api_ || !env_) return;
-
-        if (activeProfile_.has_value()) {
-            Context ctx(api_, env_);
-            Spoofer spoofer(ctx);
-            spoofer.applyDeviceSpoof(activeProfile_.value());
-        }
     }
 
 private:
     zygisk::Api* api_ = nullptr;
     JNIEnv* env_ = nullptr;
-    std::optional<DeviceProfile> activeProfile_ = std::nullopt;
 };
 
 } 

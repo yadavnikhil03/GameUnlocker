@@ -2,6 +2,7 @@
 
 #include "IHook.hpp"
 #include "HookRegistry.hpp"
+#include "SysPropHook.hpp"
 
 namespace gameunlocker {
 
@@ -15,7 +16,11 @@ public:
     }
 
     bool isSupported(const Context& ctx) const override {
-        return true; 
+        auto profile = SysPropHook::getProfile();
+        if (profile.has_value()) {
+            return profile.value().manufacturer != "Google"; 
+        }
+        return SysPropHook::isCpuSpoofOnly();
     }
 
     bool onEnable(const Context& ctx) override;
@@ -23,4 +28,4 @@ public:
     void onDisable(const Context& ctx) override;
 };
 
-} // namespace gameunlocker
+} 

@@ -10,7 +10,7 @@
     },
     "REDMAGIC_9_PRO": {
       "BRAND": "nubia",
-      "DEVICE": "REDMAGIC 9 Pro",
+      "DEVICE": "NX769J",
       "MANUFACTURER": "ZTE",
       "MODEL": "NX769J",
       "FINGERPRINT": "nubia/NX769J/NX769J:14/UKQ1.230917.001/20240813.173312:user/release-keys",
@@ -18,7 +18,7 @@
     },
     "XIAOMI_11T_PRO": {
       "BRAND": "Xiaomi",
-      "DEVICE": "Xiaomi 11T Pro",
+      "DEVICE": "vili",
       "MANUFACTURER": "Xiaomi",
       "MODEL": "2107113SG",
       "FINGERPRINT": "Xiaomi/2107113SI/Mi 11T Pro:13/RKQ1.211001.001/20230410:user/release-keys",
@@ -34,6 +34,12 @@
     }
   },
   "routing_rules": [
+    {
+      "type": "wildcard",
+      "pattern": "*",
+      "profile": "SAMSUNG_S24_ULTRA",
+      "priority": 0
+    },
     {
       "type": "exact",
       "pattern": "com.tencent.ig",
@@ -121,6 +127,12 @@
     {
       "type": "exact",
       "pattern": "com.riotgames.valormobile",
+      "profile": "SAMSUNG_S24_ULTRA",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.tencent.tmgp.codev",
       "profile": "SAMSUNG_S24_ULTRA",
       "priority": 50
     },

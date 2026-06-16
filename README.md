@@ -1,49 +1,44 @@
 # FPS Unlocker (Zygisk)
 
-![Version](https://img.shields.io/badge/Version-2.0.6--pre.1-blue.svg)
-![Platform](https://img.shields.io/badge/Platform-Android-green.svg)
-![Magisk](https://img.shields.io/badge/Magisk-Zygisk_Enabled-orange.svg)
+![Version](https://img.shields.io/badge/Version-2.0.0-blue.svg)
 
-FPS Unlocker is a Zygisk module that bypasses game frame rate locks by dynamically spoofing device hardware strings via native C++ hooking.
+FPS Unlocker bypasses game frame rate locks by dynamically spoofing device hardware strings via native C++ hooking.
 
-## Features
+## V2 Architecture
 
-- **WebUI Configuration**: Manage settings directly through a local web dashboard (No terminal commands required).
-- **Zygisk Injection**: Per-app native hooking using `bytehook` ensuring banking apps remain untouched.
-- **Hardware Spoofing Profiles**: Choose between Galaxy S24 Ultra, RedMagic 9 Pro, Xiaomi 11T Pro, or Pixel 9 Pro.
-- **CPU Spoof Only**: Unlock frame rates via `/proc/cpuinfo` binding without altering OS branding strings.
-- **Smart Thermal Management**: Overrides thermal throttling only while configured games are active.
-- **Automated Diagnostics**: Built-in bug reporter that directly captures and extracts module logcats from the root namespace.
+The V2 rewrite drops legacy CGI-BIN daemons and bash scripts in favor of a robust, fully native pipeline:
+- **Zero-Daemon WebUI**: Configuration is served entirely via the root manager's native webserver (WebUI-X / MMRL / KSU) using static HTML/JS.
+- **Copy-On-Write Configuration**: The config file is read once by the Zygote process during `onLoad`. The routing table is stored in static memory and inherited instantly by forked app processes via COW, eliminating file I/O overhead.
+- **Native Interception**: Replaced SELinux-blocked mounts with deterministic PLT hooking of `__system_property_get` and `__system_property_read_callback` via `bytehook`.
 
 ## Installation
 
-1. Download the latest `GameUnlocker-Zygisk.zip` from [Releases](../../releases).
-2. Install a standalone Zygisk implementation (GameUnlocker is incompatible with built-in Magisk Zygisk).
-   - [ZygiskNext](https://github.com/Dr-TSNG/ZygiskNext)
-   - [ReZygisk](https://github.com/PerformanC/ReZygisk)
-3. Flash the `.zip` via your root manager (KernelSU, APatch, or Magisk).
+1. Download the latest `GameUnlocker-Zygisk.zip` from Releases.
+2. Install a standalone Zygisk implementation. **Built-in Magisk Zygisk is explicitly unsupported and will cause the installation to abort.** Use:
+   - ZygiskNext
+   - ReZygisk
+3. Flash the `.zip` via KernelSU, APatch, or Magisk.
 4. Reboot device.
 
 ## Configuration
 
-The module is configured entirely via the WebUI.
-
 - **KernelSU / APatch:** Tap the module in your app list to launch the WebUI.
-- **Magisk:** Install [WebUI-X](https://github.com/MMRLApp/WebUI-X-Portable/releases) or [MMRL](https://github.com/DerGoogler/MMRL) to access the dashboard.
-
+- **Magisk:** Install WebUI-X Portable or MMRL to access the dashboard.
 Select your target profile, check the games to inject, and reboot to apply.
 
-## Support
+## Troubleshooting
 
-Report bugs via [GitHub Issues](../../issues). Please generate and attach a logcat using the "Report Bug" button in the WebUI.
+- **WebUI Does Not Open:** Ensure you are using KSU/APatch or have installed WebUI-X/MMRL for Magisk.
+- **Game Unlocks Randomly Drop:** Check if another module (e.g., thermal limiters) is overriding system properties.
+- **Module Installs But No Effect:** Verify that your standalone Zygisk implementation is active and that the game is checked in the WebUI.
+- **Capturing Logs:** Use the native "Report a Bug" button in the WebUI to instantly generate a diagnostic bundle, or run `logcat -s GameUnlocker`.
 
 ## Credits
 
-- **[AlirezaParsi](https://github.com/Ali
-rezaParsi)**: For the COPG project architecture which forms the foundation of the Zygisk injection pipeline used here.
-- **[topjohnwu](https://github.com/topjohnwu)**: Magisk framework and Zygisk API.
-- **[tiann](https://github.com/tiann)**: KernelSU development.
+- AlirezaParsi: COPG project architecture.
+- topjohnwu: Magisk framework.
+- tiann: KernelSU development.
 
 ## License
 
-MIT License. See [LICENSE](./LICENSE) and [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) for details.
+MIT License. See LICENSE and THIRD_PARTY_NOTICES.md for details.

@@ -1,1 +1,1 @@
-fix(core): System property hooks, Zygisk memory safety, and UI improvements
+chore: Release v2.0.0 (WebUI redesign, Valormobile support, and robust logging)

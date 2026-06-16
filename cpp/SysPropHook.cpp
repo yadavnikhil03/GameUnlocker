@@ -7,13 +7,19 @@
 namespace gameunlocker {
 
 std::optional<DeviceProfile> SysPropHook::activeProfile_ = std::nullopt;
+bool SysPropHook::cpuSpoofOnly_ = false;
 
-void SysPropHook::setProfile(const std::optional<DeviceProfile>& profile) {
+void SysPropHook::setProfile(const std::optional<DeviceProfile>& profile, bool cpuSpoofOnly) {
     activeProfile_ = profile;
+    cpuSpoofOnly_ = cpuSpoofOnly;
 }
 
 std::optional<DeviceProfile> SysPropHook::getProfile() {
     return activeProfile_;
+}
+
+bool SysPropHook::isCpuSpoofOnly() {
+    return cpuSpoofOnly_;
 }
 
 typedef int (*prop_get_t)(const char*, char*);
@@ -28,17 +34,28 @@ static prop_read_old_t orig_property_read = nullptr;
 thread_local prop_read_cb_t tls_app_callback = nullptr;
 
 static bool getSpoofedValue(const char* name, std::string& outValue) {
+    if (!name) return false;
+
+    if (SysPropHook::isCpuSpoofOnly() || SysPropHook::getProfile().has_value()) {
+        if (strcmp(name, "ro.board.platform") == 0) { outValue = "kalama"; return true; }
+        if (strcmp(name, "ro.hardware") == 0) { outValue = "qcom"; return true; }
+        if (strcmp(name, "ro.soc.model") == 0) { outValue = "SM8550"; return true; }
+        if (strcmp(name, "ro.soc.manufacturer") == 0) { outValue = "Qualcomm"; return true; }
+    }
+
     auto profileOpt = SysPropHook::getProfile();
-    if (!profileOpt.has_value() || !name) return false;
+    if (!profileOpt.has_value()) return false;
     
     const auto& profile = profileOpt.value();
     
-    if (strcmp(name, "ro.product.model") == 0) outValue = profile.model;
-    else if (strcmp(name, "ro.product.brand") == 0) outValue = profile.brand;
-    else if (strcmp(name, "ro.product.name") == 0) outValue = profile.product;
-    else if (strcmp(name, "ro.product.device") == 0) outValue = profile.device;
-    else if (strcmp(name, "ro.product.manufacturer") == 0) outValue = profile.manufacturer;
-    else if (strcmp(name, "ro.build.fingerprint") == 0) outValue = profile.fingerprint;
+    std::string prop(name);
+    
+    if (prop.find(".model") != std::string::npos && prop.find("ro.product") == 0) outValue = profile.model;
+    else if (prop.find(".brand") != std::string::npos && prop.find("ro.product") == 0) outValue = profile.brand;
+    else if (prop.find(".name") != std::string::npos && prop.find("ro.product") == 0) outValue = profile.product;
+    else if (prop.find(".device") != std::string::npos && prop.find("ro.product") == 0) outValue = profile.device;
+    else if (prop.find(".manufacturer") != std::string::npos && prop.find("ro.product") == 0) outValue = profile.manufacturer;
+    else if (prop.find("build.fingerprint") != std::string::npos && prop.find("ro.") == 0) outValue = profile.fingerprint;
     else return false;
 
     return true;
@@ -96,16 +113,26 @@ static void on_hooked(bytehook_stub_t task_stub, int status_code, const char *ca
     if (status_code == BYTEHOOK_STATUS_CODE_OK && prev_func) {
         if (strcmp(sym_name, "__system_property_get") == 0 && !orig_property_get) {
             orig_property_get = (prop_get_t)prev_func;
+            LOGI("Property hook installed on __system_property_get");
         } else if (strcmp(sym_name, "__system_property_read_callback") == 0 && !orig_property_read_callback) {
             orig_property_read_callback = (prop_read_t)prev_func;
+            LOGI("Property hook installed on __system_property_read_callback");
         } else if (strcmp(sym_name, "__system_property_read") == 0 && !orig_property_read) {
             orig_property_read = (prop_read_old_t)prev_func;
+            LOGI("Property hook installed on __system_property_read");
         }
+    } else {
+        LOGE("Bytehook failed for symbol: %s (Status: %d)", sym_name, status_code);
     }
 }
 
+static bool bytehook_initialized_ = false;
+
 bool SysPropHook::onEnable(const Context& ctx) {
-    bytehook_init(BYTEHOOK_MODE_AUTOMATIC, false);
+    if (!bytehook_initialized_) {
+        bytehook_init(BYTEHOOK_MODE_AUTOMATIC, false);
+        bytehook_initialized_ = true;
+    }
 
     bytehook_hook_all(NULL, "__system_property_get", (void*)my_system_property_get, on_hooked, NULL);
     bytehook_hook_all(NULL, "__system_property_read_callback", (void*)my_system_property_read_callback, on_hooked, NULL);
@@ -120,4 +147,4 @@ void SysPropHook::onDisable(const Context& ctx) {
 
 REGISTER_HOOK(SysPropHook);
 
-} // namespace gameunlocker
+} 

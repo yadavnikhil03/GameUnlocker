@@ -7,9 +7,6 @@ namespace gameunlocker {
 HookManager::HookManager(const Context& ctx) : ctx_(ctx) {}
 
 void HookManager::initialize(const std::optional<DeviceProfile>& profile) {
-    if (!profile.has_value()) {
-        return; 
-    }
 
     for (const auto& factory : HookRegistry::getInstance().getFactories()) {
         auto hook = factory();
