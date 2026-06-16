@@ -10,7 +10,7 @@
 
 JavaVM* g_vm = nullptr;
 
-extern "C" jint JNI_OnLoad(JavaVM* vm, void*) {
+extern "C" JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void*) {
     g_vm = vm;
     return JNI_VERSION_1_6;
 }
@@ -83,10 +83,10 @@ public:
     }
 
     void postAppSpecialize(const zygisk::AppSpecializeArgs* args) override {
-        if (!api_ || !env_) return;
+        if (!api_) return;
 
         if (activeProfile_.has_value()) {
-            Context ctx(api_, env_);
+            Context ctx(api_, nullptr);
             Spoofer spoofer(ctx);
             spoofer.applyDeviceSpoof(activeProfile_.value());
         }
