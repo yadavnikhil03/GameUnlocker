@@ -669,6 +669,9 @@
                         </div>
                         <div class="pkg-right">
                             <span class="pkg-badge ${badgeClass}">${badgeText}</span>
+                            <button class="btn-remove" onclick="launchGame('${pkg}')" title="Launch Game" style="color: #60a5fa;">
+                                <svg class="icon icon-sm" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                            </button>
                             <button class="btn-remove" onclick="removeGame('${deleteArg}', ${isCpuSpoof})" title="Remove">
                                 <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                             </button>
@@ -805,17 +808,30 @@
                     successCount++;
                 }
 
-                let writeCmd = `cat << 'EOF' > ${configPath}\n${JSON.stringify(cfg, null, 2)}\nEOF\n`;
-                let shell = await execShell(writeCmd);
-
+                let newJson = JSON.stringify(cfg, null, 4);
+                let shell = await execShell(`cat << 'EOF' > ${configPath}
+${newJson}
+EOF`);
+                
                 if (shell && shell.errno === 0) {
-                    alert(`Successfully injected ${successCount} apps.\\nPlease reboot your device to apply changes.`);
+                    alert(`Successfully injected ${successCount} apps.\nPlease reboot your device to apply changes.`);
                     loadConfig();
                 } else {
                     alert('Failed to write configuration. Make sure you have root access.');
                 }
             } catch (e) {
                 alert('Error during configuration update: ' + e);
+            }
+        }
+
+        async function launchGame(pkg) {
+            try {
+                let shell = await execShell(`monkey -p ${pkg} -c android.intent.category.LAUNCHER 1`);
+                if (shell && shell.errno !== 0) {
+                    alert('Could not launch the game natively.');
+                }
+            } catch (e) {
+                alert('Error launching game: ' + e);
             }
         }
 
