@@ -7,13 +7,19 @@
 namespace gameunlocker {
 
 std::optional<DeviceProfile> SysPropHook::activeProfile_ = std::nullopt;
+bool SysPropHook::cpuSpoofOnly_ = false;
 
-void SysPropHook::setProfile(const std::optional<DeviceProfile>& profile) {
+void SysPropHook::setProfile(const std::optional<DeviceProfile>& profile, bool cpuSpoofOnly) {
     activeProfile_ = profile;
+    cpuSpoofOnly_ = cpuSpoofOnly;
 }
 
 std::optional<DeviceProfile> SysPropHook::getProfile() {
     return activeProfile_;
+}
+
+bool SysPropHook::isCpuSpoofOnly() {
+    return cpuSpoofOnly_;
 }
 
 typedef int (*prop_get_t)(const char*, char*);
@@ -28,8 +34,17 @@ static prop_read_old_t orig_property_read = nullptr;
 thread_local prop_read_cb_t tls_app_callback = nullptr;
 
 static bool getSpoofedValue(const char* name, std::string& outValue) {
+    if (!name) return false;
+
+    if (SysPropHook::isCpuSpoofOnly() || SysPropHook::getProfile().has_value()) {
+        if (strcmp(name, "ro.board.platform") == 0) { outValue = "kalama"; return true; }
+        if (strcmp(name, "ro.hardware") == 0) { outValue = "qcom"; return true; }
+        if (strcmp(name, "ro.soc.model") == 0) { outValue = "SM8550"; return true; }
+        if (strcmp(name, "ro.soc.manufacturer") == 0) { outValue = "Qualcomm"; return true; }
+    }
+
     auto profileOpt = SysPropHook::getProfile();
-    if (!profileOpt.has_value() || !name) return false;
+    if (!profileOpt.has_value()) return false;
     
     const auto& profile = profileOpt.value();
     

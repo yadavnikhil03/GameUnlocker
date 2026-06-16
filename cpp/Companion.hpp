@@ -11,10 +11,6 @@ public:
 
     std::string resolveModulePath() const;
 
-    bool mountSpoof(const std::string& spoofFilePath) const;
-
-    bool unmountSpoof() const;
-
 private:
     const Context& ctx_;
 
@@ -23,4 +19,4 @@ private:
 
 void companionHandler(int fd);
 
-} // namespace gameunlocker
+} 

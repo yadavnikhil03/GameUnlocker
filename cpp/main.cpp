@@ -56,18 +56,11 @@ public:
         bool appNeedsCpuSpoof = ConfigManager::isCpuSpoofApp(pkgStr);
 
         if (profileOpt.has_value() || appNeedsCpuSpoof) {
-            LOGI("GameUnlocker Target Detected: %s [Profile: %s]", pkgStr.c_str(), profileOpt.has_value() ? "Active" : "None");
-
-            std::string modulePath = companion.resolveModulePath();
-            if (appNeedsCpuSpoof && !modulePath.empty()) {
-                companion.mountSpoof(modulePath + "/cpuinfo_spoof");
-            } else if (!appNeedsCpuSpoof) {
-                companion.unmountSpoof();
-            }
+            LOGI("GameUnlocker Target Detected: %s [Profile: %s, CPU Spoof: %d]", pkgStr.c_str(), profileOpt.has_value() ? "Active" : "None", appNeedsCpuSpoof);
         
             activeProfile_ = profileOpt;
 
-            SysPropHook::setProfile(profileOpt);
+            SysPropHook::setProfile(profileOpt, appNeedsCpuSpoof);
             hookManager.initialize(profileOpt);
             hookManager.enableHooks();
 
@@ -77,7 +70,6 @@ public:
                 api_->setOption(zygisk::Option::DLCLOSE_MODULE_LIBRARY);
             }
         } else {
-            companion.unmountSpoof();
             api_->setOption(zygisk::Option::DLCLOSE_MODULE_LIBRARY);
         }
     }
