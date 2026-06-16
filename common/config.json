@@ -35,6 +35,12 @@
   },
   "routing_rules": [
     {
+      "type": "wildcard",
+      "pattern": "*",
+      "profile": "SAMSUNG_S24_ULTRA",
+      "priority": 0
+    },
+    {
       "type": "exact",
       "pattern": "com.tencent.ig",
       "profile": "SAMSUNG_S24_ULTRA",

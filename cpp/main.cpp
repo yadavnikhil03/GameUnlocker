@@ -69,19 +69,17 @@ public:
             } else {
                 api_->setOption(zygisk::Option::DLCLOSE_MODULE_LIBRARY);
             }
+
+            if (profileOpt.has_value()) {
+                Spoofer spoofer(ctx);
+                spoofer.applyDeviceSpoof(profileOpt.value());
+            }
         } else {
             api_->setOption(zygisk::Option::DLCLOSE_MODULE_LIBRARY);
         }
     }
 
     void postAppSpecialize(const zygisk::AppSpecializeArgs* args) override {
-        if (!api_) return;
-
-        if (activeProfile_.has_value()) {
-            Context ctx(api_, nullptr);
-            Spoofer spoofer(ctx);
-            spoofer.applyDeviceSpoof(activeProfile_.value());
-        }
     }
 
 private:
