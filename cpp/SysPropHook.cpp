@@ -111,11 +111,16 @@ static void on_hooked(bytehook_stub_t task_stub, int status_code, const char *ca
     if (status_code == BYTEHOOK_STATUS_CODE_OK && prev_func) {
         if (strcmp(sym_name, "__system_property_get") == 0 && !orig_property_get) {
             orig_property_get = (prop_get_t)prev_func;
+            LOGI("Property hook installed on __system_property_get");
         } else if (strcmp(sym_name, "__system_property_read_callback") == 0 && !orig_property_read_callback) {
             orig_property_read_callback = (prop_read_t)prev_func;
+            LOGI("Property hook installed on __system_property_read_callback");
         } else if (strcmp(sym_name, "__system_property_read") == 0 && !orig_property_read) {
             orig_property_read = (prop_read_old_t)prev_func;
+            LOGI("Property hook installed on __system_property_read");
         }
+    } else {
+        LOGE("Bytehook failed for symbol: %s (Status: %d)", sym_name, status_code);
     }
 }
 
@@ -135,4 +140,4 @@ void SysPropHook::onDisable(const Context& ctx) {
 
 REGISTER_HOOK(SysPropHook);
 
-} // namespace gameunlocker
+} 
