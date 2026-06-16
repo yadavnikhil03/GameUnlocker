@@ -148,4 +148,4 @@ std::optional<DeviceProfile> ConfigManager::getProfileForApp(const std::string& 
     return std::nullopt;
 }
 
-} // namespace gameunlocker
+} 

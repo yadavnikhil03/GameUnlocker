@@ -44,7 +44,6 @@ public:
         }
 
         Context ctx(api_, env_);
-        CompanionManager companion(ctx);
         HookManager hookManager(ctx);
 
         if (ConfigManager::isAppBlacklisted(pkgStr)) {
@@ -57,9 +56,7 @@ public:
 
         if (profileOpt.has_value() || appNeedsCpuSpoof) {
             LOGI("GameUnlocker Target Detected: %s [Profile: %s, CPU Spoof: %d]", pkgStr.c_str(), profileOpt.has_value() ? "Active" : "None", appNeedsCpuSpoof);
-        
-            activeProfile_ = profileOpt;
-
+            
             SysPropHook::setProfile(profileOpt, appNeedsCpuSpoof);
             hookManager.initialize(profileOpt);
             hookManager.enableHooks();
@@ -85,7 +82,6 @@ public:
 private:
     zygisk::Api* api_ = nullptr;
     JNIEnv* env_ = nullptr;
-    std::optional<DeviceProfile> activeProfile_ = std::nullopt;
 };
 
 } 

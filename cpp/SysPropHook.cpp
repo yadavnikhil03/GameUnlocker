@@ -48,12 +48,14 @@ static bool getSpoofedValue(const char* name, std::string& outValue) {
     
     const auto& profile = profileOpt.value();
     
-    if (strcmp(name, "ro.product.model") == 0) outValue = profile.model;
-    else if (strcmp(name, "ro.product.brand") == 0) outValue = profile.brand;
-    else if (strcmp(name, "ro.product.name") == 0) outValue = profile.product;
-    else if (strcmp(name, "ro.product.device") == 0) outValue = profile.device;
-    else if (strcmp(name, "ro.product.manufacturer") == 0) outValue = profile.manufacturer;
-    else if (strcmp(name, "ro.build.fingerprint") == 0) outValue = profile.fingerprint;
+    std::string prop(name);
+    
+    if (prop.find(".model") != std::string::npos && prop.find("ro.product") == 0) outValue = profile.model;
+    else if (prop.find(".brand") != std::string::npos && prop.find("ro.product") == 0) outValue = profile.brand;
+    else if (prop.find(".name") != std::string::npos && prop.find("ro.product") == 0) outValue = profile.product;
+    else if (prop.find(".device") != std::string::npos && prop.find("ro.product") == 0) outValue = profile.device;
+    else if (prop.find(".manufacturer") != std::string::npos && prop.find("ro.product") == 0) outValue = profile.manufacturer;
+    else if (prop.find("build.fingerprint") != std::string::npos && prop.find("ro.") == 0) outValue = profile.fingerprint;
     else return false;
 
     return true;
@@ -124,8 +126,13 @@ static void on_hooked(bytehook_stub_t task_stub, int status_code, const char *ca
     }
 }
 
+static bool bytehook_initialized_ = false;
+
 bool SysPropHook::onEnable(const Context& ctx) {
-    bytehook_init(BYTEHOOK_MODE_AUTOMATIC, false);
+    if (!bytehook_initialized_) {
+        bytehook_init(BYTEHOOK_MODE_AUTOMATIC, false);
+        bytehook_initialized_ = true;
+    }
 
     bytehook_hook_all(NULL, "__system_property_get", (void*)my_system_property_get, on_hooked, NULL);
     bytehook_hook_all(NULL, "__system_property_read_callback", (void*)my_system_property_read_callback, on_hooked, NULL);

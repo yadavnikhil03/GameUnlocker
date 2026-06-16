@@ -19,7 +19,7 @@ is_game_configured() {
         *launcher*|*systemui*|*android*|*miui*|*bbk*|*nexus*|*pixel*) return 1 ;;
     esac
 
-    grep -q "\"$1\"" "$CONFIG_FILE"
+    grep -q "\"pattern\": \"$1\"" "$CONFIG_FILE"
 }
 
 apply_perf_mode() {
