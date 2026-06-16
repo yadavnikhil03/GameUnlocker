@@ -1,6 +1,6 @@
 # FPS Unlocker (Zygisk)
 
-![Version](https://img.shields.io/badge/Version-2.0.6-blue.svg)
+![Version](https://img.shields.io/badge/Version-2.0.0-blue.svg)
 
 FPS Unlocker bypasses game frame rate locks by dynamically spoofing device hardware strings via native C++ hooking.
 
