@@ -868,6 +868,7 @@ EOF`);
         function proceedToGitHub() {
             if (generatedGithubUrl) {
                 window.open(generatedGithubUrl, '_blank');
+                alert('Please paste the report content from the text area into the issue body.');
             }
             closeBugModal();
         }
@@ -918,18 +919,17 @@ EOF`);
             const issueBody = "**Describe the issue**\nA clear and concise description of what the bug is.\n\n" +
                               "**To Reproduce**\nSteps to reproduce the behavior:\n1. \n2. \n\n" +
                               "**Environment**\n- Device: " + model + "\n- OS: Android " + android + "\n- Zygisk: " + zygiskImpl + "\n\n" +
-                              "**Logs & Configuration**\n" +
-                              "> **Important:** Please attach the `GameUnlocker_Logs.txt` file that was just downloaded to your device!\n\n" +
-                              "<details>\n<summary>Module Configuration Dump</summary>\n\n" +
-                              "```json\n" + configDump + "\n```\n" +
-                              "</details>";
+                              "**Module Configuration Dump**\n" +
+                              "```json\n" + configDump + "\n```\n\n" +
+                              "**Logcat Output**\n" +
+                              "```\n" + logSnippet + "\n```";
             
-            generatedGithubUrl = `https://github.com/yadavnikhil03/GameUnlocker/issues/new?title=Bug+Report:+[Brief+Title+Here]&body=${encodeURIComponent(issueBody)}`;
+            generatedGithubUrl = `https://github.com/yadavnikhil03/GameUnlocker/issues/new`;
             
             body.innerHTML = `
                 <div style="color: var(--foreground); font-weight: 500; margin-bottom: 12px;">Diagnostics Complete!</div>
-                <div style="font-size: 13px; color: var(--muted-foreground); margin-bottom: 8px;">Please copy the logs below and paste them into the GitHub issue manually:</div>
-                <textarea id="logOutputArea" class="terminal-box" style="width: 100%; height: 120px; resize: none; margin-bottom: 12px;" readonly>${logSnippet}</textarea>
+                <div style="font-size: 13px; color: var(--muted-foreground); margin-bottom: 8px;">Please click "Copy Logs" below, then "Open GitHub" and paste the copied content into the issue body:</div>
+                <textarea id="logOutputArea" class="terminal-box" style="width: 100%; height: 120px; resize: none; margin-bottom: 12px;" readonly>${issueBody}</textarea>
                 <div style="display: flex; gap: 8px;">
                     <button id="copyLogsBtn" class="btn btn-outline" style="flex: 1;" onclick="copyLogs()">
                         <svg class="icon icon-sm" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
