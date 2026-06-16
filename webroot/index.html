@@ -885,6 +885,7 @@ EOF`);
 
             let model = "Unknown";
             let android = "Unknown";
+            let zygiskImpl = "Unknown";
             let logSnippet = "No recent logs found.";
             let configDump = JSON.stringify(window.currentConfig || {}, null, 2);
             let logFileStatus = "";
@@ -895,6 +896,9 @@ EOF`);
                 
                 let aShell = await execShell('echo "$(getprop ro.build.version.release) (API $(getprop ro.build.version.sdk))"');
                 if (aShell && aShell.stdout && aShell.stdout.trim() !== "") android = aShell.stdout.trim();
+
+                let zShell = await execShell('if [ -d "/data/adb/modules/zygisksu" ]; then echo "ZygiskNext"; elif [ -d "/data/adb/modules/rezygisk" ]; then echo "ReZygisk"; elif [ -d "/data/adb/modules/neozygisk" ]; then echo "NeoZygisk"; elif [ -d "/data/adb/modules/zygisk_next" ]; then echo "ZygiskNext (Legacy)"; else echo "Built-in / None"; fi');
+                if (zShell && zShell.stdout && zShell.stdout.trim() !== "") zygiskImpl = zShell.stdout.trim();
 
                 body.innerHTML = `<div style="display:flex; align-items:center; gap:8px;"><div class="loader" style="margin:0; width:16px; height:16px;"></div> Saving logs to Downloads...</div>`;
 
@@ -913,7 +917,7 @@ EOF`);
 
             const issueBody = "**Describe the issue**\nA clear and concise description of what the bug is.\n\n" +
                               "**To Reproduce**\nSteps to reproduce the behavior:\n1. \n2. \n\n" +
-                              "**Environment**\n- Device: " + model + "\n- OS: Android " + android + "\n\n" +
+                              "**Environment**\n- Device: " + model + "\n- OS: Android " + android + "\n- Zygisk: " + zygiskImpl + "\n\n" +
                               "**Logs & Configuration**\n" +
                               "> **Important:** Please attach the `GameUnlocker_Logs.txt` file that was just downloaded to your device!\n\n" +
                               "<details>\n<summary>Module Configuration Dump</summary>\n\n" +
