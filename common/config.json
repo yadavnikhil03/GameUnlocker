@@ -132,6 +132,12 @@
     },
     {
       "type": "exact",
+      "pattern": "com.tencent.tmgp.codev",
+      "profile": "SAMSUNG_S24_ULTRA",
+      "priority": 50
+    },
+    {
+      "type": "exact",
       "pattern": "com.mobile.legends",
       "profile": "SAMSUNG_S24_ULTRA",
       "priority": 50
