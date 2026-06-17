@@ -24,11 +24,16 @@ public:
         env_ = env;
         
         Context ctx(api_, env_);
-        ConfigManager::globalInit(ctx);
+        configLoaded_ = ConfigManager::globalInit(ctx);
     }
 
     void preAppSpecialize(zygisk::AppSpecializeArgs* args) override {
         if (!api_ || !env_ || !args) return;
+
+        if (!configLoaded_) {
+            api_->setOption(zygisk::Option::DLCLOSE_MODULE_LIBRARY);
+            return;
+        }
 
         JniString pkg(env_, args->nice_name);
         const char* package_name = pkg.get();
@@ -82,6 +87,7 @@ public:
 private:
     zygisk::Api* api_ = nullptr;
     JNIEnv* env_ = nullptr;
+    bool configLoaded_ = false;
 };
 
 } 

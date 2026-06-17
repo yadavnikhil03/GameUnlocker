@@ -1,19 +1,19 @@
-#!/bin/bash
+#!/system/bin/sh
 SKIPMOUNT=false
 PROPFILE=true
 POSTFSDATA=true
 LATESTARTSERVICE=true
+SKIPUNZIP=1
 
 Market_Name=$(getprop ro.product.marketname)
 if [ -z "$Market_Name" ]; then
     Market_Name="$(getprop ro.product.brand) $(getprop ro.product.model)"
 fi
-Device=`getprop ro.product.device`
-Model=`getprop ro.product.model`
-Version=`getprop ro.build.version.incremental`
-Android=`getprop ro.build.version.release`
-CPU_ABI=`getprop ro.product.cpu.abi`
-CommonPath=$MODPATH/common
+Device=$(getprop ro.product.device)
+Model=$(getprop ro.product.model)
+Version=$(getprop ro.build.version.incremental)
+Android=$(getprop ro.build.version.release)
+CPU_ABI=$(getprop ro.product.cpu.abi)
 
 abort_missing_zygisk() {
   ui_print ""
@@ -69,10 +69,10 @@ check_root() {
     count=$((count + 1))
   fi
 
-  if [ $count -gt 1 ]; then
+  if [ "$count" -gt 1 ]; then
     ui_print " [!] Error: Multiple Root Solutions Found!"
     abort
-  elif [ $count -eq 0 ]; then
+  elif [ "$count" -eq 0 ]; then
     ui_print " [!] Error: No Supported Root Solution (Magisk/KSU/APatch)!"
     abort
   else
@@ -85,7 +85,7 @@ check_root
 check_zygisk_implementation() {
   ui_print " [*] Checking Zygisk Implementation"
   sleep 0.5
-  
+
   if [ ! -d "/data/adb/modules/zygisksu" ] && \
      [ ! -d "/data/adb/modules/rezygisk" ] && \
      [ ! -d "/data/adb/modules/neozygisk" ] && \
@@ -101,27 +101,15 @@ check_zygisk_implementation() {
 
 check_zygisk_implementation
 
-on_install() {
-  ui_print " [*] Extracting module files"
-  sleep 0.5
-  unzip -o "$ZIPFILE" \
-    'module.prop' \
-    'common/*' \
-    'zygisk/*' \
-    'webroot/*' \
-    'system/*' \
-    -d $MODPATH >&2
-}
-
-set_permissions() {
-  ui_print " [*] Applying permissions"
-  set_perm_recursive  $MODPATH  0  0  0755  0644
-}
-
-ui_print " [*] Preparing package"
+ui_print " [*] Extracting module files"
 sleep 0.5
-mv ${CommonPath}/* $MODPATH
-rm -rf ${CommonPath}
+unzip -o "$ZIPFILE" \
+  'module.prop' \
+  'uninstall.sh' \
+  'common/*' \
+  'zygisk/*' \
+  'webroot/*' \
+  -d "$MODPATH" >&2
 
 if [ ! -d "$MODPATH/zygisk" ]; then
   abort_missing_zygisk "$MODPATH/zygisk/<abi>.so"
@@ -145,9 +133,20 @@ esac
 ui_print " [*] Zygisk library verified for $CPU_ABI"
 sleep 0.5
 
-ui_print " [*] Finalizing config files"
-chmod 0644 $MODPATH/config.json
+ui_print " [*] Moving common files into module root"
+mv "$MODPATH"/common/* "$MODPATH/" 2>/dev/null
+rmdir "$MODPATH/common" 2>/dev/null
+
+if [ -f "$MODPATH/config.json" ]; then
+  chmod 0644 "$MODPATH/config.json"
+else
+  ui_print " [!] Warning: config.json missing after extraction"
+fi
+
+ui_print " [*] Applying permissions"
 sleep 0.5
+set_perm_recursive "$MODPATH" 0 0 0755 0644
+set_perm_recursive "$MODPATH/zygisk" 0 0 0755 0644
 
 ui_print ""
 ui_print " Installation complete"

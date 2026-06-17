@@ -26,6 +26,7 @@ private:
     std::mutex cacheMutex_;
 
     bool matchRule(const RoutingRule& rule, std::string_view pkg) const;
+    bool isSystemPackage(std::string_view pkg) const;
 };
 
 } // namespace gameunlocker
