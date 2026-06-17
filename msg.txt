@@ -1,1 +1,1 @@
-chore: Release v2.0.0 (WebUI redesign, Valormobile support, and robust logging)
+chore: Release v2.0.1 (Fix service loops, customize quoting, and rewrite README)

@@ -2,6 +2,7 @@
 #include "HookRegistry.hpp"
 #include "logger.hpp"
 #include <string.h>
+#include <sys/system_properties.h>
 #include <bytehook.h>
 
 namespace gameunlocker {
@@ -33,6 +34,13 @@ static prop_read_old_t orig_property_read = nullptr;
 
 thread_local prop_read_cb_t tls_app_callback = nullptr;
 
+static void writeSpoofedValue(char* value, const std::string& spoofedVal) {
+    size_t toCopy = spoofedVal.size();
+    if (toCopy >= PROP_VALUE_MAX) toCopy = PROP_VALUE_MAX - 1;
+    memcpy(value, spoofedVal.c_str(), toCopy);
+    value[toCopy] = '\0';
+}
+
 static bool getSpoofedValue(const char* name, std::string& outValue) {
     if (!name) return false;
 
@@ -45,28 +53,61 @@ static bool getSpoofedValue(const char* name, std::string& outValue) {
 
     auto profileOpt = SysPropHook::getProfile();
     if (!profileOpt.has_value()) return false;
-    
-    const auto& profile = profileOpt.value();
-    
-    std::string prop(name);
-    
-    if (prop.find(".model") != std::string::npos && prop.find("ro.product") == 0) outValue = profile.model;
-    else if (prop.find(".brand") != std::string::npos && prop.find("ro.product") == 0) outValue = profile.brand;
-    else if (prop.find(".name") != std::string::npos && prop.find("ro.product") == 0) outValue = profile.product;
-    else if (prop.find(".device") != std::string::npos && prop.find("ro.product") == 0) outValue = profile.device;
-    else if (prop.find(".manufacturer") != std::string::npos && prop.find("ro.product") == 0) outValue = profile.manufacturer;
-    else if (prop.find("build.fingerprint") != std::string::npos && prop.find("ro.") == 0) outValue = profile.fingerprint;
-    else return false;
 
-    return true;
+    const auto& profile = profileOpt.value();
+
+    if (strcmp(name, "ro.product.manufacturer") == 0 ||
+        strcmp(name, "ro.product.vendor.manufacturer") == 0 ||
+        strcmp(name, "ro.product.odm.manufacturer") == 0 ||
+        strcmp(name, "ro.product.system.manufacturer") == 0 ||
+        strcmp(name, "ro.product.product.manufacturer") == 0) {
+        outValue = profile.manufacturer; return true;
+    }
+    if (strcmp(name, "ro.product.model") == 0 ||
+        strcmp(name, "ro.product.vendor.model") == 0 ||
+        strcmp(name, "ro.product.odm.model") == 0 ||
+        strcmp(name, "ro.product.system.model") == 0 ||
+        strcmp(name, "ro.product.product.model") == 0) {
+        outValue = profile.model; return true;
+    }
+    if (strcmp(name, "ro.product.device") == 0 ||
+        strcmp(name, "ro.product.vendor.device") == 0 ||
+        strcmp(name, "ro.product.odm.device") == 0 ||
+        strcmp(name, "ro.product.system.device") == 0 ||
+        strcmp(name, "ro.product.product.device") == 0) {
+        outValue = profile.device; return true;
+    }
+    if (strcmp(name, "ro.product.brand") == 0 ||
+        strcmp(name, "ro.product.vendor.brand") == 0 ||
+        strcmp(name, "ro.product.odm.brand") == 0 ||
+        strcmp(name, "ro.product.system.brand") == 0 ||
+        strcmp(name, "ro.product.product.brand") == 0) {
+        outValue = profile.brand; return true;
+    }
+    if (strcmp(name, "ro.product.name") == 0 ||
+        strcmp(name, "ro.product.vendor.name") == 0 ||
+        strcmp(name, "ro.product.odm.name") == 0 ||
+        strcmp(name, "ro.product.system.name") == 0 ||
+        strcmp(name, "ro.product.product.name") == 0) {
+        outValue = profile.product; return true;
+    }
+    if (strcmp(name, "ro.build.fingerprint") == 0 ||
+        strcmp(name, "ro.bootimage.build.fingerprint") == 0 ||
+        strcmp(name, "ro.vendor.build.fingerprint") == 0 ||
+        strcmp(name, "ro.system.build.fingerprint") == 0 ||
+        strcmp(name, "ro.product.build.fingerprint") == 0 ||
+        strcmp(name, "ro.odm.build.fingerprint") == 0) {
+        outValue = profile.fingerprint; return true;
+    }
+
+    return false;
 }
 
 static int my_system_property_get(const char* name, char* value) {
     std::string spoofedVal;
     if (getSpoofedValue(name, spoofedVal)) {
         LOGD("SysPropHook: Intercepted __system_property_get for '%s', returning spoofed value '%s'", name, spoofedVal.c_str());
-        strncpy(value, spoofedVal.c_str(), 91);
-        value[91] = '\0';
+        writeSpoofedValue(value, spoofedVal);
         return (int)strlen(value);
     }
     if (orig_property_get) {
@@ -99,12 +140,13 @@ static void my_system_property_read_callback(const void* pi, prop_read_cb_t cb, 
 static void my_system_property_read(const void* pi, unsigned* serial, char* name, char* value) {
     if (!orig_property_read) return;
     orig_property_read(pi, serial, name, value);
-    
+
+    if (!name || !value) return;
+
     std::string spoofedVal;
     if (getSpoofedValue(name, spoofedVal)) {
         LOGD("SysPropHook: Intercepted __system_property_read for '%s', injecting spoofed value '%s'", name, spoofedVal.c_str());
-        strncpy(value, spoofedVal.c_str(), 91);
-        value[91] = '\0';
+        writeSpoofedValue(value, spoofedVal);
     }
 }
 

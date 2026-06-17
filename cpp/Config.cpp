@@ -29,16 +29,25 @@ bool ConfigManager::globalInit(const Context& ctx) {
         return false;
     }
 
-    char buffer[16384]; 
-    memset(buffer, 0, sizeof(buffer));
-    ssize_t bytes = read(fd.get(), buffer, sizeof(buffer) - 1);
+    std::string raw;
+    raw.reserve(16384);
+    char chunk[4096];
+    ssize_t bytes;
+    const size_t kMaxConfigSize = 1048576;
 
-    if (bytes <= 0) {
+    while ((bytes = read(fd.get(), chunk, sizeof(chunk))) > 0) {
+        raw.append(chunk, static_cast<size_t>(bytes));
+        if (raw.size() > kMaxConfigSize) {
+            LOGE("ConfigManager::globalInit failed: config.json exceeds size limit");
+            return false;
+        }
+    }
+
+    if (raw.empty()) {
         LOGE("ConfigManager::globalInit failed: config.json is empty or read error");
         return false;
     }
 
-    std::string raw(buffer, static_cast<size_t>(bytes));
     isLoaded_ = parseJson(raw);
     return isLoaded_;
 }
@@ -52,9 +61,12 @@ bool ConfigManager::parseJson(const std::string& jsonString) {
                 if (!val.is_object()) continue;
 
                 DeviceProfile profile;
-                if (!val.contains("MANUFACTURER") || !val.contains("BRAND") || 
-                    !val.contains("MODEL") || !val.contains("DEVICE") || 
-                    !val.contains("PRODUCT") || !val.contains("FINGERPRINT")) {
+                if (!val.contains("MANUFACTURER") || !val["MANUFACTURER"].is_string() ||
+                    !val.contains("BRAND") || !val["BRAND"].is_string() ||
+                    !val.contains("MODEL") || !val["MODEL"].is_string() ||
+                    !val.contains("DEVICE") || !val["DEVICE"].is_string() ||
+                    !val.contains("PRODUCT") || !val["PRODUCT"].is_string() ||
+                    !val.contains("FINGERPRINT") || !val["FINGERPRINT"].is_string()) {
                     continue;
                 }
 
@@ -65,7 +77,7 @@ bool ConfigManager::parseJson(const std::string& jsonString) {
                 profile.product = val["PRODUCT"].get<std::string>();
                 profile.fingerprint = val["FINGERPRINT"].get<std::string>();
 
-                if (val.contains("BRAND_FOR_DEVICE")) {
+                if (val.contains("BRAND_FOR_DEVICE") && val["BRAND_FOR_DEVICE"].is_string()) {
                     profile.brand_for_device = val["BRAND_FOR_DEVICE"].get<std::string>();
                 }
 
@@ -75,15 +87,16 @@ bool ConfigManager::parseJson(const std::string& jsonString) {
 
         if (j.contains("routing_rules") && j["routing_rules"].is_array()) {
             for (const auto& ruleJson : j["routing_rules"]) {
-                if (!ruleJson.is_object() || !ruleJson.contains("type") || 
-                    !ruleJson.contains("pattern") || !ruleJson.contains("profile") || 
-                    !ruleJson.contains("priority")) {
+                if (!ruleJson.is_object() || !ruleJson.contains("type") || !ruleJson["type"].is_string() ||
+                    !ruleJson.contains("pattern") || !ruleJson["pattern"].is_string() ||
+                    !ruleJson.contains("profile") || !ruleJson["profile"].is_string() ||
+                    !ruleJson.contains("priority") || !ruleJson["priority"].is_number()) {
                     continue;
                 }
 
                 RoutingRule rule;
                 std::string typeStr = ruleJson["type"].get<std::string>();
-                
+
                 if (typeStr == "exact") rule.type = MatchType::EXACT;
                 else if (typeStr == "prefix") rule.type = MatchType::PREFIX;
                 else if (typeStr == "suffix") rule.type = MatchType::SUFFIX;
@@ -122,6 +135,9 @@ bool ConfigManager::parseJson(const std::string& jsonString) {
         return false;
     } catch (const json::type_error& e) {
         LOGE("Type error in config.json: %s", e.what());
+        return false;
+    } catch (const std::exception& e) {
+        LOGE("Error processing config.json: %s", e.what());
         return false;
     }
 }
