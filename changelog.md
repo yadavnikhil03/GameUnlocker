@@ -1,5 +1,17 @@
 # Changelog
 
+## v2.0.1
+
+### Bug Fixes
+- Fixed `service.sh` game detection always failing due to multi-line grep on JSON
+- Fixed `uninstall.sh` trying to umount deleted cpuinfo and reset stale properties
+- Fixed `customize.sh` unquoted `$count` variable causing errors on some shells
+- Fixed WebUI `validPkg` regex allowing empty package segments
+- Added `napa` and `napa*` wildcard variants to Qualcomm device detection
+- Created proper `changelog.md` for the update channel
+
+---
+
 ## v2.0.0
 
 ### Architecture
