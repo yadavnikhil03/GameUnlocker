@@ -13,7 +13,7 @@ public:
     }
 
     bool onEnable(const Context& ctx) override;
-    void onDisable(const Context& ctx) override;
+
 
     static void setProfile(const std::optional<DeviceProfile>& profile, bool cpuSpoofOnly = false);
     static std::optional<DeviceProfile> getProfile();

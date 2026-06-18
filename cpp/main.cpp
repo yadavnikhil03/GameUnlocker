@@ -1,7 +1,6 @@
 #include "zygisk.hpp"
 #include "context.hpp"
 #include "Config.hpp"
-#include "Companion.hpp"
 #include "Spoofer.hpp"
 #include "HookManager.hpp"
 #include "SysPropHook.hpp"
@@ -22,7 +21,7 @@ public:
     void onLoad(zygisk::Api* api, JNIEnv* env) override {
         api_ = api;
         env_ = env;
-        
+
         Context ctx(api_, env_);
         configLoaded_ = ConfigManager::globalInit(ctx);
     }
@@ -61,14 +60,12 @@ public:
 
         if (profileOpt.has_value() || appNeedsCpuSpoof) {
             LOGI("GameUnlocker Target Detected: %s [Profile: %s, CPU Spoof: %d]", pkgStr.c_str(), profileOpt.has_value() ? "Active" : "None", appNeedsCpuSpoof);
-            
+
             SysPropHook::setProfile(profileOpt, appNeedsCpuSpoof);
-            hookManager.initialize(profileOpt);
+            hookManager.initialize();
             hookManager.enableHooks();
 
-            if (hookManager.hasActiveHooks()) {
-                api_->pltHookCommit();
-            } else {
+            if (!hookManager.hasActiveHooks()) {
                 api_->setOption(zygisk::Option::DLCLOSE_MODULE_LIBRARY);
             }
 
@@ -81,16 +78,12 @@ public:
         }
     }
 
-    void postAppSpecialize(const zygisk::AppSpecializeArgs* args) override {
-    }
-
 private:
     zygisk::Api* api_ = nullptr;
     JNIEnv* env_ = nullptr;
     bool configLoaded_ = false;
 };
 
-} 
+}
 
 REGISTER_ZYGISK_MODULE(gameunlocker::AppLifecycle)
-REGISTER_ZYGISK_COMPANION(gameunlocker::companionHandler)

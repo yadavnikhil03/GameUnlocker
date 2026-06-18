@@ -2,7 +2,6 @@
 
 #include "context.hpp"
 #include "IHook.hpp"
-#include "ConfigData.hpp"
 #include <vector>
 #include <memory>
 
@@ -12,11 +11,9 @@ class HookManager {
 public:
     explicit HookManager(const Context& ctx);
 
-    void initialize(const std::optional<DeviceProfile>& profile);
+    void initialize();
 
     void enableHooks();
-
-    void disableHooks();
 
     bool hasActiveHooks() const;
 

@@ -27,6 +27,7 @@ private:
 
     bool matchRule(const RoutingRule& rule, std::string_view pkg) const;
     bool isSystemPackage(std::string_view pkg) const;
+    void putCache(const std::string& pkg, const std::string& profile);
 };
 
 } // namespace gameunlocker
