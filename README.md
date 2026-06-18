@@ -182,7 +182,6 @@ To package the flashable ZIP, the [GitHub Actions workflow](.github/workflows/re
 │   ├── Spoofer.cpp           # JNI android.os.Build field injection
 │   ├── GpuHook.cpp           # GLES glGetString hook
 │   ├── HookManager.cpp       # Hook lifecycle orchestrator
-│   ├── Companion.cpp         # Root companion process (stub)
 │   ├── include/nlohmann/     # nlohmann/json header-only lib
 │   └── zygisk.hpp            # Zygisk API v4 (upstream, unmodified)
 ├── common/

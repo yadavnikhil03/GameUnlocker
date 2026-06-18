@@ -129,7 +129,7 @@ bool ConfigManager::parseJson(const std::string& jsonString) {
             }
         }
 
-        return true;
+        return !config_.profiles.empty() || !config_.cpuSpoofApps.empty() || !config_.blacklistedApps.empty() || j.contains("routing_rules");
     } catch (const json::parse_error& e) {
         LOGE("Failed to parse config.json: %s", e.what());
         return false;

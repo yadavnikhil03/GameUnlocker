@@ -6,7 +6,7 @@ namespace gameunlocker {
 
 HookManager::HookManager(const Context& ctx) : ctx_(ctx) {}
 
-void HookManager::initialize(const std::optional<DeviceProfile>& profile) {
+void HookManager::initialize() {
 
     for (const auto& factory : HookRegistry::getInstance().getFactories()) {
         auto hook = factory();
@@ -29,13 +29,7 @@ void HookManager::enableHooks() {
     }
 }
 
-void HookManager::disableHooks() {
-    for (auto& hook : activeHooks_) {
-        hook->onDisable(ctx_);
-        LOGI("HookManager: Disabled hook '%s'", hook->getName());
-    }
-    activeHooks_.clear();
-}
+
 
 bool HookManager::hasActiveHooks() const {
     return !activeHooks_.empty();

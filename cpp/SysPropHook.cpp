@@ -184,8 +184,7 @@ bool SysPropHook::onEnable(const Context& ctx) {
     return true;
 }
 
-void SysPropHook::onDisable(const Context& ctx) {
-}
+
 
 REGISTER_HOOK(SysPropHook);
 

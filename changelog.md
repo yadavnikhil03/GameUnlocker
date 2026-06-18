@@ -1,5 +1,15 @@
 # Changelog
 
+## v2.0.2
+
+### Refactoring & Fixes
+- Added GLES31 and GLES32 support for broader GPU spoofing coverage
+- Tightened `config.json` parsing to ensure strict success semantics
+- Cleaned up dead code (empty `onDisable` overrides, unreachable Google GPU branches)
+- Fixed `HookManager::initialize` signature mismatch
+
+---
+
 ## v2.0.1
 
 ### Bug Fixes
@@ -47,8 +57,3 @@
 - Automatic ABI validation during install
 - Update channel via `release.json`
 
-### Bug Fixes
-- Fixed service.sh game detection failing due to multi-line grep
-- Fixed uninstall.sh referencing stale properties and deleted files
-- Fixed WebUI package validation accepting empty segments
-- Quoted shell variables in customize.sh for portability

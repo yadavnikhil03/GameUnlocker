@@ -8,11 +8,13 @@ if [ ! -f "$CONFIG_FILE" ]; then
 fi
 
 get_foreground_app() {
-    local pkg
+    local pkg window_out
 
-    pkg=$(dumpsys window 2>/dev/null | grep -m1 -E 'mCurrentFocus|mFocusedApp' | sed -n 's/.*[[:space:]]\([A-Za-z0-9_][A-Za-z0-9_.]*\)\/.*/\1/p')
+    # A single dumpsys window call; reuse the output for both regex variants.
+    window_out=$(dumpsys window 2>/dev/null)
+    pkg=$(printf '%s\n' "$window_out" | grep -m1 -E 'mCurrentFocus|mFocusedApp' | sed -n 's/.*[[:space:]]\([A-Za-z0-9_][A-Za-z0-9_.]*\)\/.*/\1/p')
     if [ -z "$pkg" ]; then
-        pkg=$(dumpsys window 2>/dev/null | grep -m1 -E 'mCurrentFocus|mFocusedApp' | sed -n 's/.*\(\b[A-Za-z0-9_][A-Za-z0-9_.]*\)\/.*/\1/p')
+        pkg=$(printf '%s\n' "$window_out" | grep -m1 -E 'mCurrentFocus|mFocusedApp' | sed -n 's/.*\([A-Za-z0-9_][A-Za-z0-9_.]*\)\/.*/\1/p')
     fi
     if [ -z "$pkg" ]; then
         pkg=$(dumpsys activity activities 2>/dev/null | grep -m1 -E 'mResumedActivity|topResumedActivity|ResumedActivity' | sed -n 's/.*[[:space:]]\([A-Za-z0-9_][A-Za-z0-9_.]*\)\/.*/\1/p')
@@ -32,7 +34,7 @@ get_foreground_app() {
 
 is_system_package() {
     case "$1" in
-        ""|android|com.android.*|com.google.android.*|com.miui.*|com.xiaomi.*|com.sec.*|com.huawei.*|com.oppo.*|com.coloros.*|com.heytap.*|com.vivo.*|com.iqoo.*|com.bbk.*|miui.*|org.lineageos.*|*launcher*|*systemui*|*inputmethod*)
+        ""|android|com.android.*|com.google.android.*|com.miui.*|com.xiaomi.*|com.sec.*|com.huawei.*|com.oppo.*|com.coloros.*|com.heytap.*|com.vivo.*|com.iqoo.*|com.bbk.*|miui.*|org.lineageos.*|*.launcher|*.launcher.*|*.systemui|com.android.inputmethod.*|*inputmethod*)
             return 0 ;;
     esac
     return 1
@@ -59,11 +61,16 @@ is_qualcomm_device() {
     local hw
     hw=$(getprop ro.hardware)
     case "$hw" in
-        qcom|kalama|taro|lahaina|shima|holi|napa|napali|kalama*|taro*|lahaina*|shima*|napa*)
+        qcom|kalama|taro|lahaina|shima|holi|napa|napali|crow|cape|uksi|kalama*|taro*|lahaina*|shima*|napa*|napali*)
             return 0 ;;
     esac
     return 1
 }
+
+# Capture OEM defaults once so restore returns the device to its real state
+# rather than forcing an arbitrary value.
+GPU_MODE_DEFAULT=$(getprop vendor.gpu.mode)
+GFX_LOW_QUALITY_DEFAULT=$(getprop vendor.gfx.low_quality)
 
 apply_perf_mode() {
     if is_qualcomm_device; then
@@ -74,8 +81,8 @@ apply_perf_mode() {
 
 restore_perf_mode() {
     if is_qualcomm_device; then
-        setprop vendor.gpu.mode normal 2>/dev/null
-        setprop vendor.gfx.low_quality 0 2>/dev/null
+        setprop vendor.gpu.mode "$GPU_MODE_DEFAULT" 2>/dev/null
+        setprop vendor.gfx.low_quality "$GFX_LOW_QUALITY_DEFAULT" 2>/dev/null
     fi
 }
 

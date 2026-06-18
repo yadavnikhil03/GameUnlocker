@@ -25,7 +25,7 @@ public:
 
     bool onEnable(const Context& ctx) override;
 
-    void onDisable(const Context& ctx) override;
+
 };
 
 } 
