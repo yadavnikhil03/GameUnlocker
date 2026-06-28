@@ -303,6 +303,48 @@
       "pattern": "com.nintendo.zaka",
       "profile": "PIXEL_9_PRO",
       "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.ea.gp.fifamobile",
+      "profile": "SAMSUNG_S24_ULTRA",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.garena.game.freefire",
+      "profile": "PIXEL_9_PRO",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.tencent.tmgp.cf",
+      "profile": "SAMSUNG_S24_ULTRA",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.HoYoverse.hkrpgoversea",
+      "profile": "PIXEL_9_PRO",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.miHoYo.hkrpg",
+      "profile": "PIXEL_9_PRO",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.tencent.tmgp.sgame",
+      "profile": "SAMSUNG_S24_ULTRA",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.levelinfinite.sgame",
+      "profile": "SAMSUNG_S24_ULTRA",
+      "priority": 50
     }
   ],
   "cpu_spoof": {
