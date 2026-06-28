@@ -1,5 +1,23 @@
 # Changelog
 
+## v2.1.0
+
+### Bug Fixes
+- **Fixed GPU spoof bypass for Google-profile games** (`GpuHook::isSupported`): Genshin Impact, Honkai Star Rail, and other games mapped to the `PIXEL_9_PRO` profile were silently skipping the GPU hook because the check `manufacturer != "Google"` treated the spoofed profile's manufacturer as if it were the real device. The GPU hook now correctly activates for any active profile.
+- **Fixed FC Mobile / FIFA Mobile not working out-of-the-box**: Added `com.ea.gp.fifamobile` to the default routing rules (resolves #13).
+- **Fixed WebUI infinite spinner when opened outside KSU/MMRL**: When the WebUI is opened in a plain browser (no root shell injected), the UI now shows a clear error banner — "Shell not available — open via KSU WebUI / MMRL" — instead of hanging on loading spinners forever (resolves #11).
+
+### New Game Profiles Added (default config)
+- FC Mobile / FIFA Mobile (`com.ea.gp.fifamobile`) → Samsung S24 Ultra
+- Free Fire Global (`com.garena.game.freefire`) → Pixel 9 Pro
+- CrossFire Mobile (`com.tencent.tmgp.cf`) → Samsung S24 Ultra
+- Honkai: Star Rail Global (`com.HoYoverse.hkrpgoversea`) → Pixel 9 Pro
+- Honkai: Star Rail CN (`com.miHoYo.hkrpg`) → Pixel 9 Pro
+- Honor of Kings Global (`com.tencent.tmgp.sgame`) → Samsung S24 Ultra
+- Honor of Kings Global (`com.levelinfinite.sgame`) → Samsung S24 Ultra
+
+---
+
 ## v2.0.2
 
 ### Refactoring & Fixes

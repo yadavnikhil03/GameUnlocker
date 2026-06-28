@@ -1,1 +1,1 @@
-refactor(core): Bytehook integration for robust dynamic PLT hooking
+chore: Release v2.1.0 (Bug fixes for GPU hook, FC Mobile, and WebUI)

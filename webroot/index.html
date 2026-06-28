@@ -102,6 +102,11 @@
             border-radius: 50%; animation: spin 0.6s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .loading { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 22px; color: #555; font-size: 12px; }
+
+        .exec-error { background: #2a1a1a; border: 1px solid #5a2020; border-radius: 6px; padding: 14px 16px;
+            margin-bottom: 16px; display: none; }
+        .exec-error .exec-error-title { font-size: 13px; font-weight: 700; color: #ef6b6b; margin-bottom: 6px; }
+        .exec-error .exec-error-body { font-size: 12px; color: #888; line-height: 1.6; }
     </style>
 </head>
 <body>
@@ -109,6 +114,11 @@
         <div class="header">
             <h1>GameUnlocker <span class="badge" id="statusBadge">...</span></h1>
             <div class="sub" id="deviceInfo">loading...</div>
+        </div>
+
+        <div class="exec-error" id="execError">
+            <div class="exec-error-title">⚠ Shell not available</div>
+            <div class="exec-error-body">This WebUI requires root shell access. Open it through the <strong>KSU WebUI app</strong>, <strong>MMRL</strong>, or another supported manager — not a regular browser.<br>If you are using a manager, make sure the GameUnlocker module is enabled and the device is rebooted.</div>
         </div>
 
         <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
@@ -179,6 +189,17 @@
             "PIXEL_9_PRO":       "Pixel 9 Pro"
         };
 
+        let _noExecShown = false;
+
+        function showExecError() {
+            if (_noExecShown) return;
+            _noExecShown = true;
+            document.getElementById('execError').style.display = 'block';
+            document.getElementById('statusBadge').textContent = 'no shell';
+            document.getElementById('statusBadge').className = 'badge off';
+            document.getElementById('deviceInfo').textContent = 'Open via KSU WebUI / MMRL';
+        }
+
         function execShell(cmd) {
             return new Promise(resolve => {
                 const cb = `cb_${Date.now()}_${Math.floor(Math.random() * 1e6)}`;
@@ -236,6 +257,7 @@
 
         async function loadStatus() {
             const r = await execShell('echo "$(getprop ro.product.manufacturer) $(getprop ro.product.model)|$(getprop ro.build.version.release)"');
+            if (r && r.stderr === 'NO_EXEC') { showExecError(); return; }
             if (r && r.errno === 0 && r.stdout) {
                 const p = r.stdout.trim().split('|');
                 document.getElementById('deviceInfo').textContent = (p[0]||'').trim() + (p[1] ? ' · Android ' + p[1].trim() : '');
@@ -251,6 +273,10 @@
         async function loadConfig() {
             const view = document.getElementById('activeView');
             const r = await execShell('cat ' + configPath);
+            if (r && r.stderr === 'NO_EXEC') {
+                view.innerHTML = '<div class="empty">Shell unavailable — open via KSU WebUI / MMRL.</div>';
+                window.cfg = null; renderAppList(); return;
+            }
             if (!r || r.errno !== 0 || !r.stdout.trim()) {
                 view.innerHTML = '<div class="empty">No config found. Make sure the module is installed.</div>';
                 window.cfg = null; renderAppList(); return;
@@ -306,6 +332,11 @@
 
         async function fetchApps() {
             const r = await execShell('pm list packages -3');
+            if (r && r.stderr === 'NO_EXEC') {
+                window.apps = [];
+                document.getElementById('appList').innerHTML = '<div class="empty">Shell unavailable — open via KSU WebUI / MMRL.</div>';
+                return;
+            }
             if (r && r.errno === 0 && r.stdout) {
                 window.apps = r.stdout.split('\n').map(s => s.trim()).filter(s => s.startsWith('package:')).map(s => s.slice(8)).filter(validPkg).sort();
             } else {
