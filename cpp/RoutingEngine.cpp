@@ -20,9 +20,6 @@ void RoutingEngine::sortRules() {
     std::sort(rules_.begin(), rules_.end());
 }
 
-// Glob-style wildcard match: '*' matches any run of characters, '?' matches a
-// single character. Everything else matches literally. This replaces the old
-// substring test, which silently broke patterns like "com.foo.*".
 static bool wildcardMatch(std::string_view pattern, std::string_view text) {
     size_t p = 0, t = 0, star = std::string_view::npos, match = 0;
     while (t < text.size()) {
@@ -84,9 +81,6 @@ bool RoutingEngine::isSystemPackage(std::string_view pkg) const {
             pkg[prefix.size()] == '.') return true;
     }
 
-    // Only treat launcher/systemui as system when they appear as an actual
-    // dot-separated segment, so a game like "com.foo.gamelauncher" is not
-    // misclassified as a system package.
     auto hasSegment = [](std::string_view pkg, std::string_view seg) {
         if (pkg == seg) return true;
         std::string_view dotSeg = seg;
@@ -140,4 +134,4 @@ std::optional<std::string> RoutingEngine::resolveProfile(std::string_view packag
     return std::nullopt;
 }
 
-} // namespace gameunlocker
+} 

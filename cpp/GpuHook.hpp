@@ -16,10 +16,6 @@ public:
     }
 
     bool isSupported(const Context& ctx) const override {
-        // GPU spoof applies whenever a device profile is active (the profile is
-        // the spoofed target identity, not the real device hardware).
-        // We also enable it for cpu_spoof-only apps so they get the Qualcomm
-        // renderer string that unlocks GPU-gated frame-rate tiers.
         return SysPropHook::getProfile().has_value() || SysPropHook::isCpuSpoofOnly();
     }
 

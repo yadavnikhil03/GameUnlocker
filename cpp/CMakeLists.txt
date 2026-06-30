@@ -7,13 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_compile_options(-Os -flto -ffunction-sections -fdata-sections)
 add_link_options(-flto -Wl,--gc-sections)
 
-# bytehook is vendored under cpp/bytehook (v1.0.9, the last release that does
-# not depend on shadowhook). Building it via add_subdirectory keeps the build
-# fully offline and avoids the v1.1.0+ CMake 3.30 / shadowhook requirements.
 add_subdirectory(bytehook)
-
-# bytehook's own CMake enables -Weverything -Werror on its sources; we do not
-# want its warnings to affect our build, so disable them on the bytehook target.
 if(TARGET bytehook)
     target_compile_options(bytehook PRIVATE
         -Wno-everything

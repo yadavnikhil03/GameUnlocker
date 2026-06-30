@@ -24,4 +24,4 @@ private:
     static bool parseJson(const std::string& jsonString);
 };
 
-} // namespace gameunlocker
+} 
