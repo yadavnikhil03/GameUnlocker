@@ -15,6 +15,8 @@ struct DeviceProfile {
     std::string product;
     std::string fingerprint;
     std::optional<std::string> brand_for_device;
+    std::string board;       // Build.BOARD / ro.product.board (SoC platform name)
+    std::string hardware;    // Build.HARDWARE / ro.hardware
 };
 
 struct GameUnlockerConfig {

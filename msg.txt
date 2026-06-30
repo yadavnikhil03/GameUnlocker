@@ -1,1 +1,1 @@
-chore: Release v2.1.0 (Bug fixes for GPU hook, FC Mobile, and WebUI)
+fix(core): Resolve Android 14 native spoof bypass and package names

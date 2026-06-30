@@ -6,7 +6,9 @@
       "MODEL": "SM-S928B",
       "DEVICE": "e3q",
       "PRODUCT": "e3qxx",
-      "FINGERPRINT": "samsung/e3qxx/e3q:14/UP1A.231005.007/S928BXXS1AXBG:user/release-keys"
+      "FINGERPRINT": "samsung/e3qxx/e3q:14/UP1A.231005.007/S928BXXS1AXBG:user/release-keys",
+      "BOARD": "kalama",
+      "HARDWARE": "qcom"
     },
     "REDMAGIC_9_PRO": {
       "BRAND": "nubia",
@@ -14,7 +16,9 @@
       "MANUFACTURER": "ZTE",
       "MODEL": "NX769J",
       "FINGERPRINT": "nubia/NX769J/NX769J:14/UKQ1.230917.001/20240813.173312:user/release-keys",
-      "PRODUCT": "NX769J"
+      "PRODUCT": "NX769J",
+      "BOARD": "pineapple",
+      "HARDWARE": "qcom"
     },
     "XIAOMI_11T_PRO": {
       "BRAND": "Xiaomi",
@@ -22,7 +26,9 @@
       "MANUFACTURER": "Xiaomi",
       "MODEL": "2107113SG",
       "FINGERPRINT": "Xiaomi/2107113SI/Mi 11T Pro:13/RKQ1.211001.001/20230410:user/release-keys",
-      "PRODUCT": "2107113SG"
+      "PRODUCT": "2107113SG",
+      "BOARD": "lahaina",
+      "HARDWARE": "qcom"
     },
     "PIXEL_9_PRO": {
       "BRAND": "google",
@@ -30,7 +36,9 @@
       "MANUFACTURER": "Google",
       "MODEL": "Pixel 9 Pro",
       "FINGERPRINT": "google/caiman/caiman:14/AD1A.240530.047/12093554:user/release-keys",
-      "PRODUCT": "caiman"
+      "PRODUCT": "caiman",
+      "BOARD": "ripcurrent",
+      "HARDWARE": "ripcurrent"
     }
   },
   "routing_rules": [
@@ -54,31 +62,7 @@
     },
     {
       "type": "exact",
-      "pattern": "com.pubg.imobilelite",
-      "profile": "SAMSUNG_S24_ULTRA",
-      "priority": 50
-    },
-    {
-      "type": "exact",
-      "pattern": "com.pubg.imobile.india",
-      "profile": "SAMSUNG_S24_ULTRA",
-      "priority": 50
-    },
-    {
-      "type": "exact",
-      "pattern": "com.pubg.imobile.battlegroundsindia",
-      "profile": "SAMSUNG_S24_ULTRA",
-      "priority": 50
-    },
-    {
-      "type": "exact",
-      "pattern": "com.pubg.imobile.in",
-      "profile": "SAMSUNG_S24_ULTRA",
-      "priority": 50
-    },
-    {
-      "type": "exact",
-      "pattern": "com.pubg.imidas",
+      "pattern": "com.tencent.iglite",
       "profile": "SAMSUNG_S24_ULTRA",
       "priority": 50
     },
@@ -310,12 +294,7 @@
       "profile": "SAMSUNG_S24_ULTRA",
       "priority": 50
     },
-    {
-      "type": "exact",
-      "pattern": "com.garena.game.freefire",
-      "profile": "PIXEL_9_PRO",
-      "priority": 50
-    },
+
     {
       "type": "exact",
       "pattern": "com.tencent.tmgp.cf",
