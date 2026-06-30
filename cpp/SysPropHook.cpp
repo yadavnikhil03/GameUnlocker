@@ -45,8 +45,25 @@ static bool getSpoofedValue(const char* name, std::string& outValue) {
     if (!name) return false;
 
     if (SysPropHook::isCpuSpoofOnly() || SysPropHook::getProfile().has_value()) {
-        if (strcmp(name, "ro.board.platform") == 0) { outValue = "kalama"; return true; }
-        if (strcmp(name, "ro.hardware") == 0) { outValue = "qcom"; return true; }
+        auto profileOpt = SysPropHook::getProfile();
+
+        if (strcmp(name, "ro.product.board") == 0 ||
+            strcmp(name, "ro.board.platform") == 0) {
+            if (profileOpt.has_value() && !profileOpt.value().board.empty()) {
+                outValue = profileOpt.value().board;
+            } else {
+                outValue = "kalama";
+            }
+            return true;
+        }
+        if (strcmp(name, "ro.hardware") == 0) {
+            if (profileOpt.has_value() && !profileOpt.value().hardware.empty()) {
+                outValue = profileOpt.value().hardware;
+            } else {
+                outValue = "qcom";
+            }
+            return true;
+        }
         if (strcmp(name, "ro.soc.model") == 0) { outValue = "SM8550"; return true; }
         if (strcmp(name, "ro.soc.manufacturer") == 0) { outValue = "Qualcomm"; return true; }
     }

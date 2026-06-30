@@ -80,6 +80,12 @@ bool ConfigManager::parseJson(const std::string& jsonString) {
                 if (val.contains("BRAND_FOR_DEVICE") && val["BRAND_FOR_DEVICE"].is_string()) {
                     profile.brand_for_device = val["BRAND_FOR_DEVICE"].get<std::string>();
                 }
+                if (val.contains("BOARD") && val["BOARD"].is_string()) {
+                    profile.board = val["BOARD"].get<std::string>();
+                }
+                if (val.contains("HARDWARE") && val["HARDWARE"].is_string()) {
+                    profile.hardware = val["HARDWARE"].get<std::string>();
+                }
 
                 config_.profiles[key] = profile;
             }
