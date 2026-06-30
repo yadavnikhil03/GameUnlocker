@@ -148,7 +148,7 @@
         <div class="btn-row" style="margin-top:10px;">
             <button class="btn btn-primary" id="addBtn" onclick="addSelected()" disabled>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
-                <span id="addBtnText">Add selected</span>
+                <span id="addBtnText">Select apps to add</span>
             </button>
         </div>
         <div class="note">Reboot after making changes.</div>
@@ -367,7 +367,7 @@
         function updateAddBtn() {
             const n = document.querySelectorAll('.ac:checked').length;
             document.getElementById('addBtn').disabled = n === 0;
-            document.getElementById('addBtnText').textContent = n > 0 ? 'Add ' + n + ' selected' : 'Add selected';
+            document.getElementById('addBtnText').textContent = n > 0 ? 'Add ' + n + ' selected' : 'Select apps to add';
         }
 
         async function addSelected() {
