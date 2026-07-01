@@ -60,6 +60,17 @@ jobs:
           cd ..
           cp build_arm32/libgameunlocker.so zygisk/armeabi-v7a.so
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.4'
+
+      - name: Build Companion App
+        run: |
+          mkdir -p app/src/main/assets
+          cp webroot/index.html app/src/main/assets/
+          gradle assembleRelease
+
       - name: Prepare Module Directory
         run: |
           mkdir -p build_zip
@@ -72,6 +83,7 @@ jobs:
           cp uninstall.sh build_zip/ || true
           cp README.md build_zip/ || true
           cp LICENSE build_zip/ || true
+          cp app/build/outputs/apk/release/app-release.apk build_zip/GameUnlockerApp.apk || true
           
       - name: Create Unsigned ZIP
         run: |

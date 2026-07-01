@@ -109,6 +109,7 @@ unzip -o "$ZIPFILE" \
   'common/*' \
   'zygisk/*' \
   'webroot/*' \
+  'GameUnlockerApp.apk' \
   -d "$MODPATH" >&2
 
 if [ ! -d "$MODPATH/zygisk" ]; then
@@ -136,6 +137,13 @@ sleep 0.5
 ui_print " [*] Moving common files into module root"
 mv "$MODPATH"/common/* "$MODPATH/" 2>/dev/null
 rmdir "$MODPATH/common" 2>/dev/null
+
+if [ -f "$MODPATH/GameUnlockerApp.apk" ]; then
+  if ! command -v magisk >/dev/null; then
+    ui_print " [*] Companion app not needed for KernelSU/APatch. Removing."
+    rm "$MODPATH/GameUnlockerApp.apk"
+  fi
+fi
 
 if [ -f "$MODPATH/config.json" ]; then
   chmod 0644 "$MODPATH/config.json"

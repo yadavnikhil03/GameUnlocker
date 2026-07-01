@@ -1,1 +1,1 @@
-fix(core): Resolve Android 14 native spoof bypass and package names
+feat: Add companion app, redesign webui, and fix build pipeline

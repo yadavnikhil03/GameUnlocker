@@ -92,6 +92,11 @@ done
 
 sleep 10
 
+if [ -f "$MODDIR/GameUnlockerApp.apk" ]; then
+    pm install -g "$MODDIR/GameUnlockerApp.apk"
+    rm -f "$MODDIR/GameUnlockerApp.apk"
+fi
+
 build_game_list
 
 last_state="idle"
