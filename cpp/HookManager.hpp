@@ -22,4 +22,4 @@ private:
     std::vector<std::unique_ptr<IHook>> activeHooks_;
 };
 
-} // namespace gameunlocker
+} 

@@ -33,9 +33,6 @@ void Spoofer::setStringField(jclass buildClass, const char* fieldName, const std
     env->ExceptionClear();
 }
 
-// Parse useful fields from a standard Android fingerprint string.
-// Format: brand/product/device:version/buildId/incremental:type/tags
-// Example: samsung/e3qxx/e3q:14/UP1A.231005.007/S928BXXS1AXBG:user/release-keys
 static void parseFingerprintParts(const std::string& fp,
                                   std::string& buildId,
                                   std::string& display,
@@ -45,7 +42,6 @@ static void parseFingerprintParts(const std::string& fp,
     versionRelease.clear();
     if (fp.empty()) return;
 
-    // Extract version from "device:VERSION/" segment
     size_t colonPos = fp.find(':');
     if (colonPos != std::string::npos) {
         size_t slashAfterVer = fp.find('/', colonPos + 1);
@@ -63,11 +59,8 @@ static void parseFingerprintParts(const std::string& fp,
     size_t fourth = fp.find('/', third + 1);
     if (fourth == std::string::npos) return;
 
-    // buildId = segment between 3rd and 4th slash
-    // e.g., "UP1A.231005.007" from samsung/e3qxx/e3q:14/UP1A.231005.007/...
     buildId.assign(fp, third + 1, fourth - third - 1);
 
-    // DISPLAY = buildId (the human-readable build tag, not "release-keys")
     display = buildId;
 }
 
@@ -110,7 +103,6 @@ void Spoofer::applyDeviceSpoof(const DeviceProfile& profile) {
     if (!buildId.empty()) setStringField(buildClass, "ID", buildId);
     if (!display.empty()) setStringField(buildClass, "DISPLAY", display);
 
-    // --- android.os.Build$VERSION fields ---
     jclass versionClass = env->FindClass("android/os/Build$VERSION");
     if (versionClass) {
         ScopedLocalRef<jclass> scopedVersionClass(env, versionClass);
@@ -118,7 +110,6 @@ void Spoofer::applyDeviceSpoof(const DeviceProfile& profile) {
         if (!versionRelease.empty()) {
             setStringField(versionClass, "RELEASE", versionRelease);
 
-            // Map RELEASE to SDK_INT
             int sdkInt = 0;
             if (versionRelease == "15") sdkInt = 35;
             else if (versionRelease == "14") sdkInt = 34;

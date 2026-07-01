@@ -72,4 +72,4 @@ private:
     T ref_;
 };
 
-} // namespace gameunlocker
+} 

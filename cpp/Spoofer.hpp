@@ -18,4 +18,4 @@ private:
     void setStringField(jclass buildClass, const char* fieldName, const std::string& value);
 };
 
-} // namespace gameunlocker
+}

@@ -30,4 +30,4 @@ private:
     void putCache(const std::string& pkg, const std::string& profile);
 };
 
-} // namespace gameunlocker
+} 
