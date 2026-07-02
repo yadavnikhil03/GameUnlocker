@@ -7,6 +7,32 @@
 #include "logger.hpp"
 #include "raii.hpp"
 
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <unistd.h>
+#include <thread>
+
+void connectDaemon() {
+    int sock = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (sock < 0) return;
+
+    struct sockaddr_un addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sun_family = AF_UNIX;
+    const char* socket_name = "@gameunlocker_daemon";
+    addr.sun_path[0] = '\0';
+    strncpy(addr.sun_path + 1, socket_name + 1, sizeof(addr.sun_path) - 2);
+    int len = offsetof(struct sockaddr_un, sun_path) + strlen(socket_name + 1) + 1;
+
+    if (connect(sock, (struct sockaddr*)&addr, len) == 0) {
+        char ping = 1;
+        write(sock, &ping, 1);
+        char buf[16];
+        while (read(sock, buf, sizeof(buf)) > 0) {}
+    }
+    close(sock);
+}
+
 JavaVM* g_vm = nullptr;
 
 extern "C" JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void*) {
@@ -60,6 +86,8 @@ public:
 
         if (profileOpt.has_value() || appNeedsCpuSpoof) {
             LOGI("GameUnlocker Target Detected: %s [Profile: %s, CPU Spoof: %d]", pkgStr.c_str(), profileOpt.has_value() ? "Active" : "None", appNeedsCpuSpoof);
+            
+            std::thread(connectDaemon).detach();
 
             SysPropHook::setProfile(profileOpt, appNeedsCpuSpoof);
             hookManager.initialize();

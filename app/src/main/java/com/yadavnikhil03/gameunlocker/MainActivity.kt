@@ -54,6 +54,26 @@ class MainActivity : Activity() {
     inner class RootShellInterface {
         @JavascriptInterface
         fun exec(command: String, args: String, callbackName: String) {
+            // XSS Protection: Strictly validate allowed shell commands
+            val isSafe = command.startsWith("cat << 'GU_EOF' > /data/adb/modules/") ||
+                         command.startsWith("cat /data/adb/modules/") ||
+                         command.startsWith("cmd package list packages") ||
+                         (command.startsWith("monkey -p ") && !command.contains(";") && !command.contains("&") && !command.contains("|")) ||
+                         command.startsWith("echo \"\$(getprop ") ||
+                         command.startsWith("if [ -f /data/adb/modules/") ||
+                         command.startsWith("if command -v magisk") ||
+                         command.startsWith("if [ -d /data/adb/modules/") ||
+                         command.startsWith("grep '^version=' /data/adb/modules/") ||
+                         command.startsWith("logcat -d -s GameUnlocker")
+
+            if (!isSafe) {
+                handler.post {
+                    val js = "$callbackName(1, \"\", \"Security Exception: Command blocked by GameUnlocker XSS filter.\");"
+                    webView.evaluateJavascript(js, null)
+                }
+                return
+            }
+
             Thread {
                 var errno = 1
                 var stdout = ""

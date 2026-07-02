@@ -36,3 +36,9 @@ target_include_directories(gameunlocker PRIVATE
 set_target_properties(gameunlocker PROPERTIES
     LINK_FLAGS "-Wl,--exclude-libs,ALL"
 )
+
+add_executable(gu_controller controller.cpp)
+target_link_libraries(gu_controller ${log-lib})
+set_target_properties(gu_controller PROPERTIES
+    LINK_FLAGS "-Wl,--gc-sections"
+)

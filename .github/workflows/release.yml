@@ -46,6 +46,7 @@ jobs:
           cd ..
           mkdir -p zygisk
           cp build_arm64/libgameunlocker.so zygisk/arm64-v8a.so
+          cp build_arm64/gu_controller gu_controller_arm64
 
       - name: Build Zygisk Library (armeabi-v7a)
         run: |
@@ -59,6 +60,7 @@ jobs:
           make
           cd ..
           cp build_arm32/libgameunlocker.so zygisk/armeabi-v7a.so
+          cp build_arm32/gu_controller gu_controller_armv7
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
@@ -78,6 +80,7 @@ jobs:
           cp -r webroot build_zip/
           cp -r META-INF build_zip/
           cp -r zygisk build_zip/
+          cp gu_controller_arm* build_zip/ || true
           cp customize.sh build_zip/
           cp module.prop build_zip/
           cp uninstall.sh build_zip/ || true

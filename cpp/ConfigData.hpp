@@ -16,7 +16,11 @@ struct DeviceProfile {
     std::string fingerprint;
     std::optional<std::string> brand_for_device;
     std::string board;      
-    std::string hardware;    
+    std::string hardware;
+    std::string gl_vendor;
+    std::string gl_renderer;
+    std::string soc_model;
+    std::string soc_manufacturer;
 };
 
 struct GameUnlockerConfig {

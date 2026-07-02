@@ -1,1 +1,1 @@
-feat: Add companion app, redesign webui, and fix build pipeline
+chore: Architectural Overhaul (Migrate to Native Daemon IPC)

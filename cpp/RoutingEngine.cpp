@@ -66,7 +66,7 @@ bool RoutingEngine::isSystemPackage(std::string_view pkg) const {
         "com.android.systemui", "com.android.settings", "com.android.phone",
         "com.android.permissioncontroller", "com.android.vending", "com.sec.android",
         "com.huawei", "com.oppo", "com.coloros", "com.heytap",
-        "com.vivo", "com.iqoo", "com.bbk", "com.tencent.qqlive",
+        "com.vivo", "com.iqoo", "com.bbk",
         "miui", "org.lineageos", "com.android.shell", "com.android.providers",
         "com.android.inputmethod", "com.android.contacts", "com.android.mms",
         "com.android.calendar", "com.android.camera", "com.android.deskclock",
@@ -80,24 +80,6 @@ bool RoutingEngine::isSystemPackage(std::string_view pkg) const {
             pkg.compare(0, prefix.size(), prefix) == 0 &&
             pkg[prefix.size()] == '.') return true;
     }
-
-    auto hasSegment = [](std::string_view pkg, std::string_view seg) {
-        if (pkg == seg) return true;
-        std::string_view dotSeg = seg;
-        std::string_view needle = dotSeg;
-        size_t pos = 0;
-        while ((pos = pkg.find(needle, pos)) != std::string_view::npos) {
-            bool leftOk = (pos == 0) || (pkg[pos - 1] == '.');
-            bool rightOk = (pos + needle.size() == pkg.size()) ||
-                           (pkg[pos + needle.size()] == '.');
-            if (leftOk && rightOk) return true;
-            ++pos;
-        }
-        return false;
-    };
-
-    if (hasSegment(pkg, "launcher")) return true;
-    if (hasSegment(pkg, "systemui")) return true;
 
     return false;
 }

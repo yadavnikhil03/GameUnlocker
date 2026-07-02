@@ -86,6 +86,18 @@ bool ConfigManager::parseJson(const std::string& jsonString) {
                 if (val.contains("HARDWARE") && val["HARDWARE"].is_string()) {
                     profile.hardware = val["HARDWARE"].get<std::string>();
                 }
+                if (val.contains("GL_VENDOR") && val["GL_VENDOR"].is_string()) {
+                    profile.gl_vendor = val["GL_VENDOR"].get<std::string>();
+                }
+                if (val.contains("GL_RENDERER") && val["GL_RENDERER"].is_string()) {
+                    profile.gl_renderer = val["GL_RENDERER"].get<std::string>();
+                }
+                if (val.contains("SOC_MODEL") && val["SOC_MODEL"].is_string()) {
+                    profile.soc_model = val["SOC_MODEL"].get<std::string>();
+                }
+                if (val.contains("SOC_MANUFACTURER") && val["SOC_MANUFACTURER"].is_string()) {
+                    profile.soc_manufacturer = val["SOC_MANUFACTURER"].get<std::string>();
+                }
 
                 config_.profiles[key] = profile;
             }
