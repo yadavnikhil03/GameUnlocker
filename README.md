@@ -1,218 +1,113 @@
-# GameUnlocker
+<div align="center">
+  <img src="banner.png" alt="GameUnlocker Banner" width="800">
 
-[![Release](https://img.shields.io/github/v/release/yadavnikhil03/GameUnlocker?label=release)](https://github.com/yadavnikhil03/GameUnlocker/releases/latest)
-[![License](https://img.shields.io/github/license/yadavnikhil03/GameUnlocker)](LICENSE)
+  **Zygisk module to unlock 90/120 FPS and bypass hardware whitelists** <br>
+  *A high-performance native Daemon IPC that spoofs device identity seamlessly.*
 
-Zygisk module that unlocks high frame rates (60/90/120 FPS) and graphics settings in Android games by spoofing device identity at the native level.
+  [![Version](https://img.shields.io/github/v/tag/yadavnikhil03/GameUnlocker?label=version&color=blue)](https://github.com/yadavnikhil03/GameUnlocker/releases/latest)
+  [![License](https://img.shields.io/github/license/yadavnikhil03/GameUnlocker?style=for-the-badge&color=green)](LICENSE)
+  [![Android](https://img.shields.io/badge/Android-13.0+-3DDC84?style=for-the-badge&logo=android)](https://www.android.com/)
+  
+  <p align="center">
+    <a href="#features">Features</a> •
+    <a href="#how-it-works">How It Works</a> •
+    <a href="#installation">Installation</a> •
+    <a href="#configuration">Configuration</a> •
+    <a href="#supported-games">Games</a>
+  </p>
+</div>
 
-Works by intercepting system property reads and patching `android.os.Build` fields before the target app initializes, making the game's server-side device whitelist see a flagship device instead of your real hardware.
+---
 
-## How It Works
+> [!IMPORTANT]
+> **Device Compatibility** <br>
+> Due to the huge variety of Android devices and custom ROMs, the module might not work perfectly on every single phone. If you encounter any issues, don't worry! Please [open an issue](https://github.com/yadavnikhil03/GameUnlocker/issues) with your logs and device details so we can investigate and fix it.
 
-GameUnlocker operates inside the [Zygisk](https://topjohnwu.github.io/Magisk/guides.html#zygisk) framework (API v4). When Android's Zygote forks a new app process, the module runs two spoofing layers before the app's own code executes:
+> [!WARNING]
+> **Disclaimer** <br>
+> We are not responsible for bricked devices, bootloops, game account bans, or any other issues that may occur from using this module. Please use it at your own risk!
 
-### 1. Java-level spoofing (`Spoofer.cpp`)
+### Overview
 
-During [`preAppSpecialize`](https://topjohnwu.github.io/Magisk/guides.html#zygisk), the module uses JNI to overwrite static fields on [`android.os.Build`](https://developer.android.com/reference/android/os/Build):
+GameUnlocker is a highly advanced **Zygisk module** designed to **spoof your Android device identity** at the native level. By intercepting system property reads and patching `android.os.Build` fields *before* the target game initializes, GameUnlocker tricks the game's server-side whitelist into recognizing your device as a **flagship phone** (e.g., Samsung Galaxy S24 Ultra, RedMagic 9 Pro).
 
-```
-Build.MANUFACTURER → "Samsung"
-Build.MODEL        → "SM-S928B"
-Build.FINGERPRINT  → "samsung/e3qxx/e3q:14/..."
-```
+This allows you to permanently unlock **extreme frame rates (90 FPS / 120 FPS)** and **maximum graphics settings** in heavily restricted competitive titles without triggering **anti-cheat mechanisms**.
 
-This handles any app that reads device info through the standard Java API — which is how most games check your device on launch.
+### Features
 
-### 2. Native property hooks (`SysPropHook.cpp`)
+- **Zero Idle Battery Drain:** Uses a highly efficient native C++ daemon (IPC) that only activates when a target game is launched, instantly dropping connections when the game closes.
+- **Advanced GPU Spoofing:** Hooks `GLES20.glGetString()` to return flagship GPU identifiers (e.g., **Adreno 750**) exclusively for Qualcomm devices, dynamically bypassing Unreal Engine and Unity hardware checks.
+- **Dynamic Routing Engine:** Assign specific devices to specific games (e.g., spoof a **Pixel 9 Pro** for Genshin Impact, and a **RedMagic 9 Pro** for COD Mobile).
+- **WebUI Configuration:** Manage all profiles, app lists, and routing rules directly from a gorgeous WebUI built into your root manager.
+- **Anti-Cheat Safe:** Spoofing happens at the Zygote fork level using bytehook (PLT hooking), making it completely **invisible** to most user-space anti-cheat engines.
 
-Some games (especially Unreal Engine titles) bypass `android.os.Build` and call [`__system_property_get()`](https://android.googlesource.com/platform/bionic/+/refs/heads/main/libc/include/sys/system_properties.h) directly via NDK. The module hooks these libc functions using [bytehook](https://github.com/bytedance/bhook) (PLT hooking):
+### How It Works
 
-- `__system_property_get`
-- `__system_property_read_callback`
-- `__system_property_read`
+GameUnlocker takes heavy inspiration from industry-leading modules like COPG and Uperf, utilizing a multi-layered approach:
 
-All `ro.product.*` variants are covered, including the namespaced ones Android 10+ introduced (`ro.product.system.model`, `ro.product.vendor.model`, `ro.product.odm.model`, etc.). See the [Android property system docs](https://source.android.com/docs/core/architecture/configuration/add-system-properties) for background.
+1. **Native IPC Daemon (`gu_controller`):** A detached C++ daemon listens on an abstract UNIX socket. When a game launches, the Zygisk payload connects to this socket, triggering the daemon to apply high-performance tuning (like `vendor.gpu.mode`) in milliseconds.
+2. **Java-level Spoofing:** During `preAppSpecialize`, the module uses JNI to overwrite static fields on `android.os.Build` (e.g., `MANUFACTURER`, `MODEL`, `FINGERPRINT`).
+3. **Native Property Hooks:** For games that bypass Java and use NDK to read properties, the module uses PLT hooking (`bytehook`) to intercept `__system_property_get` and `__system_property_read`.
 
-### 3. GPU string spoofing (`GpuHook.cpp`)
+### Requirements
 
-For games that query OpenGL ES renderer strings via [`GLES20.glGetString()`](https://developer.android.com/reference/android/opengl/GLES20#glGetString(int)), the module hooks the JNI native method to return Adreno 750 identifiers. This hook only activates on Qualcomm devices — it skips Google Tensor and other non-Qualcomm SoCs to avoid returning nonsensical GPU info.
+- **Android Version:** Android 9.0+ (API 27+)
+- **Root Access:** [Magisk](https://github.com/topjohnwu/Magisk) ≥ 24.0, [KernelSU](https://github.com/tiann/KernelSU), or [APatch](https://github.com/bmax121/APatch)
+- **Zygisk Implementation:** **Standalone implementation required.** Use [ZygiskNext](https://github.com/Dr-TSNG/ZygiskNext), [ReZygisk](https://github.com/PerformanC/ReZygisk), or [NeoZygisk](https://github.com/ponces/NeoZygisk). *(Note: Built-in Magisk Zygisk is intentionally not supported due to PLT patching incompatibilities).*
+- **Architecture:** `arm64-v8a` or `armeabi-v7a`
 
-### 4. Routing engine
+### Installation
 
-The config system uses a priority-based routing engine. Each app is matched against routing rules (exact, prefix, suffix, wildcard) sorted by priority. A global wildcard rule at priority 0 provides a default profile, while per-app exact rules at priority 50 override it. Config is parsed once during Zygote's `onLoad` using [nlohmann/json](https://github.com/nlohmann/json) and inherited by forked processes via copy-on-write — no per-app file I/O.
+1. Ensure you have a **standalone Zygisk implementation** installed and active.
+2. Download the latest `GameUnlocker_v*.zip` from the [Releases page](https://github.com/yadavnikhil03/GameUnlocker/releases/latest).
+3. Flash the ZIP file through your root manager (Magisk, KernelSU, or APatch).
+4. **Reboot** your device.
 
-### 5. Performance service (`service.sh`)
+The installer automatically detects your environment, verifies your Zygisk setup, and installs the correct ABI libraries. Future updates will be pushed directly to your root manager via the OTA update channel.
 
-A background shell service detects when a configured game is in the foreground and sets Qualcomm GPU performance hints (`vendor.gpu.mode`, `vendor.gfx.low_quality`). Restores defaults when the game exits.
+### Configuration
 
-## Requirements
+You can configure GameUnlocker using the included **Companion App** or the built-in **WebUI**.
 
-| Requirement | Details |
-|---|---|
-| Android | 9.0+ (API 27+) |
-| Root | [Magisk](https://github.com/topjohnwu/Magisk) ≥ 24.0, [KernelSU](https://github.com/tiann/KernelSU), or [APatch](https://github.com/bmax121/APatch) |
-| Zygisk | **Standalone implementation required.** Use [ZygiskNext](https://github.com/Dr-TSNG/ZygiskNext), [ReZygisk](https://github.com/PerformanC/ReZygisk), or [NeoZygisk](https://github.com/ponces/NeoZygisk). |
-| ABI | `arm64-v8a` or `armeabi-v7a` |
+#### 1. Companion App (Recommended)
+After flashing the module, the GameUnlocker companion app will be installed automatically. Open it from your app drawer to manage your profiles easily.
 
-> **Built-in Magisk Zygisk is not supported.** The installer will abort if no standalone Zygisk module is detected. This is intentional — built-in Zygisk has known incompatibilities with bytehook's PLT patching in recent Magisk versions.
+#### 2. WebUI (Alternative)
+The WebUI is served directly by your root manager's webserver:
+- **KernelSU / APatch:** Simply tap the module entry in the modules list.
+- **Magisk:** Install [WebUI-X Portable](https://github.com/MMRLApp/WebUI-X-Portable) or [MMRL](https://github.com/DerGoogler/MMRL), then launch the interface.
 
-## Installation
+**Using either interface, you can:**
+- Assign custom spoofing profiles (e.g., `SAMSUNG_S24_ULTRA`, `REDMAGIC_9_PRO`) to specific installed apps.
+- View active routing rules.
+- Generate and copy diagnostic bug reports for troubleshooting.
 
-1. Install a standalone Zygisk implementation (see requirements above).
-2. Download `GameUnlocker_v*.zip` from [Releases](https://github.com/yadavnikhil03/GameUnlocker/releases/latest).
-3. Flash the ZIP through your root manager (Magisk/KSU/APatch).
-4. Reboot.
+*Note: Changes require an app restart (or device reboot) to take effect, as configurations are loaded during the Zygote fork process.*
 
-The installer validates your environment during flash — it checks for a supported root solution, a standalone Zygisk implementation, and verifies the compiled `.so` matches your device ABI.
+### Supported Games
 
-Existing users: the module registers an [update channel](https://topjohnwu.github.io/Magisk/guides.html#moduleprop) via `release.json`. Your root manager will notify you when a new version is available.
+GameUnlocker comes pre-configured with rules for **30+ major titles**, including:
 
-## Configuration
+- **Battle Royales:** PUBG Mobile (Global, KR, BGMI, VN, TW), Call of Duty: Warzone Mobile, Free Fire / Free Fire Max, Farlight 84, Apex Legends (CPU Spoof Only).
+- **MOBA / RPG:** League of Legends: Wild Rift, Mobile Legends, Genshin Impact, Tower of Fantasy.
+- **Other:** Brawl Stars, Clash of Clans, Squad Busters, Diablo Immortal.
 
-Configuration is managed through a WebUI served by your root manager's built-in webserver.
+*Any game not explicitly listed in the config will automatically fall back to the **default flagship profile** (Samsung Galaxy S24 Ultra).*
 
-| Root Manager | How to access |
-|---|---|
-| KernelSU / APatch | Tap the module entry in the app |
-| Magisk | Install [WebUI-X Portable](https://github.com/MMRLApp/WebUI-X-Portable) or [MMRL](https://github.com/DerGoogler/MMRL), then open from there |
+### Troubleshooting
 
-From the WebUI you can:
-- See all currently configured apps grouped by profile
-- Add third-party apps from your installed app list
-- Choose which device profile to assign
-- Launch a configured game directly
-- Remove apps from the config
-- Generate a diagnostic report for bug reports
+- **Games show no change:** Ensure your standalone Zygisk is active (check for `/data/adb/modules/zygisksu`). Check logs via `adb shell logcat -s GameUnlocker`.
+- **FPS drops over time:** This is likely thermal throttling from another module or your kernel. Disable conflicting thermal modules.
+- **Bootloop:** Reboot to custom recovery (TWRP/OrangeFox) and delete `/data/adb/modules/Game-Unlocker`.
 
-Changes are written to `/data/adb/modules/Game-Unlocker/config.json`. A reboot is required for changes to take effect (since config is loaded at Zygote fork time).
+### Credits & References
 
-### Manual configuration
+This project stands on the shoulders of giants. Massive thanks to:
+- [AlirezaParsi/COPG](https://github.com/AlirezaParsi/COPG) for architectural inspiration regarding Native Daemon IPC.
+- [topjohnwu/Magisk](https://github.com/topjohnwu/Magisk) for the incredible Zygisk API.
+- [bytedance/bhook](https://github.com/bytedance/bhook) for robust PLT hooking capabilities.
+- [nlohmann/json](https://github.com/nlohmann/json) for the elegant JSON parser.
 
-The config file is plain JSON. You can edit it directly:
+### License
 
-```
-adb shell su -c cat /data/adb/modules/Game-Unlocker/config.json
-```
-
-See [`common/config.json`](common/config.json) for the full default configuration including all routing rules and profiles.
-
-## Included Profiles
-
-| Profile | Spoofed Device | SoC | Use Case |
-|---|---|---|---|
-| `SAMSUNG_S24_ULTRA` | SM-S928B (Galaxy S24 Ultra) | Snapdragon 8 Gen 3 | PUBG, BGMI, Wild Rift, Valorant |
-| `REDMAGIC_9_PRO` | NX769J (RedMagic 9 Pro) | Snapdragon 8 Gen 3 | COD Mobile, racing games |
-| `XIAOMI_11T_PRO` | vili (Xiaomi 11T Pro) | Snapdragon 888 | Tower of Fantasy, Clash of Clans |
-| `PIXEL_9_PRO` | caiman (Pixel 9 Pro) | Tensor G4 | Genshin Impact, Free Fire |
-| CPU spoof only | — | Snapdragon 8 Gen 2 props | Fortnite, Apex Legends |
-
-## Supported Games
-
-<details>
-<summary>30+ preconfigured titles (click to expand)</summary>
-
-**PUBG Mobile variants**
-`com.tencent.ig`, `com.pubg.imobile`, `com.pubg.imobile.india`, `com.pubg.imobile.battlegroundsindia`, `com.pubg.imobile.in`, `com.pubg.imobilelite`, `com.pubg.imidas`, `com.pubg.krmobile`, `com.vng.pubgmobile`, `com.rekoo.pubgm`, `com.tencent.tmgp.pubgmhd`
-
-**Riot Games**
-`com.riotgames.league.wildrift`, `com.riotgames.league.wildrifttw`, `com.riotgames.league.wildriftvn`, `com.riotgames.valormobile`, `com.tencent.tmgp.codev`
-
-**Other titles**
-`com.mobile.legends`, `com.activision.callofduty.warzone`, `com.supercell.brawlstars`, `com.supercell.clashofclans`, `com.supercell.squad`, `com.miHoYo.GenshinImpact`, `com.miHoYo.Yuanshen`, `com.dts.freefireth`, `com.dts.freefiremax`, `com.levelinfinite.hotta.gp`, `com.blizzard.diablo.immortal`, `com.garena.game.df`, `com.pearlabyss.blackdesertm.gl`, `com.nintendo.zaka`
-
-**CPU spoof only** (competitive anti-cheat titles)
-`com.epicgames.fortnite`, `com.ea.gp.apexlegendsmobilefps`, `com.miraclegames.farlight84`
-
-</details>
-
-Any app not in the list still gets the default Samsung S24 Ultra profile via the wildcard routing rule.
-
-## Troubleshooting
-
-**Module installs but games show no change**
-- Verify your Zygisk implementation is active: check that `/data/adb/modules/zygisksu` (or `rezygisk`/`neozygisk`) exists.
-- Make sure you rebooted after installing.
-- Check logs: `adb shell logcat -s GameUnlocker` — you should see lines like `GameUnlocker Target Detected: com.tencent.ig`.
-
-**WebUI does not open**
-- On Magisk you need [WebUI-X Portable](https://github.com/MMRLApp/WebUI-X-Portable) or [MMRL](https://github.com/DerGoogler/MMRL). KSU and APatch have native WebUI support.
-
-**FPS drops back after a while**
-- Another module (thermal limiter, performance tweaker) may be overriding the same system properties. Disable conflicting modules and test.
-
-**Bootloop after install**
-- Boot to recovery and delete `/data/adb/modules/Game-Unlocker`.
-
-**Generating a bug report**
-- Open the WebUI → tap "Report issue" → tap "Copy report" → paste into a [new issue](https://github.com/yadavnikhil03/GameUnlocker/issues/new).
-- Or from terminal: `adb shell logcat -s GameUnlocker -d > gameunlocker_log.txt`
-
-## Building from Source
-
-Requires Android NDK r25c and CMake 3.22+.
-
-```bash
-# arm64
-mkdir build_arm64 && cd build_arm64
-cmake ../cpp \
-  -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake \
-  -DANDROID_ABI=arm64-v8a \
-  -DANDROID_PLATFORM=android-27 \
-  -DCMAKE_BUILD_TYPE=Release
-make -j$(nproc)
-cd ..
-mkdir -p zygisk
-cp build_arm64/libgameunlocker.so zygisk/arm64-v8a.so
-
-# armeabi-v7a (same steps with -DANDROID_ABI=armeabi-v7a)
-```
-
-[bytehook](https://github.com/bytedance/bhook) v1.0.8 is fetched automatically via CMake's `FetchContent`.
-
-To package the flashable ZIP, the [GitHub Actions workflow](.github/workflows/release.yml) handles building both ABIs, signing, and creating a release.
-
-## Project Structure
-
-```
-├── cpp/
-│   ├── main.cpp              # Zygisk lifecycle (onLoad, preAppSpecialize)
-│   ├── Config.cpp            # JSON config parser, routing engine init
-│   ├── RoutingEngine.cpp     # Priority-based app→profile matcher
-│   ├── SysPropHook.cpp       # PLT hooks for __system_property_*
-│   ├── Spoofer.cpp           # JNI android.os.Build field injection
-│   ├── GpuHook.cpp           # GLES glGetString hook
-│   ├── HookManager.cpp       # Hook lifecycle orchestrator
-│   ├── include/nlohmann/     # nlohmann/json header-only lib
-│   └── zygisk.hpp            # Zygisk API v4 (upstream, unmodified)
-├── common/
-│   ├── config.json           # Default device profiles and routing rules
-│   └── service.sh            # Background perf-mode service
-├── webroot/
-│   └── index.html            # WebUI (static HTML/JS, no build step)
-├── customize.sh              # Magisk module installer script
-├── uninstall.sh              # Cleanup on module removal
-├── module.prop               # Module metadata and update channel
-└── release.json              # OTA update descriptor
-```
-
-## Credits & References
-
-| What | Link |
-|---|---|
-| Zygisk API | [topjohnwu/Magisk — Zygisk docs](https://topjohnwu.github.io/Magisk/guides.html#zygisk) |
-| bytehook (PLT hooking) | [bytedance/bhook](https://github.com/bytedance/bhook) |
-| nlohmann/json | [nlohmann/json](https://github.com/nlohmann/json) |
-| COPG (architecture reference) | [AlirezaParsi/COPG](https://github.com/AlirezaParsi/COPG) |
-| Magisk | [topjohnwu/Magisk](https://github.com/topjohnwu/Magisk) |
-| KernelSU | [tiann/KernelSU](https://github.com/tiann/KernelSU) |
-| APatch | [bmax121/APatch](https://github.com/bmax121/APatch) |
-| ZygiskNext | [Dr-TSNG/ZygiskNext](https://github.com/Dr-TSNG/ZygiskNext) |
-| ReZygisk | [PerformanC/ReZygisk](https://github.com/PerformanC/ReZygisk) |
-| Android property system | [AOSP — System properties](https://source.android.com/docs/core/architecture/configuration/add-system-properties) |
-| android.os.Build | [Android SDK reference](https://developer.android.com/reference/android/os/Build) |
-
-## License
-
-MIT — see [LICENSE](LICENSE).
-
-Third-party attributions in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. Third-party attributions can be found in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
