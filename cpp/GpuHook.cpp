@@ -5,6 +5,8 @@
 #define GL_VENDOR   0x1F00
 #define GL_RENDERER 0x1F01
 
+#include "SysPropHook.hpp"
+
 namespace gameunlocker {
 
 static jstring (*orig_GLES20_glGetString)(JNIEnv*, jclass, jint);
@@ -13,10 +15,18 @@ static jstring (*orig_GLES31_glGetString)(JNIEnv*, jclass, jint);
 static jstring (*orig_GLES32_glGetString)(JNIEnv*, jclass, jint);
 
 static const char* spoofed_gl_vendor() {
+    auto profileOpt = SysPropHook::getProfile();
+    if (profileOpt.has_value() && !profileOpt.value().gl_vendor.empty()) {
+        return profileOpt.value().gl_vendor.c_str();
+    }
     return "Qualcomm";
 }
 
 static const char* spoofed_gl_renderer() {
+    auto profileOpt = SysPropHook::getProfile();
+    if (profileOpt.has_value() && !profileOpt.value().gl_renderer.empty()) {
+        return profileOpt.value().gl_renderer.c_str();
+    }
     return "Adreno (TM) 750";
 }
 

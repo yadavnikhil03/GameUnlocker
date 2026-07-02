@@ -103,6 +103,19 @@ last_state="idle"
 last_pkg=""
 
 while true; do
+    # Battery saver: Don't poll aggressively if the screen is off
+    screen_on=$(dumpsys power | grep -E 'mWakefulness=Awake|Display Power: state=ON' 2>/dev/null)
+    if [ -z "$screen_on" ]; then
+        if [ "$last_state" != "idle" ]; then
+            log -p i -t GameUnlocker "Screen off - restoring normal mode"
+            restore_perf_mode
+            last_state="idle"
+            last_pkg=""
+        fi
+        sleep 10
+        continue
+    fi
+
     FOREGROUND_APP=$(get_foreground_app)
 
     if is_game_configured "$FOREGROUND_APP"; then

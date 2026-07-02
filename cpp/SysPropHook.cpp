@@ -64,8 +64,22 @@ static bool getSpoofedValue(const char* name, std::string& outValue) {
             }
             return true;
         }
-        if (strcmp(name, "ro.soc.model") == 0) { outValue = "SM8550"; return true; }
-        if (strcmp(name, "ro.soc.manufacturer") == 0) { outValue = "Qualcomm"; return true; }
+        if (strcmp(name, "ro.soc.model") == 0) {
+            if (profileOpt.has_value() && !profileOpt.value().soc_model.empty()) {
+                outValue = profileOpt.value().soc_model;
+            } else {
+                outValue = "SM8550";
+            }
+            return true;
+        }
+        if (strcmp(name, "ro.soc.manufacturer") == 0) {
+            if (profileOpt.has_value() && !profileOpt.value().soc_manufacturer.empty()) {
+                outValue = profileOpt.value().soc_manufacturer;
+            } else {
+                outValue = "Qualcomm";
+            }
+            return true;
+        }
     }
 
     auto profileOpt = SysPropHook::getProfile();
