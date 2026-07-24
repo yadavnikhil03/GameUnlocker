@@ -47,15 +47,13 @@ public:
     void onLoad(zygisk::Api* api, JNIEnv* env) override {
         api_ = api;
         env_ = env;
-
-        Context ctx(api_, env_);
-        configLoaded_ = ConfigManager::globalInit(ctx);
     }
 
     void preAppSpecialize(zygisk::AppSpecializeArgs* args) override {
         if (!api_ || !env_ || !args) return;
 
-        if (!configLoaded_) {
+        Context ctx(api_, env_);
+        if (!ConfigManager::globalInit(ctx)) {
             api_->setOption(zygisk::Option::DLCLOSE_MODULE_LIBRARY);
             return;
         }
@@ -73,7 +71,6 @@ public:
             pkgStr = pkgStr.substr(0, pos);
         }
 
-        Context ctx(api_, env_);
         HookManager hookManager(ctx);
 
         if (ConfigManager::isAppBlacklisted(pkgStr)) {
@@ -87,7 +84,7 @@ public:
         if (profileOpt.has_value() || appNeedsCpuSpoof) {
             LOGI("GameUnlocker Target Detected: %s [Profile: %s, CPU Spoof: %d]", pkgStr.c_str(), profileOpt.has_value() ? "Active" : "None", appNeedsCpuSpoof);
             
-            std::thread(connectDaemon).detach();
+            isTargetApp_ = true;
 
             SysPropHook::setProfile(profileOpt, appNeedsCpuSpoof);
             hookManager.initialize();
@@ -95,6 +92,7 @@ public:
 
             if (!hookManager.hasActiveHooks()) {
                 api_->setOption(zygisk::Option::DLCLOSE_MODULE_LIBRARY);
+                isTargetApp_ = false;
             }
 
             if (profileOpt.has_value()) {
@@ -106,10 +104,16 @@ public:
         }
     }
 
+    void postAppSpecialize(const zygisk::AppSpecializeArgs* args) override {
+        if (isTargetApp_) {
+            std::thread(connectDaemon).detach();
+        }
+    }
+
 private:
     zygisk::Api* api_ = nullptr;
     JNIEnv* env_ = nullptr;
-    bool configLoaded_ = false;
+    bool isTargetApp_ = false;
 };
 
 }

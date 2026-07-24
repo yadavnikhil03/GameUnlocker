@@ -53,8 +53,9 @@ jobs:
           -DANDROID_PLATFORM=android-21 \
           -DCMAKE_BUILD_TYPE=Release
         make
-        mkdir -p ../../zygisk/armeabi-v7a
-        cp libgameunlocker.so ../../zygisk/armeabi-v7a/libgameunlocker.so       
+        mkdir -p ../../zygisk/
+        cp libgameunlocker.so ../../zygisk/armeabi-v7a.so       
+        cp gu_controller ../../gu_controller_armv7
 
     - name: Build Zygisk Libraries (arm64-v8a)
       run: |
@@ -66,8 +67,9 @@ jobs:
           -DANDROID_PLATFORM=android-21 \
           -DCMAKE_BUILD_TYPE=Release
         make
-        mkdir -p ../../zygisk/arm64-v8a/
-        cp libgameunlocker.so ../../zygisk/arm64-v8a/libgameunlocker.so
+        mkdir -p ../../zygisk/
+        cp libgameunlocker.so ../../zygisk/arm64-v8a.so
+        cp gu_controller ../../gu_controller_arm64
 
     - name: Package Magisk Module
       run: |
@@ -79,7 +81,9 @@ jobs:
           module.prop \
           README.md \
           webroot \
-          release.json
+          release.json \
+          gu_controller_armv7 \
+          gu_controller_arm64
 
     - name: Check for Edit and Append Footer
       env:
