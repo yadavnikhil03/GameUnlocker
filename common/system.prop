@@ -1,4 +1,7 @@
-ro.product.manufacturer=vivo
-ro.product.brand=vivo
-ro.product.marketname=iQOO Neo8 Pro
-ro.product.model=V2302A
+# system.prop — intentionally left empty.
+#
+# Do NOT set ro.product.* props here globally.
+# Per-app device spoofing is handled dynamically by the Zygisk module
+# (SysPropHook + Spoofer) on a per-package basis. Setting these globally
+# would conflict with the dynamic system and leak spoofed identity to ALL
+# apps including banking/wallet apps that must not be spoofed.

@@ -98,6 +98,15 @@ bool ConfigManager::parseJson(const std::string& jsonString) {
                 if (val.contains("SOC_MANUFACTURER") && val["SOC_MANUFACTURER"].is_string()) {
                     profile.soc_manufacturer = val["SOC_MANUFACTURER"].get<std::string>();
                 }
+                if (val.contains("SOC_ID") && val["SOC_ID"].is_string()) {
+                    profile.soc_id = val["SOC_ID"].get<std::string>();
+                }
+                if (val.contains("ANDROID_VERSION") && val["ANDROID_VERSION"].is_string()) {
+                    profile.android_version = val["ANDROID_VERSION"].get<std::string>();
+                }
+                if (val.contains("SECURITY_PATCH") && val["SECURITY_PATCH"].is_string()) {
+                    profile.security_patch = val["SECURITY_PATCH"].get<std::string>();
+                }
 
                 config_.profiles[key] = profile;
             }

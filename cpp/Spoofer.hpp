@@ -15,7 +15,8 @@ public:
 private:
     const Context& ctx_;
 
-    void setStringField(jclass buildClass, const char* fieldName, const std::string& value);
+    void setStringField(jclass clazz, const char* fieldName, const std::string& value);
+    void setIntField(jclass clazz, const char* fieldName, jint value);
 };
 
 }

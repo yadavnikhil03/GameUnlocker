@@ -16,7 +16,9 @@ public:
     }
 
     bool isSupported(const Context& ctx) const override {
-        return SysPropHook::getProfile().has_value() || SysPropHook::isCpuSpoofOnly();
+        // GPU spoofing requires a full device profile with GL_VENDOR/GL_RENDERER.
+        // For cpu-spoof-only mode there is no GPU data — do not inject.
+        return SysPropHook::getProfile().has_value();
     }
 
     bool onEnable(const Context& ctx) override;

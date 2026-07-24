@@ -7,16 +7,16 @@ namespace gameunlocker {
 
 Spoofer::Spoofer(const Context& ctx) : ctx_(ctx) {}
 
-void Spoofer::setStringField(jclass buildClass, const char* fieldName, const std::string& value) {
+void Spoofer::setStringField(jclass clazz, const char* fieldName, const std::string& value) {
     if (value.empty()) return;
 
     JNIEnv* env = ctx_.getEnv();
     if (!env) {
-        LOGE("Spoofer::setStringField failed: JNIEnv is null for %s", fieldName);
+        LOGE("Spoofer::setStringField: JNIEnv is null (field=%s)", fieldName);
         return;
     }
 
-    jfieldID field = env->GetStaticFieldID(buildClass, fieldName, "Ljava/lang/String;");
+    jfieldID field = env->GetStaticFieldID(clazz, fieldName, "Ljava/lang/String;");
     if (!field) {
         env->ExceptionClear();
         return;
@@ -28,20 +28,40 @@ void Spoofer::setStringField(jclass buildClass, const char* fieldName, const std
         return;
     }
 
-    env->SetStaticObjectField(buildClass, field, js);
+    env->SetStaticObjectField(clazz, field, js);
     env->DeleteLocalRef(js);
     env->ExceptionClear();
 }
 
+void Spoofer::setIntField(jclass clazz, const char* fieldName, jint value) {
+    JNIEnv* env = ctx_.getEnv();
+    if (!env) return;
+
+    jfieldID field = env->GetStaticFieldID(clazz, fieldName, "I");
+    if (!field) {
+        env->ExceptionClear();
+        return;
+    }
+    env->SetStaticIntField(clazz, field, value);
+    env->ExceptionClear();
+}
+
+// Parse fingerprint: brand/product/device:VERSION/BUILD_ID/INCREMENTAL:type/tags
+// Extracts: buildId (3rd→4th slash), versionRelease (after ':' to next '/'),
+//           buildType ("user"/"userdebug"), buildTags ("release-keys")
 static void parseFingerprintParts(const std::string& fp,
                                   std::string& buildId,
-                                  std::string& display,
-                                  std::string& versionRelease) {
+                                  std::string& versionRelease,
+                                  std::string& buildType,
+                                  std::string& buildTags) {
     buildId.clear();
-    display.clear();
     versionRelease.clear();
+    buildType.clear();
+    buildTags.clear();
+
     if (fp.empty()) return;
 
+    // Version: between first ':' and the '/' that follows it
     size_t colonPos = fp.find(':');
     if (colonPos != std::string::npos) {
         size_t slashAfterVer = fp.find('/', colonPos + 1);
@@ -50,88 +70,125 @@ static void parseFingerprintParts(const std::string& fp,
         }
     }
 
-    size_t first = fp.find('/');
-    if (first == std::string::npos) return;
-    size_t second = fp.find('/', first + 1);
-    if (second == std::string::npos) return;
-    size_t third = fp.find('/', second + 1);
-    if (third == std::string::npos) return;
-    size_t fourth = fp.find('/', third + 1);
-    if (fourth == std::string::npos) return;
+    // Build ID: between 3rd and 4th slash
+    size_t f1 = fp.find('/');
+    if (f1 == std::string::npos) return;
+    size_t f2 = fp.find('/', f1 + 1);
+    if (f2 == std::string::npos) return;
+    size_t f3 = fp.find('/', f2 + 1);
+    if (f3 == std::string::npos) return;
+    size_t f4 = fp.find('/', f3 + 1);
+    if (f4 == std::string::npos) {
+        buildId.assign(fp, f3 + 1, std::string::npos);
+        return;
+    }
+    buildId.assign(fp, f3 + 1, f4 - f3 - 1);
 
-    buildId.assign(fp, third + 1, fourth - third - 1);
+    // Build type and tags: "INCREMENTAL:type/tags" — 5th segment onward
+    // Find the second ':' (the one after INCREMENTAL, before type)
+    size_t f5 = fp.find('/', f4 + 1);
+    if (f5 != std::string::npos) {
+        // Between f4+1 and f5 is "INCREMENTAL:type"
+        size_t colon2 = fp.find(':', f4 + 1);
+        if (colon2 != std::string::npos && colon2 < f5) {
+            buildType.assign(fp, colon2 + 1, f5 - colon2 - 1);
+        }
+        // After f5 is the tags string
+        buildTags.assign(fp, f5 + 1, std::string::npos);
+    }
+}
 
-    display = buildId;
+static int sdkIntFromVersion(const std::string& ver) {
+    if (ver == "16") return 36;
+    if (ver == "15") return 35;
+    if (ver == "14") return 34;
+    if (ver == "13") return 33;
+    if (ver == "12") return 32;
+    if (ver == "11") return 30;
+    if (ver == "10") return 29;
+    return 0;
 }
 
 void Spoofer::applyDeviceSpoof(const DeviceProfile& profile) {
     JNIEnv* env = ctx_.getEnv();
     if (!env) {
-        LOGE("Spoofer::applyDeviceSpoof failed: JNIEnv is null");
+        LOGE("Spoofer::applyDeviceSpoof: JNIEnv is null");
         return;
     }
 
-    // --- android.os.Build fields ---
+    // ---------------------------------------------------------------
+    // android.os.Build fields
+    // ---------------------------------------------------------------
     jclass buildClass = env->FindClass("android/os/Build");
     if (!buildClass) {
         env->ExceptionClear();
-        LOGE("Spoofer::applyDeviceSpoof failed: Could not find android/os/Build class");
+        LOGE("Spoofer: could not find android/os/Build");
         return;
     }
-    ScopedLocalRef<jclass> scopedBuildClass(env, buildClass);
+    ScopedLocalRef<jclass> scopedBuild(env, buildClass);
 
     setStringField(buildClass, "MANUFACTURER", profile.manufacturer);
-    setStringField(buildClass, "BRAND", profile.brand);
-    setStringField(buildClass, "MODEL", profile.model);
-    setStringField(buildClass, "DEVICE", profile.device);
-    setStringField(buildClass, "PRODUCT", profile.product);
-    setStringField(buildClass, "FINGERPRINT", profile.fingerprint);
+    setStringField(buildClass, "BRAND",        profile.brand);
+    setStringField(buildClass, "MODEL",        profile.model);
+    setStringField(buildClass, "DEVICE",       profile.device);
+    setStringField(buildClass, "PRODUCT",      profile.product);
+    setStringField(buildClass, "FINGERPRINT",  profile.fingerprint);
 
-    if (!profile.board.empty()) {
-        setStringField(buildClass, "BOARD", profile.board);
-    }
-    if (!profile.hardware.empty()) {
-        setStringField(buildClass, "HARDWARE", profile.hardware);
-    }
+    if (!profile.board.empty())    setStringField(buildClass, "BOARD",    profile.board);
+    if (!profile.hardware.empty()) setStringField(buildClass, "HARDWARE", profile.hardware);
 
     if (profile.brand_for_device.has_value()) {
         setStringField(buildClass, "BRAND_FOR_DEVICE", profile.brand_for_device.value());
     }
 
-    std::string buildId, display, versionRelease;
-    parseFingerprintParts(profile.fingerprint, buildId, display, versionRelease);
-    if (!buildId.empty()) setStringField(buildClass, "ID", buildId);
-    if (!display.empty()) setStringField(buildClass, "DISPLAY", display);
+    // Parse fingerprint for build metadata
+    std::string buildId, versionRelease, buildType, buildTags;
+    parseFingerprintParts(profile.fingerprint, buildId, versionRelease, buildType, buildTags);
 
-    jclass versionClass = env->FindClass("android/os/Build$VERSION");
-    if (versionClass) {
-        ScopedLocalRef<jclass> scopedVersionClass(env, versionClass);
-
-        if (!versionRelease.empty()) {
-            setStringField(versionClass, "RELEASE", versionRelease);
-
-            int sdkInt = 0;
-            if (versionRelease == "15") sdkInt = 35;
-            else if (versionRelease == "14") sdkInt = 34;
-            else if (versionRelease == "13") sdkInt = 33;
-            else if (versionRelease == "12") sdkInt = 32;
-
-            if (sdkInt > 0) {
-                jfieldID sdkField = env->GetStaticFieldID(versionClass, "SDK_INT", "I");
-                if (sdkField) {
-                    env->SetStaticIntField(versionClass, sdkField, sdkInt);
-                }
-                env->ExceptionClear();
-            }
-        }
-    } else {
-        env->ExceptionClear();
+    if (!buildId.empty()) {
+        setStringField(buildClass, "ID",      buildId);
+        setStringField(buildClass, "DISPLAY", buildId);
     }
 
-    LOGI("Spoofer: Applied device spoof (Model: %s, Board: %s, Android: %s)",
+    // Build type / tags from fingerprint (or sensible defaults)
+    std::string type = buildType.empty() ? "user" : buildType;
+    std::string tags = buildTags.empty() ? "release-keys" : buildTags;
+    setStringField(buildClass, "TYPE", type);
+    setStringField(buildClass, "TAGS", tags);
+
+    // ---------------------------------------------------------------
+    // android.os.Build$VERSION fields
+    // ---------------------------------------------------------------
+    jclass versionClass = env->FindClass("android/os/Build$VERSION");
+    if (!versionClass) {
+        env->ExceptionClear();
+        LOGW("Spoofer: could not find android/os/Build$VERSION");
+    } else {
+        ScopedLocalRef<jclass> scopedVersion(env, versionClass);
+
+        // Prefer the explicit android_version field; fall back to fingerprint
+        const std::string& verStr = !profile.android_version.empty()
+                                    ? profile.android_version : versionRelease;
+
+        if (!verStr.empty()) {
+            setStringField(versionClass, "RELEASE", verStr);
+
+            int sdkInt = sdkIntFromVersion(verStr);
+            if (sdkInt > 0) {
+                setIntField(versionClass, "SDK_INT", static_cast<jint>(sdkInt));
+            }
+        }
+
+        if (!profile.security_patch.empty()) {
+            setStringField(versionClass, "SECURITY_PATCH", profile.security_patch);
+        }
+    }
+
+    LOGI("Spoofer: applied spoof — model=%s board=%s android=%s patch=%s",
          profile.model.c_str(),
-         profile.board.empty() ? "(default)" : profile.board.c_str(),
-         versionRelease.empty() ? "(default)" : versionRelease.c_str());
+         profile.board.empty()           ? "(none)" : profile.board.c_str(),
+         profile.android_version.empty() ? versionRelease.c_str() : profile.android_version.c_str(),
+         profile.security_patch.empty()  ? "(none)" : profile.security_patch.c_str());
 }
 
-}
+} // namespace gameunlocker

@@ -20,6 +20,7 @@ endif()
 add_library(gameunlocker SHARED
             main.cpp
             Config.cpp
+            Companion.cpp
             Spoofer.cpp
             GpuHook.cpp
             SysPropHook.cpp

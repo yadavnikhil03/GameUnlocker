@@ -3,32 +3,55 @@
     "SAMSUNG_S24_ULTRA": {
       "MANUFACTURER": "Samsung",
       "BRAND": "samsung",
+      "BRAND_FOR_DEVICE": "samsung",
       "MODEL": "SM-S928B",
       "DEVICE": "e3q",
       "PRODUCT": "e3qxx",
-      "FINGERPRINT": "samsung/e3qxx/e3q:14/UP1A.231005.007/S928BXXS1AXBG:user/release-keys",
-      "BOARD": "kalama",
-      "HARDWARE": "qcom"
+      "FINGERPRINT": "samsung/e3qxx/e3q:14/UP1A.231005.007/S928BXXS5BXI3:user/release-keys",
+      "BOARD": "pineapple",
+      "HARDWARE": "qcom",
+      "GL_VENDOR": "Qualcomm",
+      "GL_RENDERER": "Adreno (TM) 750",
+      "SOC_MODEL": "SM8650",
+      "SOC_MANUFACTURER": "Qualcomm",
+      "SOC_ID": "519",
+      "ANDROID_VERSION": "14",
+      "SECURITY_PATCH": "2024-03-05"
     },
     "REDMAGIC_9_PRO": {
       "BRAND": "nubia",
+      "BRAND_FOR_DEVICE": "nubia",
       "DEVICE": "NX769J",
       "MANUFACTURER": "ZTE",
       "MODEL": "NX769J",
       "FINGERPRINT": "nubia/NX769J/NX769J:14/UKQ1.230917.001/20240813.173312:user/release-keys",
       "PRODUCT": "NX769J",
       "BOARD": "pineapple",
-      "HARDWARE": "qcom"
+      "HARDWARE": "qcom",
+      "GL_VENDOR": "Qualcomm",
+      "GL_RENDERER": "Adreno (TM) 750",
+      "SOC_MODEL": "SM8650",
+      "SOC_MANUFACTURER": "Qualcomm",
+      "SOC_ID": "519",
+      "ANDROID_VERSION": "14",
+      "SECURITY_PATCH": "2024-08-01"
     },
     "XIAOMI_11T_PRO": {
       "BRAND": "Xiaomi",
       "DEVICE": "vili",
       "MANUFACTURER": "Xiaomi",
       "MODEL": "2107113SG",
-      "FINGERPRINT": "Xiaomi/2107113SI/Mi 11T Pro:13/RKQ1.211001.001/20230410:user/release-keys",
+      "FINGERPRINT": "Xiaomi/2107113SI/vili:13/RKQ1.211001.001/20230410:user/release-keys",
       "PRODUCT": "2107113SG",
       "BOARD": "lahaina",
-      "HARDWARE": "qcom"
+      "HARDWARE": "qcom",
+      "GL_VENDOR": "Qualcomm",
+      "GL_RENDERER": "Adreno (TM) 660",
+      "SOC_MODEL": "SM8350",
+      "SOC_MANUFACTURER": "Qualcomm",
+      "SOC_ID": "415",
+      "ANDROID_VERSION": "13",
+      "SECURITY_PATCH": "2023-04-05"
     },
     "PIXEL_9_PRO": {
       "BRAND": "google",
@@ -38,16 +61,17 @@
       "FINGERPRINT": "google/caiman/caiman:14/AD1A.240530.047/12093554:user/release-keys",
       "PRODUCT": "caiman",
       "BOARD": "ripcurrent",
-      "HARDWARE": "ripcurrent"
+      "HARDWARE": "ripcurrent",
+      "GL_VENDOR": "ARM",
+      "GL_RENDERER": "Mali-G715 MC7",
+      "SOC_MODEL": "Tensor G4",
+      "SOC_MANUFACTURER": "Google",
+      "SOC_ID": "",
+      "ANDROID_VERSION": "14",
+      "SECURITY_PATCH": "2024-09-05"
     }
   },
   "routing_rules": [
-    {
-      "type": "wildcard",
-      "pattern": "*",
-      "profile": "SAMSUNG_S24_ULTRA",
-      "priority": 0
-    },
     {
       "type": "exact",
       "pattern": "com.tencent.ig",
@@ -294,7 +318,6 @@
       "profile": "SAMSUNG_S24_ULTRA",
       "priority": 50
     },
-
     {
       "type": "exact",
       "pattern": "com.tencent.tmgp.cf",
