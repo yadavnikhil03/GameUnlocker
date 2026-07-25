@@ -53,6 +53,14 @@ static const char* sdkFromVersion(const std::string& ver) {
 //  - Returns true + sets outValue if this prop should be overridden
 // ----------------------------------------------------------------
 
+static inline bool starts_with(std::string_view s, std::string_view prefix) {
+    return s.size() >= prefix.size() && s.compare(0, prefix.size(), prefix) == 0;
+}
+
+static inline bool ends_with(std::string_view s, std::string_view suffix) {
+    return s.size() >= suffix.size() && s.compare(s.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
 static bool getSpoofedValue(const char* name, std::string& outValue) {
     if (!name) return false;
 
@@ -111,32 +119,32 @@ static bool getSpoofedValue(const char* name, std::string& outValue) {
     const DeviceProfile& p = profileOpt.value();
 
     // Suffix matching — covers ro.product.*.manufacturer, ro.product.vendor.manufacturer, etc.
-    if (prop.ends_with(".manufacturer")) {
+    if (ends_with(prop, ".manufacturer")) {
         outValue = p.manufacturer; return true;
     }
-    if (prop.ends_with(".model")) {
+    if (ends_with(prop, ".model")) {
         outValue = p.model; return true;
     }
-    if (prop.ends_with(".brand")) {
+    if (ends_with(prop, ".brand")) {
         outValue = p.brand; return true;
     }
     // Device codename — only "ro.product.*" namespaces, not ro.product.cpu.abilist
-    if (prop.starts_with("ro.product.") && prop.ends_with(".device")) {
+    if (starts_with(prop, "ro.product.") && ends_with(prop, ".device")) {
         outValue = p.device; return true;
     }
     // Product name
-    if (prop.starts_with("ro.product.") && prop.ends_with(".name")) {
+    if (starts_with(prop, "ro.product.") && ends_with(prop, ".name")) {
         outValue = p.product; return true;
     }
 
     // Fingerprint
-    if (prop.ends_with(".fingerprint") || prop == "ro.build.fingerprint") {
+    if (ends_with(prop, ".fingerprint") || prop == "ro.build.fingerprint") {
         outValue = p.fingerprint; return true;
     }
 
     // Android version
-    if (prop.ends_with(".version.release") ||
-        prop.ends_with(".version.release_or_codename")) {
+    if (ends_with(prop, ".version.release") ||
+        ends_with(prop, ".version.release_or_codename")) {
         if (!p.android_version.empty()) {
             outValue = p.android_version; return true;
         }
@@ -144,7 +152,7 @@ static bool getSpoofedValue(const char* name, std::string& outValue) {
     }
 
     // SDK level — PIF uses "api_level" suffix; we cover both forms
-    if (prop.ends_with("api_level") || prop.ends_with(".version.sdk")) {
+    if (ends_with(prop, "api_level") || ends_with(prop, ".version.sdk")) {
         if (!p.android_version.empty()) {
             outValue = sdkFromVersion(p.android_version);
             return true;
@@ -153,7 +161,7 @@ static bool getSpoofedValue(const char* name, std::string& outValue) {
     }
 
     // Security patch — exact PIF pattern
-    if (prop.ends_with(".security_patch")) {
+    if (ends_with(prop, ".security_patch")) {
         if (!p.security_patch.empty()) {
             outValue = p.security_patch; return true;
         }
@@ -161,7 +169,7 @@ static bool getSpoofedValue(const char* name, std::string& outValue) {
     }
 
     // Build ID — extract 4th /…/ segment from fingerprint
-    if (prop.ends_with(".build.id") || prop == "ro.build.id" ||
+    if (ends_with(prop, ".build.id") || prop == "ro.build.id" ||
         prop == "ro.build.display.id") {
         const std::string& fp = p.fingerprint;
         int slashes = 0;
@@ -180,7 +188,7 @@ static bool getSpoofedValue(const char* name, std::string& outValue) {
     }
 
     // Build type / tags
-    if (prop == "ro.build.type" || prop.ends_with(".build.type")) {
+    if (prop == "ro.build.type" || ends_with(prop, ".build.type")) {
         outValue = "user"; return true;
     }
     if (prop == "ro.build.tags") {
