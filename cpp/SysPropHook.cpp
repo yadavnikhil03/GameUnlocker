@@ -204,6 +204,12 @@ static bool getSpoofedValue(const char* name, std::string& outValue) {
 // Single hook on __system_property_read_callback.
 // The callback receives (cookie, name, value, serial).
 // We intercept the app's callback and inject spoofed values.
+//
+// Thread-safety note: __system_property_read_callback is not
+// re-entrant per call, but multiple threads can call it
+// simultaneously. We use bytehook's BYTEHOOK_STACK_SCOPE to
+// capture the original callback per-call rather than using a
+// global that can be overwritten by another thread mid-call.
 // ================================================================
 
 typedef void (*T_Callback)(void*, const char*, const char*, uint32_t);
@@ -212,33 +218,57 @@ typedef void (*prop_read_cb_fn_t)(const prop_info*, T_Callback, void*);
 // The original __system_property_read_callback function
 static prop_read_cb_fn_t o_system_property_read_callback = nullptr;
 
-// The app's real callback for each read — captured per-call (not TLS)
-// This is safe: __system_property_read_callback is not re-entrant
-static T_Callback o_app_callback = nullptr;
+// ----------------------------------------------------------------
+// Per-call state passed through cookie wrapping.
+//
+// Instead of a single global o_app_callback (which is NOT thread-safe),
+// we wrap the original cookie+callback in a small struct allocated on
+// the stack of our hook, and pass that struct as the new cookie.
+// This makes each call to __system_property_read_callback fully
+// independent even when called from multiple threads simultaneously.
+// ----------------------------------------------------------------
+struct PropCallContext {
+    T_Callback  realCallback;
+    void*       realCookie;
+};
 
-// Our intercept of the app's callback — receives name+value before delivery
+// Our intercept of the app's callback
 static void my_modify_callback(void* cookie, const char* name, const char* value,
                                 uint32_t serial) {
-    if (!cookie || !name || !value || !o_app_callback) return;
+    if (!cookie || !name || !value) return;
+
+    auto* ctx = static_cast<PropCallContext*>(cookie);
+    if (!ctx->realCallback) return;
 
     const char* finalValue = value;
     std::string spoofedVal;
 
     if (getSpoofedValue(name, spoofedVal)) {
-        LOGD("SysPropHook: [%s]: %s -> %s", name, value, spoofedVal.c_str());
+        LOGD("SysPropHook: [%s]: '%s' -> '%s'", name, value, spoofedVal.c_str());
         finalValue = spoofedVal.c_str();
     }
 
-    o_app_callback(cookie, name, finalValue, serial);
+    ctx->realCallback(ctx->realCookie, name, finalValue, serial);
 }
 
 // Our hook that replaces __system_property_read_callback
 static void my_system_property_read_callback(const prop_info* pi, T_Callback callback,
                                               void* cookie) {
-    if (pi && callback && cookie) {
-        o_app_callback = callback;  // save app's real callback
+    if (!o_system_property_read_callback) {
+        // Fallback — should not happen, but avoid a crash
+        if (callback) callback(cookie, "", "", 0);
+        return;
     }
-    o_system_property_read_callback(pi, my_modify_callback, cookie);
+
+    if (pi && callback) {
+        // Wrap the caller's callback+cookie in a stack-allocated context.
+        // This is safe because o_system_property_read_callback will invoke
+        // my_modify_callback synchronously before returning.
+        PropCallContext ctx{ callback, cookie };
+        o_system_property_read_callback(pi, my_modify_callback, &ctx);
+    } else {
+        o_system_property_read_callback(pi, callback, cookie);
+    }
 }
 
 // ----------------------------------------------------------------
@@ -273,6 +303,22 @@ bool SysPropHook::onEnable(const Context& /*ctx*/) {
         return false;
     }
 
+    // Ensure o_system_property_read_callback is resolved BEFORE hooking.
+    // In AUTOMATIC mode the hook status callback may arrive after we've
+    // already set up the hook, so we pre-resolve via dlsym to guarantee
+    // it's never null when our hook runs.
+    if (!o_system_property_read_callback) {
+        void* rawFn = dlsym(RTLD_DEFAULT, "__system_property_read_callback");
+        if (rawFn) {
+            o_system_property_read_callback =
+                reinterpret_cast<prop_read_cb_fn_t>(rawFn);
+            LOGI("SysPropHook: pre-resolved original fn via dlsym=%p", rawFn);
+        } else {
+            LOGE("SysPropHook: CRITICAL — cannot resolve original fn via dlsym");
+            return false;
+        }
+    }
+
     // Hook __system_property_read_callback in ALL loaded libraries.
     // This is the single, proven hook point used by PlayIntegrityFix.
     bytehook_hook_all(
@@ -283,23 +329,7 @@ bool SysPropHook::onEnable(const Context& /*ctx*/) {
         nullptr
     );
 
-    // Ensure o_system_property_read_callback is always valid.
-    // In AUTOMATIC mode prev_func in the hook callback may be null;
-    // fall back to direct dlsym so my_system_property_read_callback
-    // never crashes with a null function pointer.
-    if (!o_system_property_read_callback) {
-        void* rawFn = dlsym(RTLD_DEFAULT, "__system_property_read_callback");
-        if (rawFn) {
-            o_system_property_read_callback =
-                reinterpret_cast<prop_read_cb_fn_t>(rawFn);
-            LOGI("SysPropHook: fallback original via RTLD_DEFAULT=%p", rawFn);
-        } else {
-            LOGE("SysPropHook: CRITICAL — cannot resolve original fn, hook will crash");
-            return false;
-        }
-    }
-
-    LOGI("SysPropHook: active (profile=%s, cpu_only=%d)",
+    LOGI("SysPropHook: active (model='%s', cpu_only=%d)",
          SysPropHook::getProfile().has_value()
              ? SysPropHook::getProfile()->model.c_str() : "none",
          SysPropHook::isCpuSpoofOnly() ? 1 : 0);

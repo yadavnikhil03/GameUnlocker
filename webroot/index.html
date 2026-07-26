@@ -1,487 +1,691 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GameUnlocker</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,400..700&display=swap');
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Roboto Flex', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; }
-        body { background: #1f1f1f; color: #e3e3e3; font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; padding-bottom: 80px; }
-        .container { max-width: 600px; margin: 0 auto; padding: 16px; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Game Unlocker</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f0f0f;--surface:#1a1a1a;--surface2:#232323;--border:#2a2a2a;
+  --text:#f0f0f0;--muted:#8a8a8a;--accent:#5c6ee6;--accent2:#7c3aed;
+  --green:#22c55e;--red:#ef4444;--yellow:#f59e0b;
+  --radius:14px;--radius-sm:8px;
+}
+body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;padding-bottom:100px;min-height:100vh}
+.container{max-width:640px;margin:0 auto;padding:0 16px}
 
-        .header { padding: 16px 0 24px; border-bottom: 1px solid #2d2d2d; margin-bottom: 24px; display: flex; flex-direction: column; }
-        .header-top { display: flex; justify-content: space-between; align-items: center; }
-        .header h1 { font-size: 22px; font-weight: 500; color: #fff; letter-spacing: 0.1px; }
-        .header .sub { font-size: 13px; color: #9aa0a6; margin-top: 4px; }
-        .badge { font-size: 12px; padding: 4px 10px; border-radius: 9999px; font-weight: 500; letter-spacing: 0.5px; }
-        .badge.on { background: rgba(52, 168, 83, 0.15); color: #34a853; border: 1px solid rgba(52, 168, 83, 0.3); }
-        .badge.off { background: rgba(234, 67, 53, 0.15); color: #ea4335; border: 1px solid rgba(234, 67, 53, 0.3); }
+/* ── Header ── */
+.header{padding:20px 0 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.header-icon{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;flex-shrink:0}
+.header-icon svg{width:20px;height:20px;fill:#fff}
+.header-text h1{font-size:18px;font-weight:700;letter-spacing:-0.3px}
+.header-text p{font-size:12px;color:var(--muted);margin-top:1px}
 
-        h2 { font-size: 14px; font-weight: 500; color: #9aa0a6; margin: 24px 0 12px; letter-spacing: 0.1px; display: flex; align-items: center; }
-        h2 .n { font-size: 11px; background: #2d2d2d; color: #9aa0a6; padding: 2px 8px; border-radius: 9999px; margin-left: 8px; }
+/* ── Tabs ── */
+.tabs{display:flex;gap:2px;background:var(--surface);border-radius:12px;padding:4px;margin:16px 0}
+.tab{flex:1;text-align:center;padding:9px 6px;border-radius:9px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .2s;border:none;background:transparent}
+.tab.active{background:var(--surface2);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.4)}
 
-        .item { display: flex; align-items: center; gap: 12px; padding: 16px; background: #2d2d2d; border-radius: 12px; margin-bottom: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
-        .item .info { flex: 1; min-width: 0; }
-        .item .name { font-size: 16px; font-weight: 500; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .item .pkg { font-size: 12px; color: #9aa0a6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
-        .item .tag { font-size: 11px; font-weight: 500; color: #e3e3e3; background: #1f1f1f; padding: 2px 8px; border-radius: 6px; white-space: nowrap; flex-shrink: 0; margin-top: 6px; display: inline-block; }
-        .item .actions { display: flex; gap: 8px; flex-shrink: 0; }
-        .item .actions button { background: transparent; border: none; color: #9aa0a6; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: grid; place-items: center; transition: background 0.2s, color 0.2s; }
-        .item .actions button:hover { background: rgba(255,255,255,0.05); color: #fff; }
-        .item .actions button.del:hover { color: #ea4335; background: rgba(234, 67, 53, 0.1); }
-        .item .actions button svg { width: 18px; height: 18px; }
+/* ── Section ── */
+.section{display:none;padding-top:4px}
+.section.active{display:block}
+.section-title{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin:20px 0 10px}
 
-        .group { font-size: 12px; color: #9aa0a6; font-weight: 500; margin: 16px 0 8px 4px; }
+/* ── Cards ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:10px;transition:border-color .2s}
+.card:hover{border-color:var(--accent)}
+.card-row{display:flex;align-items:center;gap:12px}
+.card-icon{width:42px;height:42px;border-radius:10px;background:var(--surface2);display:grid;place-items:center;flex-shrink:0;font-size:18px}
+.card-info{flex:1;min-width:0}
+.card-name{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-sub{font-size:12px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-actions{display:flex;gap:6px;flex-shrink:0}
 
-        .empty { text-align: center; padding: 32px 16px; color: #9aa0a6; font-size: 14px; border: 2px dashed #3a3a3a; border-radius: 12px; }
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;cursor:pointer;border:none;transition:all .2s;white-space:nowrap}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#4a5dd4;transform:translateY(-1px)}
+.btn-danger{background:transparent;color:var(--red);border:1px solid rgba(239,68,68,.3)}
+.btn-danger:hover{background:rgba(239,68,68,.1)}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
+.btn-ghost:hover{color:var(--text);border-color:var(--muted)}
+.btn-sm{padding:6px 12px;font-size:12px;border-radius:6px}
+.btn-icon{width:34px;height:34px;padding:0;border-radius:50%;background:transparent;border:none;color:var(--muted);cursor:pointer;display:grid;place-items:center;transition:all .2s}
+.btn-icon:hover{background:var(--surface2);color:var(--text)}
+.btn-icon.del:hover{color:var(--red)}
+.btn-icon svg{width:17px;height:17px}
+.btn-full{width:100%;justify-content:center}
 
-        label.lbl { display: block; font-size: 12px; font-weight: 500; color: #9aa0a6; margin-bottom: 6px; }
-        select, input[type=text] {
-            width: 100%; background: transparent; border: 1px solid #9aa0a6; color: #fff;
-            font-size: 16px; padding: 14px 16px; border-radius: 8px; outline: none; transition: border-color 0.2s;
-        }
-        select { appearance: none; -webkit-appearance: none; cursor: pointer;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239aa0a6' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-            background-repeat: no-repeat; background-position: right 16px center; padding-right: 40px;
-        }
-        select:focus, input:focus { border-color: #1a73e8; border-width: 2px; padding: 13px 15px; }
+/* ── Dashboard stats ── */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;text-align:center}
+.stat-val{font-size:22px;font-weight:700;color:var(--accent)}
+.stat-label{font-size:11px;color:var(--muted);margin-top:2px}
+.device-card{background:linear-gradient(135deg,rgba(92,110,230,.15),rgba(124,58,237,.1));border:1px solid rgba(92,110,230,.3);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.device-card .dc-model{font-size:17px;font-weight:700}
+.device-card .dc-sub{font-size:12px;color:var(--muted);margin-top:3px}
+.device-card .dc-soc{display:inline-flex;align-items:center;gap:6px;background:rgba(92,110,230,.2);border-radius:6px;padding:4px 10px;font-size:12px;margin-top:10px;font-weight:500}
 
-        .search-wrap { position: relative; margin-top: 16px; }
-        .search-wrap svg { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: #9aa0a6; }
-        .search-wrap input { padding-left: 44px; }
+/* ── Badge ── */
+.badge{font-size:11px;font-weight:600;padding:3px 9px;border-radius:9999px;white-space:nowrap}
+.badge-green{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.25)}
+.badge-accent{background:rgba(92,110,230,.15);color:var(--accent);border:1px solid rgba(92,110,230,.25)}
+.badge-muted{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
 
-        .app-list { margin-top: 12px; border: 1px solid #3a3a3a; border-radius: 12px; background: #2d2d2d; max-height: 400px; overflow-y: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
-        .app-list::-webkit-scrollbar { width: 6px; }
-        .app-list::-webkit-scrollbar-thumb { background: #555; border-radius: 6px; }
-        .app-list::-webkit-scrollbar-track { background: transparent; }
+/* ── Form ── */
+.form-group{margin-bottom:14px}
+.form-label{font-size:12px;font-weight:500;color:var(--muted);display:block;margin-bottom:6px}
+.form-input{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:15px;padding:12px 14px;border-radius:var(--radius-sm);outline:none;font-family:inherit;transition:border-color .2s}
+.form-input:focus{border-color:var(--accent)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+select.form-input{appearance:none;-webkit-appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238a8a8a' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;background-color:var(--surface2)}
 
-        .app-item { display: flex; align-items: center; gap: 16px; padding: 12px 16px; border-bottom: 1px solid #3a3a3a; cursor: pointer; transition: background 0.2s; }
-        .app-item:last-child { border-bottom: none; }
-        .app-item:hover { background: #353535; }
-        .app-item input[type=checkbox] { width: 20px; height: 20px; accent-color: #1a73e8; flex-shrink: 0; cursor: pointer; }
-        .app-item .info { flex: 1; min-width: 0; }
-        .app-item .name { font-size: 15px; font-weight: 400; color: #fff; }
-        .app-item .pkg { font-size: 12px; color: #9aa0a6; }
+/* ── Search ── */
+.search-wrap{position:relative;margin-bottom:10px}
+.search-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted);pointer-events:none}
+.search-wrap .form-input{padding-left:38px}
 
-        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-            padding: 12px 24px; border-radius: 9999px; font-size: 14px; font-weight: 500;
-            cursor: pointer; border: none; transition: opacity 0.2s, background 0.2s; width: 100%; }
-        .btn svg { width: 18px; height: 18px; }
-        .btn:disabled { opacity: 0.5; cursor: default; }
-        .btn-primary { background: #1a73e8; color: #fff; box-shadow: 0 4px 8px rgba(26, 115, 232, 0.2); }
-        .btn-primary:hover:not(:disabled) { background: #1b65c6; box-shadow: 0 6px 12px rgba(26, 115, 232, 0.3); }
-        .btn-secondary { background: transparent; color: #1a73e8; border: 1px solid #3a3a3a; }
-        .btn-secondary:hover { background: rgba(26, 115, 232, 0.05); border-color: #1a73e8; }
-        .btn-error { background: transparent; color: #ea4335; border: 1px solid #3a3a3a; }
-        .btn-error:hover { background: rgba(234, 67, 53, 0.05); border-color: #ea4335; }
+/* ── App list ── */
+.app-list{border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);max-height:360px;overflow-y:auto}
+.app-list::-webkit-scrollbar{width:4px}
+.app-list::-webkit-scrollbar-thumb{background:#444;border-radius:4px}
+.app-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+.app-item:last-child{border-bottom:none}
+.app-item:hover,.app-item.selected{background:rgba(92,110,230,.1)}
+.app-item.selected .app-pkg{color:var(--accent)}
+.app-item-icon{width:36px;height:36px;border-radius:9px;background:var(--surface2);display:grid;place-items:center;font-size:16px;flex-shrink:0}
+.app-item-info{flex:1;min-width:0}
+.app-item-name{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.app-pkg{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
 
-        .btn-row { display: flex; gap: 12px; margin-top: 16px; }
-        .btn-row .btn { flex: 1; }
-        .note { font-size: 12px; color: #9aa0a6; margin-top: 12px; text-align: center; }
+/* ── Profile chip ── */
+.profile-chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:9999px;padding:5px 12px;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;user-select:none}
+.profile-chip:hover,.profile-chip.selected{background:rgba(92,110,230,.15);border-color:var(--accent);color:var(--accent)}
+.profile-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 
-        #toast-area { position: fixed; bottom: 24px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 50; pointer-events: none; }
-        .toast { background: #333; color: #e3e3e3; font-size: 14px; padding: 12px 20px;
-            border-radius: 8px; opacity: 0; transform: translateY(12px); transition: opacity 0.3s, transform 0.3s; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-        .toast.show { opacity: 1; transform: translateY(0); }
+/* ── Toast ── */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:11px 20px;border-radius:12px;font-size:14px;font-weight:500;opacity:0;transition:all .3s;z-index:999;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+#toast.success{border-color:rgba(34,197,94,.4);color:var(--green)}
+#toast.error{border-color:rgba(239,68,68,.4);color:var(--red)}
 
-        .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(2px); z-index: 40; display: none; align-items: center; justify-content: center; }
-        .modal-bg.show { display: flex; }
-        .modal { background: #2d2d2d; border-radius: 16px; width: 92%; max-width: 480px; padding: 24px; max-height: 85vh; overflow-y: auto; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
-        .modal h3 { font-size: 20px; font-weight: 500; margin-bottom: 16px; color: #fff; }
-        .modal p { font-size: 14px; color: #9aa0a6; margin-bottom: 20px; }
+/* ── Loader ── */
+.loader{width:18px;height:18px;border:2px solid rgba(255,255,255,.15);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.center-loader{display:flex;align-items:center;justify-content:center;gap:10px;padding:32px;color:var(--muted)}
 
-        .diag-row { display: flex; justify-content: space-between; font-size: 13px; padding: 10px 0; border-bottom: 1px solid #3a3a3a; }
-        .diag-row:last-of-type { border-bottom: none; }
-        .diag-row .k { color: #9aa0a6; font-weight: 500; }
-        .diag-row .v { color: #fff; font-family: monospace; font-size: 12px; }
+/* ── Empty ── */
+.empty{text-align:center;padding:36px 16px;color:var(--muted);border:2px dashed var(--border);border-radius:var(--radius)}
+.empty-icon{font-size:36px;margin-bottom:10px}
+.empty p{font-size:14px}
 
-        .log-box { margin-top: 16px; background: #1f1f1f; border-radius: 8px;
-            padding: 12px; font-family: monospace; font-size: 11px; color: #34a853; max-height: 160px;
-            overflow-y: auto; white-space: pre-wrap; word-break: break-all; }
+/* ── Modal / sheet ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:none;align-items:flex-end}
+.overlay.active{display:flex}
+.sheet{background:var(--surface);border-radius:20px 20px 0 0;padding:20px 16px;width:100%;max-height:90vh;overflow-y:auto;animation:slideUp .25s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-handle{width:36px;height:4px;background:var(--border);border-radius:9999px;margin:0 auto 16px}
+.sheet-title{font-size:17px;font-weight:700;margin-bottom:16px}
 
-        .footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #3a3a3a; text-align: center; font-size: 12px; color: #666; font-family: monospace; }
+/* ── Divider ── */
+.divider{border:none;border-top:1px solid var(--border);margin:20px 0}
 
-        .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid #444; border-top-color: #1a73e8;
-            border-radius: 50%; animation: spin 0.8s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .loading { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 32px; color: #9aa0a6; font-size: 14px; }
-
-        .exec-error { background: rgba(234, 67, 53, 0.1); border: 1px solid rgba(234, 67, 53, 0.3); border-radius: 12px; padding: 16px;
-            margin-bottom: 24px; display: none; }
-        .exec-error .exec-error-title { font-size: 14px; font-weight: 500; color: #ea4335; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-        .exec-error .exec-error-body { font-size: 13px; color: #e3e3e3; line-height: 1.5; }
-    </style>
+/* ── Log ── */
+.log-box{background:#0a0a0a;border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;font-family:monospace;font-size:12px;line-height:1.7;color:#c7c7c7;max-height:360px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="header-top">
-                <h1>GameUnlocker</h1>
-                <div style="display:flex; gap:12px; align-items:center;">
-                    <span class="badge" id="statusBadge">...</span>
-                    <button onclick="loadAll()" style="background:transparent; border:none; color:#9aa0a6; cursor:pointer; display:flex; padding:4px;" title="Refresh">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-                    </button>
-                </div>
-            </div>
-            <div class="sub" id="deviceInfo">loading...</div>
-        </div>
+<div class="container">
 
-        <div class="exec-error" id="execError">
-            <div class="exec-error-title">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="m10.29 3.86-7.5 13.04a2 2 0 0 0 1.71 3h15a2 2 0 0 0 1.71-3l-7.5-13.04a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                Shell not available
-            </div>
-            <div class="exec-error-body">This WebUI requires root shell access. Open it through the <strong>KSU WebUI app</strong>, <strong>MMRL</strong>, or another supported manager — not a regular browser.<br>If you are using a manager, make sure the GameUnlocker module is enabled and the device is rebooted.</div>
-        </div>
+  <!-- Header -->
+  <div class="header">
+    <div class="header-icon">
+      <svg viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5S14.67 12 15.5 12s1.5.67 1.5 1.5S16.33 15 15.5 15zm3-3c-.83 0-1.5-.67-1.5-1.5S17.67 10 18.5 10s1.5.67 1.5 1.5S19.33 12 18.5 12z"/></svg>
+    </div>
+    <div class="header-text">
+      <h1>Game Unlocker</h1>
+      <p>Per-app device &amp; GPU spoofing · Zygisk</p>
+    </div>
+  </div>
 
-        <h2>Configured apps <span class="n" id="countBadge">0</span></h2>
-        <div id="activeView"><div class="loading"><span class="spinner"></span> loading</div></div>
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('dashboard')">Dashboard</button>
+    <button class="tab" onclick="switchTab('games')">Games</button>
+    <button class="tab" onclick="switchTab('profiles')">Profiles</button>
+    <button class="tab" onclick="switchTab('logs')">Logs</button>
+  </div>
 
-        <h2>Add apps</h2>
-        <label class="lbl" for="profileSelect">Profile</label>
-        <select id="profileSelect">
-            <option value="SAMSUNG_S24_ULTRA">Samsung Galaxy S24 Ultra</option>
-            <option value="REDMAGIC_9_PRO">RedMagic 9 Pro</option>
-            <option value="XIAOMI_11T_PRO">Xiaomi 11T Pro</option>
-            <option value="PIXEL_9_PRO">Google Pixel 9 Pro</option>
-            <option value="cpu_spoof_with_cpu">CPU spoof only</option>
-        </select>
+  <!-- ═══════════════════════════════════════ DASHBOARD ═══════ -->
+  <div class="section active" id="tab-dashboard">
+    <div class="device-card" id="dc-card">
+      <div class="dc-model" id="dc-model">Loading…</div>
+      <div class="dc-sub" id="dc-sub"></div>
+      <div class="dc-soc" id="dc-soc" style="display:none">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M6 2v2H4v2h2v2H4v2h2v2H4v2h2v2H4v2h2v2h2v2h2v-2h2v2h2v-2h2v2h2v-2h2v-2h-2v-2h2v-2h-2v-2h2v-2h-2V8h2V6h-2V4h-2V2h-2v2h-2V2h-2v2H8V2H6zm2 4h8v12H8V6z"/></svg>
+        <span id="dc-soc-text"></span>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-val" id="stat-games">—</div><div class="stat-label">Games</div></div>
+      <div class="stat"><div class="stat-val" id="stat-profiles">—</div><div class="stat-label">Profiles</div></div>
+      <div class="stat"><div class="stat-val" id="stat-android">—</div><div class="stat-label">Android</div></div>
+    </div>
+    <div class="section-title">Quick Actions</div>
+    <div class="card" style="cursor:pointer" onclick="switchTab('games');openAddGame()">
+      <div class="card-row">
+        <div class="card-icon">➕</div>
+        <div class="card-info"><div class="card-name">Add a Game</div><div class="card-sub">Pick an app and assign a spoof profile</div></div>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--muted)"><path d="m9 18 6-6-6-6"/></svg>
+      </div>
+    </div>
+    <div class="card" style="cursor:pointer" onclick="switchTab('logs');loadLogs()">
+      <div class="card-row">
+        <div class="card-icon">🔍</div>
+        <div class="card-info"><div class="card-name">View Logs</div><div class="card-sub">Check if hooks are firing for your games</div></div>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--muted)"><path d="m9 18 6-6-6-6"/></svg>
+      </div>
+    </div>
+  </div>
 
-        <div class="search-wrap">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-            <input type="text" id="searchInput" placeholder="Filter apps" autocomplete="off" oninput="renderAppList()">
-        </div>
+  <!-- ═══════════════════════════════════════ GAMES ══════════ -->
+  <div class="section" id="tab-games">
+    <button class="btn btn-primary btn-full" style="margin-top:4px" id="btn-add-game" onclick="openAddGame()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+      Add Game
+    </button>
+    <div class="section-title">Configured Games <span id="games-count" style="color:var(--accent)"></span></div>
+    <div id="games-list"><div class="center-loader"><div class="loader"></div>Loading games…</div></div>
+  </div>
 
-        <div class="app-list" id="appList"><div class="loading"><span class="spinner"></span> scanning apps</div></div>
+  <!-- ═══════════════════════════════════════ PROFILES ══════ -->
+  <div class="section" id="tab-profiles">
+    <button class="btn btn-primary btn-full" style="margin-top:4px" onclick="openAddProfile()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+      New Device Profile
+    </button>
+    <div class="section-title">Device Profiles</div>
+    <div id="profiles-list"><div class="center-loader"><div class="loader"></div>Loading profiles…</div></div>
+  </div>
 
-        <div class="btn-row" style="margin-top:10px;">
-            <button class="btn btn-primary" id="addBtn" onclick="addSelected()" disabled>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
-                <span id="addBtnText">Select apps to add</span>
-            </button>
-        </div>
-        <div class="note">Reboot after making changes.</div>
+  <!-- ═══════════════════════════════════════ LOGS ══════════ -->
+  <div class="section" id="tab-logs">
+    <button class="btn btn-ghost btn-full" style="margin-top:4px" onclick="loadLogs()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35a7.95 7.95 0 0 0-6.48-2.31c-3.67.37-6.69 3.35-7.1 7.02C3.52 15.91 7.27 20 12 20a7.98 7.98 0 0 0 7.95-7.18c.04-.6-.47-1.1-1.07-1.1H18c-.55 0-1 .41-1.05.95A5.995 5.995 0 0 1 6.27 13c-.52-1.47-.53-3.13.07-4.64C7.43 5.25 10.27 4 12 4c1.66 0 3.14.69 4.22 1.78l-1.51 1.51A1 1 0 0 0 15.48 9H19c.55 0 1-.45 1-1V4.52a1 1 0 0 0-1.71-.71l-1.64 1.54z"/></svg>
+      Refresh Logs
+    </button>
+    <div class="section-title">Recent GameUnlocker Logcat</div>
+    <div id="log-area"><div class="empty"><div class="empty-icon">📋</div><p>Tap Refresh Logs to load logcat output</p></div></div>
+  </div>
+</div>
 
-        <div class="btn-row" style="margin-top:24px;">
-            <button class="btn btn-secondary" onclick="openReport()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
-                Report issue
-            </button>
-        </div>
+<!-- ═══════════ OVERLAY: Add Game ══════════════════════════ -->
+<div class="overlay" id="overlay-add-game" onclick="closeOverlay('overlay-add-game')">
+  <div class="sheet" onclick.stop="" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Add Game</div>
 
-        <div class="footer" id="footerVer">GameUnlocker</div>
+    <div class="form-group">
+      <label class="form-label">Choose Profile</label>
+      <div class="profile-chips" id="add-profile-chips">
+        <div class="center-loader"><div class="loader"></div></div>
+      </div>
     </div>
 
-    <div id="toast-area"></div>
-
-    <div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
-        <div class="modal">
-            <h3>Report an issue</h3>
-            <p id="modalSub">Collecting diagnostics…</p>
-            <div id="diagBox"><div class="loading"><span class="spinner"></span> reading device info</div></div>
-            <div class="btn-row">
-                <button class="btn btn-secondary" onclick="closeModal()">Close</button>
-                <button class="btn btn-primary" id="copyBtn" onclick="copyReport()" disabled>Copy report</button>
-                <button class="btn btn-primary" id="githubBtn" onclick="openGitHub()" style="display:none">Open GitHub</button>
-            </div>
-        </div>
+    <div class="form-group">
+      <label class="form-label">Manual Package Name</label>
+      <input class="form-input" id="manual-pkg" type="text" placeholder="com.pubg.imobile" autocomplete="off" autocapitalize="none">
     </div>
 
-    <script>
-        const configPath = "/data/adb/modules/Game-Unlocker/config.json";
-        const modDir = "/data/adb/modules/Game-Unlocker";
+    <button class="btn btn-primary btn-full" style="margin-bottom:12px" onclick="addManualGame()">Add by Package Name</button>
 
-        const PROFILE_NAMES = {
-            "SAMSUNG_S24_ULTRA": "S24 Ultra",
-            "REDMAGIC_9_PRO":    "RedMagic 9",
-            "XIAOMI_11T_PRO":    "11T Pro",
-            "PIXEL_9_PRO":       "Pixel 9 Pro"
-        };
+    <hr class="divider">
+    <div class="form-label" style="margin-bottom:8px">Or pick from installed apps</div>
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+      <input class="form-input" id="app-search" type="search" placeholder="Search apps…" oninput="filterApps(this.value)" autocomplete="off">
+    </div>
+    <div class="app-list" id="app-list">
+      <div class="center-loader"><div class="loader"></div>Loading apps…</div>
+    </div>
+  </div>
+</div>
 
-        let _noExecShown = false;
+<!-- ═══════════ OVERLAY: Add Profile ═══════════════════════ -->
+<div class="overlay" id="overlay-add-profile" onclick="closeOverlay('overlay-add-profile')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">New Device Profile</div>
+    <div class="form-group">
+      <label class="form-label">Profile Name (e.g. PIXEL_9_PRO)</label>
+      <input class="form-input" id="p-name" type="text" placeholder="MY_PROFILE" autocapitalize="characters">
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Manufacturer</label>
+        <input class="form-input" id="p-mfr" type="text" placeholder="Samsung">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Brand</label>
+        <input class="form-input" id="p-brand" type="text" placeholder="samsung">
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Model</label>
+        <input class="form-input" id="p-model" type="text" placeholder="SM-S928B">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Device</label>
+        <input class="form-input" id="p-device" type="text" placeholder="e3q">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Product</label>
+      <input class="form-input" id="p-product" type="text" placeholder="e3qxx">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Fingerprint</label>
+      <input class="form-input" id="p-fp" type="text" placeholder="samsung/e3qxx/e3q:14/UP1A.231005.007/…:user/release-keys">
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">SOC Model</label>
+        <input class="form-input" id="p-soc" type="text" placeholder="SM8650">
+      </div>
+      <div class="form-group">
+        <label class="form-label">SOC Manufacturer</label>
+        <input class="form-input" id="p-soc-mfr" type="text" placeholder="Qualcomm">
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">GL Vendor</label>
+        <input class="form-input" id="p-gl-vendor" type="text" placeholder="Qualcomm">
+      </div>
+      <div class="form-group">
+        <label class="form-label">GL Renderer</label>
+        <input class="form-input" id="p-gl-renderer" type="text" placeholder="Adreno (TM) 750">
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Board</label>
+        <input class="form-input" id="p-board" type="text" placeholder="pineapple">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Android Version</label>
+        <input class="form-input" id="p-android" type="text" placeholder="14">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Security Patch</label>
+      <input class="form-input" id="p-patch" type="text" placeholder="2024-09-05">
+    </div>
+    <button class="btn btn-primary btn-full" style="margin-top:4px" onclick="saveProfile()">Save Profile</button>
+    <button class="btn btn-ghost btn-full" style="margin-top:8px" onclick="closeOverlay('overlay-add-profile')">Cancel</button>
+  </div>
+</div>
 
-        function showExecError() {
-            if (_noExecShown) return;
-            _noExecShown = true;
-            document.getElementById('execError').style.display = 'block';
-            document.getElementById('statusBadge').textContent = 'no shell';
-            document.getElementById('statusBadge').className = 'badge off';
-            document.getElementById('deviceInfo').textContent = 'Open via KSU WebUI / MMRL';
-        }
+<div id="toast"></div>
 
-        function execShell(cmd) {
-            return new Promise(resolve => {
-                const cb = `cb_${Date.now()}_${Math.floor(Math.random() * 1e6)}`;
-                window[cb] = (errno, stdout, stderr) => {
-                    delete window[cb];
-                    resolve({ errno: errno || 0, stdout: stdout || "", stderr: stderr || "" });
-                };
-                try {
-                    if (typeof mmrl !== 'undefined' && mmrl.exec) {
-                        let res = mmrl.exec(cmd, '{}', cb);
-                        if (res instanceof Promise) {
-                            res.then(r => { delete window[cb]; resolve(r); })
-                               .catch(e => { delete window[cb]; resolve({ errno: 1, stdout: "", stderr: String(e) }); });
-                        }
-                    } else if (typeof ksu !== 'undefined' && ksu.exec) {
-                        ksu.exec(cmd, '{}', cb);
-                    } else if (typeof apatch !== 'undefined' && apatch.exec) {
-                        apatch.exec(cmd, '{}', cb);
-                    } else {
-                        delete window[cb];
-                        resolve({ errno: 1, stdout: "", stderr: "NO_EXEC" });
-                    }
-                } catch (e) {
-                    delete window[cb];
-                    resolve({ errno: -1, stdout: "", stderr: String(e) });
-                }
-            });
-        }
+<script>
+const API = 'cgi-bin/api.sh';
+let config = null;
+let allApps = [];
+let selectedProfile = null;
+let appsLoaded = false;
+let appsPolling = null;
 
-        function toast(msg) {
-            const area = document.getElementById('toast-area');
-            const el = document.createElement('div');
-            el.className = 'toast';
-            el.textContent = msg;
-            area.appendChild(el);
-            requestAnimationFrame(() => el.classList.add('show'));
-            setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 200); }, 2500);
-        }
+// ── Fetch config on load ─────────────────────────────────────
+async function fetchConfig() {
+  try {
+    const r = await fetch(`${API}?action=get_config`);
+    config = await r.json();
+    renderDashboard();
+    renderGames();
+    renderProfiles();
+  } catch(e) {
+    toast('Failed to load config', 'error');
+  }
+}
 
-        function validPkg(p) { return typeof p === 'string' && /^[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)+$/.test(p) && p.length <= 255; }
-        function shellQuote(a) { return "'" + a.replace(/'/g, "'\\''") + "'"; }
-        function appName(p) { if (!p) return "?"; let s = p.split('.'); let n = s[s.length-1]; if (n.length < 3 && s.length > 1) n = s[s.length-2]; return n[0].toUpperCase() + n.slice(1); }
-        function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+// ── Tab switching ────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const tabs = ['dashboard','games','profiles','logs'];
+    t.classList.toggle('active', tabs[i] === name);
+  });
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+}
 
-        function getConfigured(cfg) {
-            const s = new Set();
-            if (cfg && cfg.routing_rules) cfg.routing_rules.forEach(r => { if (r.type === "exact") s.add(r.pattern); });
-            if (cfg && cfg.cpu_spoof && cfg.cpu_spoof.with_cpu) cfg.cpu_spoof.with_cpu.forEach(p => s.add(p));
-            return s;
-        }
+// ── Dashboard ────────────────────────────────────────────────
+function renderDashboard() {
+  if (!config) return;
+  const games = config.routing_rules ? config.routing_rules.length : 0;
+  const profiles = config.profiles ? Object.keys(config.profiles).length : 0;
+  document.getElementById('stat-games').textContent = games;
+  document.getElementById('stat-profiles').textContent = profiles;
+  document.getElementById('games-count').textContent = games;
+}
 
-        async function writeCfg(cfg) {
-            return execShell("cat << 'GU_EOF' > " + configPath + "\n" + JSON.stringify(cfg, null, 4) + "\nGU_EOF\n");
-        }
+async function loadDeviceInfo() {
+  try {
+    const r = await fetch(`${API}?action=get_device_info`);
+    const d = await r.json();
+    if (d.success) {
+      document.getElementById('dc-model').textContent = d.brand + ' ' + d.model;
+      document.getElementById('dc-sub').textContent = 'Android ' + d.android;
+      document.getElementById('stat-android').textContent = d.android;
+      if (d.soc) {
+        document.getElementById('dc-soc').style.display = 'inline-flex';
+        document.getElementById('dc-soc-text').textContent = d.soc;
+      }
+    }
+  } catch(e) {}
+}
 
-        async function loadStatus() {
-            const r = await execShell('echo "$(getprop ro.product.manufacturer) $(getprop ro.product.model)|$(getprop ro.build.version.release)"');
-            if (r && r.stderr === 'NO_EXEC') { showExecError(); return; }
-            if (r && r.errno === 0 && r.stdout) {
-                const p = r.stdout.trim().split('|');
-                document.getElementById('deviceInfo').textContent = (p[0]||'').trim() + (p[1] ? ' · Android ' + p[1].trim() : '');
-            }
-            const s = await execShell(`if [ -f ${modDir}/remove ] || [ -f ${modDir}/disable ]; then echo 0; else echo 1; fi`);
-            const b = document.getElementById('statusBadge');
-            if (s && s.errno === 0 && s.stdout.trim() === '1') { b.textContent = 'active'; b.className = 'badge on'; }
-            else { b.textContent = 'disabled'; b.className = 'badge off'; }
-            const v = await execShell(`grep '^version=' ${modDir}/module.prop 2>/dev/null | cut -d= -f2`);
-            if (v && v.errno === 0 && v.stdout.trim()) document.getElementById('footerVer').textContent = 'GameUnlocker ' + v.stdout.trim();
-        }
+// ── Games list ───────────────────────────────────────────────
+function renderGames() {
+  if (!config) return;
+  const rules = config.routing_rules || [];
+  const el = document.getElementById('games-list');
+  if (rules.length === 0) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🎮</div><p>No games configured yet.<br>Tap "Add Game" to get started.</p></div>`;
+    return;
+  }
+  // Group by profile
+  const groups = {};
+  rules.forEach(r => {
+    if (!groups[r.profile]) groups[r.profile] = [];
+    groups[r.profile].push(r);
+  });
+  let html = '';
+  for (const [profile, pkgs] of Object.entries(groups)) {
+    html += `<div class="section-title">${profile}</div>`;
+    pkgs.forEach(rule => {
+      const name = appName(rule.pattern);
+      html += `
+        <div class="card">
+          <div class="card-row">
+            <div class="card-icon">${gameIcon(rule.pattern)}</div>
+            <div class="card-info">
+              <div class="card-name">${name}</div>
+              <div class="card-sub">${rule.pattern}</div>
+            </div>
+            <button class="btn-icon del" title="Remove" onclick="removeGame('${rule.pattern}')">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+            </button>
+          </div>
+        </div>`;
+    });
+  }
+  el.innerHTML = html;
+}
 
-        async function loadConfig() {
-            const view = document.getElementById('activeView');
-            const r = await execShell('cat ' + configPath);
-            if (r && r.stderr === 'NO_EXEC') {
-                view.innerHTML = '<div class="empty">Shell unavailable — open via KSU WebUI / MMRL.</div>';
-                window.cfg = null; renderAppList(); return;
-            }
-            if (!r || r.errno !== 0 || !r.stdout.trim()) {
-                view.innerHTML = '<div class="empty">No config found. Make sure the module is installed.</div>';
-                window.cfg = null; renderAppList(); return;
-            }
-            try { window.cfg = JSON.parse(r.stdout); } catch(e) {
-                view.innerHTML = '<div class="empty">Failed to parse config.</div>';
-                window.cfg = null; renderAppList(); return;
-            }
-            renderActive(window.cfg);
-            renderAppList();
-        }
+function gameIcon(pkg) {
+  if (pkg.includes('pubg') || pkg.includes('bgmi')) return '🎯';
+  if (pkg.includes('freefir')) return '🔫';
+  if (pkg.includes('legends') || pkg.includes('mlbb')) return '⚔️';
+  if (pkg.includes('genshin') || pkg.includes('hkrpg')) return '✨';
+  if (pkg.includes('cod') || pkg.includes('callofduty')) return '💥';
+  if (pkg.includes('wild') || pkg.includes('riot')) return '🏆';
+  if (pkg.includes('fortnite')) return '🏗️';
+  if (pkg.includes('brawl') || pkg.includes('clash') || pkg.includes('supercell')) return '💎';
+  return '🎮';
+}
 
-        function renderActive(cfg) {
-            const view = document.getElementById('activeView');
-            const countEl = document.getElementById('countBadge');
-            const groups = {};
-            let total = 0;
+function appName(pkg) {
+  const found = allApps.find(a => a.package === pkg);
+  if (found && found.name && found.name !== pkg) return found.name;
+  // Pretty-print from package name
+  const parts = pkg.split('.');
+  return parts[parts.length - 1].replace(/([A-Z])/g, ' $1').trim();
+}
 
-            if (cfg.routing_rules) cfg.routing_rules.forEach(r => {
-                if (r.type !== "exact") return;
-                (groups[r.profile || '_'] = groups[r.profile || '_'] || []).push({ pkg: r.pattern, profile: r.profile, cpu: false });
-                total++;
-            });
-            if (cfg.cpu_spoof && cfg.cpu_spoof.with_cpu) cfg.cpu_spoof.with_cpu.forEach(p => {
-                (groups['__cpu'] = groups['__cpu'] || []).push({ pkg: p, cpu: true });
-                total++;
-            });
+// ── Profiles list ────────────────────────────────────────────
+function renderProfiles() {
+  if (!config || !config.profiles) return;
+  const el = document.getElementById('profiles-list');
+  const profiles = Object.entries(config.profiles);
+  if (profiles.length === 0) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">📱</div><p>No profiles yet.</p></div>`;
+    return;
+  }
+  let html = '';
+  profiles.forEach(([name, p]) => {
+    const gameCount = (config.routing_rules || []).filter(r => r.profile === name).length;
+    html += `
+      <div class="card">
+        <div class="card-row">
+          <div class="card-icon">📱</div>
+          <div class="card-info">
+            <div class="card-name">${p.BRAND ? p.BRAND.charAt(0).toUpperCase()+p.BRAND.slice(1) : ''} ${p.MODEL || name}</div>
+            <div class="card-sub">${name} · ${p.SOC_MODEL || 'Unknown SoC'} · ${gameCount} game${gameCount !== 1 ? 's' : ''}</div>
+          </div>
+          <button class="btn-icon del" title="Delete profile" onclick="deleteProfile('${name}')">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+          </button>
+        </div>
+        <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px">
+          <span class="badge badge-accent">${p.SOC_MODEL || '?'}</span>
+          <span class="badge badge-muted">Android ${p.ANDROID_VERSION || '?'}</span>
+          ${p.GL_RENDERER ? `<span class="badge badge-muted">${p.GL_RENDERER}</span>` : ''}
+        </div>
+      </div>`;
+  });
+  el.innerHTML = html;
+}
 
-            countEl.textContent = total;
-            if (total === 0) { view.innerHTML = '<div class="empty">No apps configured yet.</div>'; return; }
+// ── Add Game overlay ─────────────────────────────────────────
+function openAddGame() {
+  document.getElementById('manual-pkg').value = '';
+  document.getElementById('app-search').value = '';
+  selectedProfile = null;
+  renderProfileChips();
+  openOverlay('overlay-add-game');
+  if (!appsLoaded) startLoadApps();
+  else renderAppList('');
+}
 
-            const order = ["SAMSUNG_S24_ULTRA", "REDMAGIC_9_PRO", "XIAOMI_11T_PRO", "PIXEL_9_PRO", "__cpu"];
-            let h = '';
-            order.forEach(key => {
-                const items = groups[key];
-                if (!items) return;
-                const label = key === '__cpu' ? 'CPU spoof' : (PROFILE_NAMES[key] || key);
-                h += '<div class="group">' + esc(label) + '</div>';
-                items.forEach(it => {
-                    const safe = it.pkg.replace(/'/g, "\\'");
-                    const tag = it.cpu ? 'CPU' : (PROFILE_NAMES[it.profile] || it.profile);
-                    h += '<div class="item">'
-                      + '<div class="info"><div class="name">' + esc(appName(it.pkg)) + '</div><div class="pkg">' + esc(it.pkg) + '</div></div>'
-                      + '<span class="tag">' + esc(tag) + '</span>'
-                      + '<div class="actions">'
-                      + '<button onclick="launchApp(\'' + safe + '\')" title="Launch"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="7 4 19 12 7 20"/></svg></button>'
-                      + '<button class="del" onclick="removeApp(\'' + safe + '\',' + it.cpu + ')" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>'
-                      + '</div></div>';
-                });
-            });
-            view.innerHTML = h;
-        }
+function renderProfileChips() {
+  const el = document.getElementById('add-profile-chips');
+  if (!config || !config.profiles) { el.innerHTML = '—'; return; }
+  el.innerHTML = Object.keys(config.profiles).map(name => {
+    const p = config.profiles[name];
+    return `<div class="profile-chip" id="chip-${name}" onclick="selectChip('${name}')">${p.BRAND ? p.BRAND+' ' : ''}${p.MODEL || name}</div>`;
+  }).join('');
+}
 
-        async function fetchApps() {
-            const r = await execShell('pm list packages -3');
-            if (r && r.stderr === 'NO_EXEC') {
-                window.apps = [];
-                document.getElementById('appList').innerHTML = '<div class="empty">Shell unavailable — open via KSU WebUI / MMRL.</div>';
-                return;
-            }
-            if (r && r.errno === 0 && r.stdout) {
-                window.apps = r.stdout.split('\n').map(s => s.trim()).filter(s => s.startsWith('package:')).map(s => s.slice(8)).filter(validPkg).sort();
-            } else {
-                window.apps = [];
-            }
-            renderAppList();
-        }
+function selectChip(name) {
+  selectedProfile = name;
+  document.querySelectorAll('.profile-chip').forEach(c => c.classList.remove('selected'));
+  document.getElementById('chip-'+name)?.classList.add('selected');
+}
 
-        function renderAppList() {
-            const el = document.getElementById('appList');
-            if (!window.apps) return;
-            const q = (document.getElementById('searchInput').value || '').trim().toLowerCase();
-            const cfgd = getConfigured(window.cfg);
-            const list = window.apps.filter(p => !cfgd.has(p) && (!q || p.toLowerCase().includes(q)));
+function startLoadApps() {
+  fetch(`${API}?action=get_apps_async`);
+  appsPolling = setInterval(pollApps, 1500);
+}
 
-            if (!list.length) {
-                el.innerHTML = '<div class="empty">' + (window.apps.length === 0 ? 'No apps found.' : q ? 'No matches.' : 'All apps already configured.') + '</div>';
-                updateAddBtn(); return;
-            }
-            let h = '';
-            list.forEach(p => {
-                h += '<label class="app-item"><input type="checkbox" class="ac" value="' + esc(p) + '" onchange="updateAddBtn()"><div class="info"><div class="name">' + esc(appName(p)) + '</div><div class="pkg">' + esc(p) + '</div></div></label>';
-            });
-            el.innerHTML = h;
-            updateAddBtn();
-        }
+async function pollApps() {
+  try {
+    const r = await fetch(`${API}?action=poll_apps`);
+    const d = await r.json();
+    if (d.success && d.apps) {
+      clearInterval(appsPolling);
+      appsLoaded = true;
+      allApps = d.apps;
+      renderAppList(document.getElementById('app-search')?.value || '');
+    }
+  } catch(e) {}
+}
 
-        function updateAddBtn() {
-            const n = document.querySelectorAll('.ac:checked').length;
-            document.getElementById('addBtn').disabled = n === 0;
-            document.getElementById('addBtnText').textContent = n > 0 ? 'Add ' + n + ' selected' : 'Select apps to add';
-        }
+function renderAppList(query) {
+  const el = document.getElementById('app-list');
+  if (!appsLoaded) { el.innerHTML = '<div class="center-loader"><div class="loader"></div>Loading apps…</div>'; return; }
+  const q = query.toLowerCase().trim();
+  const filtered = q ? allApps.filter(a =>
+    (a.name||'').toLowerCase().includes(q) || a.package.toLowerCase().includes(q)
+  ) : allApps;
+  if (filtered.length === 0) { el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--muted)">No apps found</div>'; return; }
+  el.innerHTML = filtered.slice(0,100).map(a =>
+    `<div class="app-item" onclick="selectApp('${a.package}')">
+      <div class="app-item-icon">${gameIcon(a.package)}</div>
+      <div class="app-item-info">
+        <div class="app-item-name">${a.name || a.package}</div>
+        <div class="app-pkg">${a.package}</div>
+      </div>
+    </div>`
+  ).join('');
+}
 
-        async function addSelected() {
-            const profile = document.getElementById('profileSelect').value;
-            const checks = Array.from(document.querySelectorAll('.ac:checked'));
-            if (!checks.length) return;
-            for (const c of checks) { if (!validPkg(c.value)) { toast('Bad package name'); return; } }
+function filterApps(q) { renderAppList(q); }
 
-            let cfg = window.cfg || {};
-            if (!cfg.routing_rules) cfg.routing_rules = [];
-            if (!cfg.profiles) cfg.profiles = {};
-            if (!cfg.cpu_spoof) cfg.cpu_spoof = { blacklist: [], with_cpu: [] };
-            if (!cfg.cpu_spoof.with_cpu) cfg.cpu_spoof.with_cpu = [];
-            if (!cfg.cpu_spoof.blacklist) cfg.cpu_spoof.blacklist = [];
+function selectApp(pkg) {
+  document.querySelectorAll('.app-item').forEach(i => i.classList.remove('selected'));
+  event.currentTarget?.classList.add('selected');
+  document.getElementById('manual-pkg').value = pkg;
+}
 
-            let added = 0;
-            checks.forEach(c => {
-                const pkg = c.value;
-                if (profile === 'cpu_spoof_with_cpu') {
-                    if (!cfg.cpu_spoof.with_cpu.includes(pkg)) { cfg.cpu_spoof.with_cpu.push(pkg); added++; }
-                } else {
-                    if (!cfg.routing_rules.some(r => r.pattern === pkg)) { cfg.routing_rules.push({ type: 'exact', pattern: pkg, profile: profile, priority: 50 }); added++; }
-                }
-            });
+async function addManualGame() {
+  const pkg = document.getElementById('manual-pkg').value.trim();
+  if (!pkg) { toast('Enter a package name', 'error'); return; }
+  if (!selectedProfile) { toast('Select a device profile first', 'error'); return; }
+  await doAddGame(pkg, selectedProfile);
+}
 
-            const r = await writeCfg(cfg);
-            if (r && r.errno === 0) { toast('Added ' + added + '. Reboot to apply.'); document.getElementById('searchInput').value = ''; await loadConfig(); }
-            else toast('Write failed. Root?');
-        }
+async function doAddGame(pkg, profile) {
+  try {
+    const r = await fetch(`${API}?action=add_game&pkg=${encodeURIComponent(pkg)}&profile=${encodeURIComponent(profile)}`);
+    const d = await r.json();
+    if (d.success) {
+      toast('Game added! Reboot to apply.', 'success');
+      closeOverlay('overlay-add-game');
+      await fetchConfig();
+    } else {
+      toast(d.error || 'Failed to add game', 'error');
+    }
+  } catch(e) {
+    toast('Network error', 'error');
+  }
+}
 
-        async function removeApp(pkg, isCpu) {
-            if (!validPkg(pkg)) return;
-            let cfg = window.cfg; if (!cfg) return;
-            if (isCpu) cfg.cpu_spoof.with_cpu = cfg.cpu_spoof.with_cpu.filter(p => p !== pkg);
-            else cfg.routing_rules = cfg.routing_rules.filter(r => r.pattern !== pkg);
-            const r = await writeCfg(cfg);
-            if (r && r.errno === 0) { toast('Removed. Reboot to apply.'); await loadConfig(); }
-            else toast('Write failed.');
-        }
+async function removeGame(pkg) {
+  if (!confirm(`Remove "${pkg}" from spoofed games?`)) return;
+  try {
+    const r = await fetch(`${API}?action=remove_game&pkg=${encodeURIComponent(pkg)}`);
+    const d = await r.json();
+    if (d.success) {
+      toast('Removed. Reboot to apply.', 'success');
+      await fetchConfig();
+    } else {
+      toast(d.error || 'Failed', 'error');
+    }
+  } catch(e) { toast('Error', 'error'); }
+}
 
-        async function launchApp(pkg) {
-            if (!validPkg(pkg)) return;
-            await execShell('monkey -p ' + shellQuote(pkg) + ' -c android.intent.category.LAUNCHER 1 2>&1 >/dev/null');
-        }
+// ── Add Profile ──────────────────────────────────────────────
+function openAddProfile() {
+  ['p-name','p-mfr','p-brand','p-model','p-device','p-product','p-fp',
+   'p-soc','p-soc-mfr','p-gl-vendor','p-gl-renderer','p-board','p-android','p-patch']
+    .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  openOverlay('overlay-add-profile');
+}
 
-        async function loadAll() { await Promise.all([loadConfig(), fetchApps()]); }
+async function saveProfile() {
+  const name = document.getElementById('p-name').value.trim().toUpperCase().replace(/\s+/g,'_');
+  if (!name) { toast('Enter a profile name', 'error'); return; }
+  const data = {
+    name,
+    MANUFACTURER: document.getElementById('p-mfr').value.trim(),
+    BRAND: document.getElementById('p-brand').value.trim(),
+    MODEL: document.getElementById('p-model').value.trim(),
+    DEVICE: document.getElementById('p-device').value.trim(),
+    PRODUCT: document.getElementById('p-product').value.trim(),
+    FINGERPRINT: document.getElementById('p-fp').value.trim(),
+    SOC_MODEL: document.getElementById('p-soc').value.trim(),
+    SOC_MANUFACTURER: document.getElementById('p-soc-mfr').value.trim(),
+    GL_VENDOR: document.getElementById('p-gl-vendor').value.trim(),
+    GL_RENDERER: document.getElementById('p-gl-renderer').value.trim(),
+    BOARD: document.getElementById('p-board').value.trim(),
+    ANDROID_VERSION: document.getElementById('p-android').value.trim(),
+    SECURITY_PATCH: document.getElementById('p-patch').value.trim(),
+  };
+  if (!data.MANUFACTURER || !data.MODEL || !data.FINGERPRINT) {
+    toast('Manufacturer, Model and Fingerprint are required', 'error'); return;
+  }
+  try {
+    const r = await fetch(`${API}?action=add_profile`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: {'Content-Type':'application/json'}
+    });
+    const d = await r.json();
+    if (d.success) {
+      toast('Profile saved!', 'success');
+      closeOverlay('overlay-add-profile');
+      await fetchConfig();
+    } else {
+      toast(d.error || 'Failed', 'error');
+    }
+  } catch(e) { toast('Error saving profile', 'error'); }
+}
 
-        let reportText = '';
+async function deleteProfile(name) {
+  if (!confirm(`Delete profile "${name}" and all its game rules?`)) return;
+  try {
+    const r = await fetch(`${API}?action=delete_profile&profile=${encodeURIComponent(name)}`);
+    const d = await r.json();
+    if (d.success) {
+      toast('Profile deleted', 'success');
+      await fetchConfig();
+    } else {
+      toast(d.error || 'Failed', 'error');
+    }
+  } catch(e) { toast('Error', 'error'); }
+}
 
-        async function openReport() {
-            document.getElementById('modalBg').classList.add('show');
-            const copyBtn = document.getElementById('copyBtn');
-            const githubBtn = document.getElementById('githubBtn');
-            const sub = document.getElementById('modalSub');
-            const box = document.getElementById('diagBox');
-            copyBtn.disabled = true; githubBtn.style.display = 'none';
-            sub.textContent = 'Collecting diagnostics…';
-            box.innerHTML = '<div class="loading"><span class="spinner"></span> reading</div>';
+// ── Logs ─────────────────────────────────────────────────────
+async function loadLogs() {
+  document.getElementById('log-area').innerHTML = '<div class="center-loader"><div class="loader"></div>Loading logs…</div>';
+  try {
+    const r = await fetch(`${API}?action=generate_logs`);
+    const d = await r.json();
+    if (d.success) {
+      const raw = atob(d.snippet);
+      const colored = raw
+        .replace(/\[AppLifecycle: target/g,'<span style="color:var(--accent)">[AppLifecycle: target')
+        .replace(/\[SysPropHook:/g,'<span style="color:var(--green)">[SysPropHook:')
+        .replace(/\[GpuHook:/g,'<span style="color:var(--yellow)">[GpuHook:')
+        .replace(/(\[-\].*)/g,'<span style="color:var(--red)">$1</span>');
+      document.getElementById('log-area').innerHTML = `<div class="log-box">${colored || '(no GameUnlocker logs found — module may not be loaded)'}</div>`;
+    }
+  } catch(e) {
+    document.getElementById('log-area').innerHTML = '<div class="empty"><div class="empty-icon">❌</div><p>Failed to load logs</p></div>';
+  }
+}
 
-            const cmds = {
-                device: 'echo "$(getprop ro.product.manufacturer) $(getprop ro.product.model)"',
-                os: 'echo "Android $(getprop ro.build.version.release) (API $(getprop ro.build.version.sdk))"',
-                root: 'if command -v magisk >/dev/null; then echo Magisk; elif command -v ksud >/dev/null; then echo KernelSU; elif command -v apd >/dev/null; then echo APatch; else echo Unknown; fi',
-                zygisk: 'if [ -d /data/adb/modules/zygisksu ]; then echo ZygiskNext; elif [ -d /data/adb/modules/rezygisk ]; then echo ReZygisk; elif [ -d /data/adb/modules/neozygisk ]; then echo NeoZygisk; else echo None; fi',
-                soc: 'echo "$(getprop ro.soc.manufacturer) $(getprop ro.soc.model)"',
-                ver: 'grep "^version=" ' + modDir + '/module.prop 2>/dev/null | cut -d= -f2'
-            };
-            const fields = {};
-            for (const k of Object.keys(cmds)) {
-                const r = await execShell(cmds[k]);
-                fields[k] = (r && r.errno === 0 && r.stdout.trim()) ? r.stdout.trim() : '?';
-            }
+// ── Overlay helpers ──────────────────────────────────────────
+function openOverlay(id) { document.getElementById(id).classList.add('active'); document.body.style.overflow='hidden'; }
+function closeOverlay(id) { document.getElementById(id).classList.remove('active'); document.body.style.overflow=''; }
 
-            let h = '';
-            for (const [k, label] of [['device','Device'],['os','OS'],['root','Root'],['zygisk','Zygisk'],['soc','SoC'],['ver','Module']]) {
-                h += '<div class="diag-row"><span class="k">' + label + '</span><span class="v">' + esc(fields[k]) + '</span></div>';
-            }
+// ── Toast ────────────────────────────────────────────────────
+let toastTimer;
+function toast(msg, type='') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.className = ''; }, 2800);
+}
 
-            sub.textContent = 'Fetching logs…';
-            const lr = await execShell('logcat -d -s GameUnlocker 2>/dev/null | tail -n 50');
-            const logs = (lr && lr.errno === 0 && lr.stdout.trim()) ? lr.stdout.trim() : '(no logs)';
-            h += '<div class="log-box">' + esc(logs) + '</div>';
-            box.innerHTML = h;
-
-            reportText = "Device: " + fields.device + "\nOS: " + fields.os + "\nRoot: " + fields.root + "\nZygisk: " + fields.zygisk + "\nSoC: " + fields.soc + "\nModule: " + fields.ver + "\n\nConfig:\n" + JSON.stringify(window.cfg || {}, null, 2) + "\n\nLogcat:\n" + logs;
-            sub.textContent = 'Copy the report and paste it in a GitHub issue.';
-            copyBtn.disabled = false;
-        }
-
-        async function copyReport() {
-            try { await navigator.clipboard.writeText(reportText); } catch(e) {
-                const t = document.createElement('textarea'); t.value = reportText; t.style.cssText = 'position:fixed;opacity:0';
-                document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t);
-            }
-            document.getElementById('copyBtn').textContent = 'Copied';
-            document.getElementById('githubBtn').style.display = 'inline-flex';
-            toast('Copied');
-        }
-
-        function openGitHub() { window.open('https://github.com/yadavnikhil03/GameUnlocker/issues/new', '_blank'); }
-        function closeModal() { document.getElementById('modalBg').classList.remove('show'); document.getElementById('copyBtn').textContent = 'Copy report'; }
-
-        window.onload = () => { loadStatus(); loadAll(); };
-    </script>
+// ── Init ─────────────────────────────────────────────────────
+fetchConfig();
+loadDeviceInfo();
+</script>
 </body>
 </html>

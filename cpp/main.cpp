@@ -124,7 +124,23 @@ public:
         hookManager.initialize();
         hookManager.enableHooks();
 
+        // ---------------------------------------------------------------
+        // CRITICAL: Do NOT call DLCLOSE_MODULE_LIBRARY for target apps!
+        //
+        // The bytehook trampolines for __system_property_read_callback and
+        // the JNI native method hooks for glGetString all reference code
+        // that lives inside this shared library (.so).
+        //
+        // If we unload the .so here, those function pointers become
+        // dangling — the next time the app calls getprop or glGetString,
+        // the process will segfault. This was the primary bug preventing
+        // spoofing from working.
+        //
+        // For non-target apps, DLCLOSE is called above (before we reach
+        // this point), so memory usage stays low for everything else.
+        // ---------------------------------------------------------------
         if (!hookManager.hasActiveHooks()) {
+            // No hooks were installed at all — safe to unload
             LOGW("AppLifecycle: no active hooks for '%s' — unloading", pkgStr.c_str());
             api_->setOption(zygisk::Option::DLCLOSE_MODULE_LIBRARY);
             isTargetApp_ = false;
@@ -136,6 +152,8 @@ public:
             Spoofer spoofer(ctx);
             spoofer.applyDeviceSpoof(profileOpt.value());
         }
+
+        LOGI("AppLifecycle: hooks active for '%s' — module stays loaded", pkgStr.c_str());
     }
 
     void postAppSpecialize(const zygisk::AppSpecializeArgs* args) override {
