@@ -12,11 +12,11 @@ namespace gameunlocker {
 CompanionManager::CompanionManager(const Context& ctx) : ctx_(ctx) {}
 
 std::string CompanionManager::resolveModulePath() const {
-    int dirfd = ctx_.getModuleDirFd();
-    if (dirfd < 0) return "";
+    FdWrapper dirfd(ctx_.getModuleDirFd());
+    if (!dirfd.isValid()) return "";
 
     char fdPath[64];
-    snprintf(fdPath, sizeof(fdPath), "/proc/self/fd/%d", dirfd);
+    snprintf(fdPath, sizeof(fdPath), "/proc/self/fd/%d", dirfd.get());
 
     char modulePath[PATH_MAX];
     ssize_t len = readlink(fdPath, modulePath, sizeof(modulePath) - 1);
