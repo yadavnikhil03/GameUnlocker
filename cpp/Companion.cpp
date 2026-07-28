@@ -6,6 +6,7 @@
 #include <cstring>
 #include <limits.h>
 #include <sys/stat.h>
+#include <sys/mount.h>
 
 namespace gameunlocker {
 
@@ -62,7 +63,7 @@ void companionHandler(int fd) {
 
     if (command == "unmount_spoof") {
         // Best-effort unmount; ignore errors (may not be mounted)
-        system("/system/bin/umount /proc/cpuinfo 2>/dev/null");
+        umount2("/proc/cpuinfo", MNT_DETACH);
         LOGI("Companion: Unmounted /proc/cpuinfo");
         return;
     }
@@ -72,6 +73,8 @@ void companionHandler(int fd) {
         std::string spoofPath = command.substr(12); // len("mount_spoof:") == 12
 
         // Security: only allow paths under /data/adb/modules/
+        // Even though we use mount() now (which prevents shell injection),
+        // we still restrict paths to prevent binding arbitrary files to /proc/cpuinfo
         if (spoofPath.rfind("/data/adb/modules/", 0) != 0) {
             LOGW("Companion: Rejected path outside module dir: %s", spoofPath.c_str());
             return;
@@ -84,12 +87,9 @@ void companionHandler(int fd) {
         }
 
         // Unmount any existing bind-mount first
-        system("/system/bin/umount /proc/cpuinfo 2>/dev/null");
+        umount2("/proc/cpuinfo", MNT_DETACH);
 
-        char mountCmd[600];
-        snprintf(mountCmd, sizeof(mountCmd),
-                 "/system/bin/mount --bind \"%s\" /proc/cpuinfo", spoofPath.c_str());
-        int ret = system(mountCmd);
+        int ret = mount(spoofPath.c_str(), "/proc/cpuinfo", nullptr, MS_BIND, nullptr);
         if (ret == 0) {
             LOGI("Companion: Mounted %s -> /proc/cpuinfo", spoofPath.c_str());
         } else {

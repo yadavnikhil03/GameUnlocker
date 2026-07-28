@@ -29,7 +29,7 @@ std::string getProp(const char* name) {
 }
 
 void setProp(const char* name, const char* value) {
-    std::string cmd = std::string("setprop ") + name + " " + value;
+    std::string cmd = std::string("setprop ") + name + " '" + value + "'";
     system(cmd.c_str());
 }
 
