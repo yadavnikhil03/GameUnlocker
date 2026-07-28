@@ -12,12 +12,11 @@ public:
     // Resolves the on-disk module path via /proc/self/fd/<dirfd>
     std::string resolveModulePath() const;
 
-    // Sends mount_spoof command to the companion process to bind-mount
-    // <modulePath>/cpuinfo_spoof over /proc/cpuinfo for the target app.
-    bool mountCpuInfo(const std::string& modulePath) const;
+    bool mountCpuInfo(const std::string& modulePath, const std::string& hardware) const;
 
-    // Sends unmount_spoof command to the companion process.
     bool unmountCpuInfo() const;
+
+    bool whitelistDaemon(uid_t targetUid) const;
 
 private:
     const Context& ctx_;

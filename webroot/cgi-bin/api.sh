@@ -230,6 +230,62 @@ elif [ "$ACTION" = "poll_apps" ]; then
     fi
 
 # -----------------------------------------------------------------------
+# upload_config — restore configuration from backup
+# -----------------------------------------------------------------------
+elif [ "$ACTION" = "upload_config" ]; then
+    if [ "$REQUEST_METHOD" = "POST" ]; then
+        TMP=$(mktemp)
+        cat > "$TMP"
+        if ! command -v jq > /dev/null 2>&1; then
+            echo '{"success": false, "error": "jq not available"}'
+            rm -f "$TMP"
+            exit 0
+        fi
+        if jq empty "$TMP" >/dev/null 2>&1; then
+            mv "$TMP" "$CONFIG_FILE"
+            chmod 0644 "$CONFIG_FILE"
+            echo '{"success": true}'
+        else
+            echo '{"success": false, "error": "Invalid JSON format"}'
+            rm -f "$TMP"
+        fi
+    else
+        echo '{"success": false, "error": "Must use POST"}'
+    fi
+
+elif [ "$ACTION" = "update_cloud_profiles" ]; then
+    CLOUD_URL="https://raw.githubusercontent.com/yadavnikhil03/GameUnlocker/main/cloud_profiles.json"
+    TMP_CLOUD=$(mktemp)
+    
+    if command -v curl >/dev/null 2>&1; then
+        curl -sL "$CLOUD_URL" > "$TMP_CLOUD"
+    else
+        wget -qO "$TMP_CLOUD" "$CLOUD_URL"
+    fi
+    
+    if ! command -v jq > /dev/null 2>&1; then
+        echo '{"success": false, "error": "jq not available"}'
+        rm -f "$TMP_CLOUD"
+        exit 0
+    fi
+    
+    if jq empty "$TMP_CLOUD" >/dev/null 2>&1; then
+        TMP_MERGE=$(mktemp)
+        jq -s '
+          (.[0].profiles * .[1].profiles) as $merged_profiles |
+          (.[1].routing_rules + .[0].routing_rules | unique_by(.pattern)) as $merged_rules |
+          .[0] | .profiles = $merged_profiles | .routing_rules = $merged_rules
+        ' "$CONFIG_FILE" "$TMP_CLOUD" > "$TMP_MERGE"
+        
+        mv "$TMP_MERGE" "$CONFIG_FILE"
+        chmod 0644 "$CONFIG_FILE"
+        echo '{"success": true}'
+    else
+        echo '{"success": false, "error": "Failed to fetch or parse cloud profiles"}'
+    fi
+    rm -f "$TMP_CLOUD"
+
+# -----------------------------------------------------------------------
 # get_device_info — real device model + active spoof status
 # -----------------------------------------------------------------------
 elif [ "$ACTION" = "get_device_info" ]; then

@@ -11,16 +11,20 @@
 #include <android/log.h>
 #include <fcntl.h>
 #include <csignal>
+#include <unordered_set>
 
 #define LOG_TAG "GameUnlockerDaemon"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+#define LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
 
 #define SOCKET_NAME "@gameunlocker_daemon"
 
 std::atomic<int> active_clients(0);
 std::string default_gpu_mode = "";
 std::string default_gfx_low_quality = "";
+std::unordered_set<uid_t> whitelisted_uids;
+std::mutex uid_mutex;
 
 std::string getProp(const char* name) {
     char value[PROP_VALUE_MAX] = {0};
@@ -58,21 +62,66 @@ void restorePerfMode() {
 }
 
 void handleClient(int client_fd) {
-    if (active_clients.fetch_add(1) == 0) {
-        applyPerfMode();
+    struct ucred ucred;
+    socklen_t len = sizeof(struct ucred);
+    if (getsockopt(client_fd, SOL_SOCKET, SO_PEERCRED, &ucred, &len) < 0) {
+        close(client_fd);
+        return;
     }
-    LOGI("Client connected. Active clients: %d", active_clients.load());
 
-    char buf[16];
-    // Block until client disconnects
-    while (read(client_fd, buf, sizeof(buf)) > 0) {}
+    char buf[256];
+    ssize_t bytes = read(client_fd, buf, sizeof(buf) - 1);
+    if (bytes <= 0) {
+        close(client_fd);
+        return;
+    }
+    buf[bytes] = '\0';
+    std::string command(buf);
+
+    if (command.rfind("WHITELIST:", 0) == 0) {
+        if (ucred.uid != 0) {
+            LOGW("Non-root (uid %d) attempted to whitelist", ucred.uid);
+            close(client_fd);
+            return;
+        }
+        uid_t target_uid = std::stoi(command.substr(10));
+        std::lock_guard<std::mutex> lock(uid_mutex);
+        whitelisted_uids.insert(target_uid);
+        LOGI("Whitelisted UID: %d", target_uid);
+        close(client_fd);
+        return;
+    }
+
+    if (command == "CONNECT") {
+        bool allowed = false;
+        {
+            std::lock_guard<std::mutex> lock(uid_mutex);
+            allowed = whitelisted_uids.count(ucred.uid) > 0;
+        }
+
+        if (!allowed && ucred.uid != 0) {
+            LOGW("Unauthorized process (uid %d) attempted to trigger perf mode", ucred.uid);
+            close(client_fd);
+            return;
+        }
+
+        if (active_clients.fetch_add(1) == 0) {
+            applyPerfMode();
+        }
+        LOGI("Client connected (uid %d). Active clients: %d", ucred.uid, active_clients.load());
+
+        char ping[16];
+        while (read(client_fd, ping, sizeof(ping)) > 0) {}
+
+        if (active_clients.fetch_sub(1) == 1) {
+            restorePerfMode();
+        }
+        LOGI("Client disconnected (uid %d). Active clients: %d", ucred.uid, active_clients.load());
+        close(client_fd);
+        return;
+    }
 
     close(client_fd);
-
-    if (active_clients.fetch_sub(1) == 1) {
-        restorePerfMode();
-    }
-    LOGI("Client disconnected. Active clients: %d", active_clients.load());
 }
 
 int main() {
@@ -91,9 +140,9 @@ int main() {
     memset(&addr, 0, sizeof(addr));
     addr.sun_family = AF_UNIX;
     addr.sun_path[0] = '\0';
-    strncpy(addr.sun_path + 1, SOCKET_NAME + 1, sizeof(addr.sun_path) - 2);
+    strncpy(addr.sun_path + 1, &SOCKET_NAME[1], sizeof(addr.sun_path) - 2);
 
-    int len = offsetof(struct sockaddr_un, sun_path) + strlen(SOCKET_NAME + 1) + 1;
+    int len = offsetof(struct sockaddr_un, sun_path) + strlen(&SOCKET_NAME[1]) + 1;
 
     int opt = 1;
     setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));

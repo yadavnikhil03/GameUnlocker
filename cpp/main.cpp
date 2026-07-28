@@ -29,8 +29,8 @@ static void connectDaemon() {
     int len = offsetof(struct sockaddr_un, sun_path) + strlen(socket_name + 1) + 1;
 
     if (connect(sock, reinterpret_cast<struct sockaddr*>(&addr), len) == 0) {
-        char ping = 1;
-        write(sock, &ping, 1);
+        std::string cmd = "CONNECT";
+        write(sock, cmd.c_str(), cmd.size());
         char buf[16];
         // Block until daemon closes connection (keeps perf mode active)
         while (read(sock, buf, sizeof(buf)) > 0) {}
@@ -100,13 +100,20 @@ public:
              cpuSpoofApp ? 1 : 0);
 
         isTargetApp_ = true;
+        
+        CompanionManager companion(ctx);
+        if (companion.whitelistDaemon(getuid())) {
+            LOGI("AppLifecycle: Whitelisted app uid %d for performance daemon", getuid());
+        }
 
-        // --- CPU /proc/cpuinfo bind-mount via root companion process ---
         if (cpuSpoofApp) {
-            CompanionManager companion(ctx);
             std::string modPath = companion.resolveModulePath();
+            std::string hardware = "Qualcomm";
+            if (profileOpt.has_value() && !profileOpt.value().hardware.empty()) {
+                hardware = profileOpt.value().hardware;
+            }
             if (!modPath.empty()) {
-                if (companion.mountCpuInfo(modPath)) {
+                if (companion.mountCpuInfo(modPath, hardware)) {
                     LOGI("AppLifecycle: CPU spoof mount requested for '%s'", pkgStr.c_str());
                 } else {
                     LOGW("AppLifecycle: CPU spoof mount FAILED for '%s'", pkgStr.c_str());

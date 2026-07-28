@@ -188,6 +188,19 @@ select.form-input{appearance:none;-webkit-appearance:none;cursor:pointer;backgro
         <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--muted)"><path d="m9 18 6-6-6-6"/></svg>
       </div>
     </div>
+    <div class="card" style="cursor:pointer" onclick="backupConfig()">
+      <div class="card-row">
+        <div class="card-icon">💾</div>
+        <div class="card-info"><div class="card-name">Backup Config</div><div class="card-sub">Save your configuration to a file</div></div>
+      </div>
+    </div>
+    <div class="card" style="cursor:pointer" onclick="document.getElementById('restore-file').click()">
+      <div class="card-row">
+        <div class="card-icon">📂</div>
+        <div class="card-info"><div class="card-name">Restore Config</div><div class="card-sub">Load configuration from a file</div></div>
+        <input type="file" id="restore-file" style="display:none" accept=".json" onchange="restoreConfig(event)">
+      </div>
+    </div>
   </div>
 
   <!-- ═══════════════════════════════════════ GAMES ══════════ -->
@@ -205,6 +218,10 @@ select.form-input{appearance:none;-webkit-appearance:none;cursor:pointer;backgro
     <button class="btn btn-primary btn-full" style="margin-top:4px" onclick="openAddProfile()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
       New Device Profile
+    </button>
+    <button class="btn btn-ghost btn-full" style="margin-top:8px" onclick="updateCloudProfiles()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H8l4-4 4 4h-3v4h-2z"/></svg>
+      Update Rules from Cloud
     </button>
     <div class="section-title">Device Profiles</div>
     <div id="profiles-list"><div class="center-loader"><div class="loader"></div>Loading profiles…</div></div>
@@ -594,6 +611,22 @@ function openAddProfile() {
    'p-soc','p-soc-mfr','p-gl-vendor','p-gl-renderer','p-board','p-android','p-patch']
     .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
   openOverlay('overlay-add-profile');
+}
+
+async function updateCloudProfiles() {
+  toast('Fetching cloud updates...', '');
+  try {
+    const r = await fetch(`${API}?action=update_cloud_profiles`);
+    const res = await r.json();
+    if (res.success) {
+      toast('Profiles updated from cloud!', 'success');
+      fetchConfig();
+    } else {
+      toast(res.error || 'Failed to update', 'error');
+    }
+  } catch(err) {
+    toast('Network error', 'error');
+  }
 }
 
 async function saveProfile() {

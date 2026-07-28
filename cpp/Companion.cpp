@@ -7,6 +7,8 @@
 #include <limits.h>
 #include <sys/stat.h>
 #include <sys/mount.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 
 namespace gameunlocker {
 
@@ -27,14 +29,18 @@ std::string CompanionManager::resolveModulePath() const {
     return std::string(modulePath);
 }
 
-bool CompanionManager::mountCpuInfo(const std::string& modulePath) const {
+bool CompanionManager::mountCpuInfo(const std::string& modulePath, const std::string& hardware) const {
     if (modulePath.empty()) return false;
     std::string spoofPath = modulePath + "/cpuinfo_spoof";
-    return executeCompanionCommand("mount_spoof:" + spoofPath);
+    return executeCompanionCommand("mount_spoof:" + hardware + "|" + spoofPath);
 }
 
 bool CompanionManager::unmountCpuInfo() const {
     return executeCompanionCommand("unmount_spoof");
+}
+
+bool CompanionManager::whitelistDaemon(uid_t targetUid) const {
+    return executeCompanionCommand("whitelist_daemon:" + std::to_string(targetUid));
 }
 
 bool CompanionManager::executeCompanionCommand(const std::string& command) const {
@@ -69,31 +75,70 @@ void companionHandler(int fd) {
     }
 
     if (command.rfind("mount_spoof:", 0) == 0) {
-        // Extract path after "mount_spoof:" prefix
-        std::string spoofPath = command.substr(12); // len("mount_spoof:") == 12
+        std::string payload = command.substr(12);
+        size_t pipe_pos = payload.find('|');
+        if (pipe_pos == std::string::npos) return;
+        
+        std::string hardware = payload.substr(0, pipe_pos);
+        std::string spoofPath = payload.substr(pipe_pos + 1);
 
-        // Security: only allow paths under /data/adb/modules/
-        // Even though we use mount() now (which prevents shell injection),
-        // we still restrict paths to prevent binding arbitrary files to /proc/cpuinfo
         if (spoofPath.rfind("/data/adb/modules/", 0) != 0) {
             LOGW("Companion: Rejected path outside module dir: %s", spoofPath.c_str());
             return;
         }
 
-        // Verify file exists
-        if (access(spoofPath.c_str(), F_OK) != 0) {
-            LOGW("Companion: cpuinfo_spoof not found at: %s", spoofPath.c_str());
+        FILE* fp = fopen(spoofPath.c_str(), "w");
+        if (fp) {
+            fprintf(fp, "Processor\t: AArch64 Processor rev 0 (aarch64)\n");
+            fprintf(fp, "system type\t: %s\n", hardware.c_str());
+            fprintf(fp, "Hardware\t: %s\n", hardware.c_str());
+            for (int i = 0; i < 8; i++) {
+                fprintf(fp, "\nprocessor\t: %d\n", i);
+                fprintf(fp, "BogoMIPS\t: 38.40\n");
+                fprintf(fp, "Features\t: fp asimd evtstrm aes pmull sha1 sha2 crc32\n");
+                fprintf(fp, "CPU implementer\t: 0x41\n");
+                fprintf(fp, "CPU architecture: 8\n");
+                fprintf(fp, "CPU variant\t: 0x1\n");
+                fprintf(fp, "CPU part\t: 0x000\n");
+                fprintf(fp, "CPU revision\t: 0\n");
+            }
+            fclose(fp);
+            chmod(spoofPath.c_str(), 0644);
+        } else {
+            LOGW("Companion: Failed to generate cpuinfo at: %s", spoofPath.c_str());
             return;
         }
 
-        // Unmount any existing bind-mount first
         umount2("/proc/cpuinfo", MNT_DETACH);
-
         int ret = mount(spoofPath.c_str(), "/proc/cpuinfo", nullptr, MS_BIND, nullptr);
         if (ret == 0) {
-            LOGI("Companion: Mounted %s -> /proc/cpuinfo", spoofPath.c_str());
+            LOGI("Companion: Mounted dynamic cpuinfo (%s) -> /proc/cpuinfo", hardware.c_str());
         } else {
-            LOGW("Companion: mount --bind failed (exit=%d) for path: %s", ret, spoofPath.c_str());
+            LOGW("Companion: mount --bind failed (exit=%d)", ret);
+        }
+        return;
+    }
+
+    if (command.rfind("whitelist_daemon:", 0) == 0) {
+        std::string uidStr = command.substr(17);
+        int sock = socket(AF_UNIX, SOCK_STREAM, 0);
+        if (sock >= 0) {
+            struct sockaddr_un addr;
+            memset(&addr, 0, sizeof(addr));
+            addr.sun_family = AF_UNIX;
+            const char* socket_name = "@gameunlocker_daemon";
+            addr.sun_path[0] = '\0';
+            strncpy(addr.sun_path + 1, socket_name + 1, sizeof(addr.sun_path) - 2);
+            int len = offsetof(struct sockaddr_un, sun_path) + strlen(socket_name + 1) + 1;
+            
+            if (connect(sock, reinterpret_cast<struct sockaddr*>(&addr), len) == 0) {
+                std::string wlCmd = "WHITELIST:" + uidStr;
+                write(sock, wlCmd.c_str(), wlCmd.size());
+                LOGI("Companion: Sent whitelist command for uid %s", uidStr.c_str());
+            } else {
+                LOGW("Companion: Failed to connect to controller daemon to whitelist uid %s", uidStr.c_str());
+            }
+            close(sock);
         }
         return;
     }
