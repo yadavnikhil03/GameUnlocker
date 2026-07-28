@@ -214,9 +214,13 @@ static bool getSpoofedValue(const char* name, std::string& outValue) {
 
 typedef void (*T_Callback)(void*, const char*, const char*, uint32_t);
 typedef void (*prop_read_cb_fn_t)(const prop_info*, T_Callback, void*);
+typedef int (*prop_get_fn_t)(const char*, char*);
+typedef int (*prop_read_fn_t)(const prop_info*, char*, char*);
 
-// The original __system_property_read_callback function
+// The original functions
 static prop_read_cb_fn_t o_system_property_read_callback = nullptr;
+static prop_get_fn_t o_system_property_get = nullptr;
+static prop_read_fn_t o_system_property_read = nullptr;
 
 // ----------------------------------------------------------------
 // Per-call state passed through cookie wrapping.
@@ -271,6 +275,43 @@ static void my_system_property_read_callback(const prop_info* pi, T_Callback cal
     }
 }
 
+// Our hook for __system_property_get
+static int my_system_property_get(const char* name, char* value) {
+    if (!name || !value) {
+        if (o_system_property_get) return o_system_property_get(name, value);
+        return 0;
+    }
+    
+    std::string spoofedVal;
+    if (getSpoofedValue(name, spoofedVal)) {
+        LOGD("SysPropHook: __system_property_get [%s]: -> '%s'", name, spoofedVal.c_str());
+        strcpy(value, spoofedVal.c_str());
+        return spoofedVal.length();
+    }
+    
+    if (o_system_property_get) {
+        return o_system_property_get(name, value);
+    }
+    return 0;
+}
+
+// Our hook for __system_property_read (deprecated but sometimes used)
+static int my_system_property_read(const prop_info* pi, char* name, char* value) {
+    if (!o_system_property_read) return 0;
+    
+    int ret = o_system_property_read(pi, name, value);
+    
+    if (ret == 0 && name && value) {
+        std::string spoofedVal;
+        if (getSpoofedValue(name, spoofedVal)) {
+            LOGD("SysPropHook: __system_property_read [%s]: -> '%s'", name, spoofedVal.c_str());
+            strcpy(value, spoofedVal.c_str());
+        }
+    }
+    
+    return ret;
+}
+
 // ----------------------------------------------------------------
 // Hooked callback (C linkage required for bytehook_hooked_t)
 // ----------------------------------------------------------------
@@ -279,9 +320,14 @@ static void on_hook_status(bytehook_stub_t /*stub*/, int status_code,
                            void* /*new_func*/, void* prev_func, void* /*arg*/) {
     if (status_code == BYTEHOOK_STATUS_CODE_OK) {
         // Capture original pointer when bytehook delivers it
-        if (prev_func && !o_system_property_read_callback) {
-            o_system_property_read_callback =
-                reinterpret_cast<prop_read_cb_fn_t>(prev_func);
+        if (prev_func) {
+            if (strcmp(sym_name, "__system_property_read_callback") == 0 && !o_system_property_read_callback) {
+                o_system_property_read_callback = reinterpret_cast<prop_read_cb_fn_t>(prev_func);
+            } else if (strcmp(sym_name, "__system_property_get") == 0 && !o_system_property_get) {
+                o_system_property_get = reinterpret_cast<prop_get_fn_t>(prev_func);
+            } else if (strcmp(sym_name, "__system_property_read") == 0 && !o_system_property_read) {
+                o_system_property_read = reinterpret_cast<prop_read_fn_t>(prev_func);
+            }
         }
         LOGI("SysPropHook: hook OK for %s in '%s' (prev=%p)",
              sym_name, caller_path ? caller_path : "?", prev_func);
@@ -310,12 +356,19 @@ bool SysPropHook::onEnable(const Context& /*ctx*/) {
     if (!o_system_property_read_callback) {
         void* rawFn = dlsym(RTLD_DEFAULT, "__system_property_read_callback");
         if (rawFn) {
-            o_system_property_read_callback =
-                reinterpret_cast<prop_read_cb_fn_t>(rawFn);
-            LOGI("SysPropHook: pre-resolved original fn via dlsym=%p", rawFn);
-        } else {
-            LOGE("SysPropHook: CRITICAL — cannot resolve original fn via dlsym");
-            return false;
+            o_system_property_read_callback = reinterpret_cast<prop_read_cb_fn_t>(rawFn);
+        }
+    }
+    if (!o_system_property_get) {
+        void* rawFn = dlsym(RTLD_DEFAULT, "__system_property_get");
+        if (rawFn) {
+            o_system_property_get = reinterpret_cast<prop_get_fn_t>(rawFn);
+        }
+    }
+    if (!o_system_property_read) {
+        void* rawFn = dlsym(RTLD_DEFAULT, "__system_property_read");
+        if (rawFn) {
+            o_system_property_read = reinterpret_cast<prop_read_fn_t>(rawFn);
         }
     }
 
@@ -325,6 +378,22 @@ bool SysPropHook::onEnable(const Context& /*ctx*/) {
         nullptr,                   // callee_path_name: search all libs (libc.so)
         "__system_property_read_callback",
         reinterpret_cast<void*>(my_system_property_read_callback),
+        on_hook_status,
+        nullptr
+    );
+
+    bytehook_hook_all(
+        nullptr,
+        "__system_property_get",
+        reinterpret_cast<void*>(my_system_property_get),
+        on_hook_status,
+        nullptr
+    );
+
+    bytehook_hook_all(
+        nullptr,
+        "__system_property_read",
+        reinterpret_cast<void*>(my_system_property_read),
         on_hook_status,
         nullptr
     );
