@@ -5,9 +5,9 @@
   *A high-performance native Daemon IPC that spoofs device identity seamlessly.*
 
   [![Version](https://img.shields.io/github/v/tag/yadavnikhil03/GameUnlocker?label=version&color=blue)](https://github.com/yadavnikhil03/GameUnlocker/releases/latest)
+  [![Latest Downloads](https://img.shields.io/github/downloads/yadavnikhil03/GameUnlocker/latest/total?style=for-the-badge&color=orange&label=downloads)](https://github.com/yadavnikhil03/GameUnlocker/releases/latest)
   [![License](https://img.shields.io/github/license/yadavnikhil03/GameUnlocker?style=for-the-badge&color=green)](LICENSE)
   [![Android](https://img.shields.io/badge/Android-13.0+-3DDC84?style=for-the-badge&logo=android)](https://www.android.com/)
-  
   <p align="center">
     <a href="#features">Features</a> •
     <a href="#how-it-works">How It Works</a> •

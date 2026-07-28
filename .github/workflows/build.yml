@@ -35,6 +35,9 @@ jobs:
         
         # Simple changelog from commit
         echo "$COMMIT_MSG" > release_msg.txt
+        echo "" >> release_msg.txt
+        echo "---" >> release_msg.txt
+        echo "📥 **Downloads for this release:** [![Downloads](https://img.shields.io/github/downloads/yadavnikhil03/GameUnlocker/$VERSION/total?style=flat&color=orange)](https://github.com/yadavnikhil03/GameUnlocker/releases/tag/$VERSION)" >> release_msg.txt
         echo "body_file=release_msg.txt" >> $GITHUB_OUTPUT
 
     - name: Set up Android NDK
@@ -71,6 +74,12 @@ jobs:
         cp libgameunlocker.so ../../zygisk/arm64-v8a.so
         cp gu_controller ../../gu_controller_arm64
 
+    - name: Download jq binaries
+      run: |
+        wget -qO jq_arm64 https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-arm64
+        wget -qO jq_armv7 https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-armhf
+        chmod +x jq_arm64 jq_armv7
+
     - name: Package Magisk Module
       run: |
         zip -r9 ${{ steps.metadata.outputs.filename }} \
@@ -83,7 +92,9 @@ jobs:
           webroot \
           release.json \
           gu_controller_armv7 \
-          gu_controller_arm64
+          gu_controller_arm64 \
+          jq_arm64 \
+          jq_armv7
 
     - name: Check for Edit and Append Footer
       env:

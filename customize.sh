@@ -111,6 +111,7 @@ unzip -o "$ZIPFILE" \
   'webroot/*' \
   'GameUnlockerApp.apk' \
   'gu_controller_arm*' \
+  'jq_arm*' \
   -d "$MODPATH" >&2
 
 if [ ! -d "$MODPATH/zygisk" ]; then
@@ -122,11 +123,15 @@ case "$CPU_ABI" in
     [ -f "$MODPATH/zygisk/arm64-v8a.so" ] || abort_missing_zygisk "$MODPATH/zygisk/arm64-v8a.so"
     mv "$MODPATH/gu_controller_arm64" "$MODPATH/gu_controller" 2>/dev/null
     rm "$MODPATH/gu_controller_armv7" 2>/dev/null
+    mv "$MODPATH/jq_arm64" "$MODPATH/jq" 2>/dev/null
+    rm "$MODPATH/jq_armv7" 2>/dev/null
     ;;
   armeabi-v7a|armeabi)
     [ -f "$MODPATH/zygisk/armeabi-v7a.so" ] || abort_missing_zygisk "$MODPATH/zygisk/armeabi-v7a.so"
     mv "$MODPATH/gu_controller_armv7" "$MODPATH/gu_controller" 2>/dev/null
     rm "$MODPATH/gu_controller_arm64" 2>/dev/null
+    mv "$MODPATH/jq_armv7" "$MODPATH/jq" 2>/dev/null
+    rm "$MODPATH/jq_arm64" 2>/dev/null
     ;;
   *)
     ui_print ""
@@ -161,6 +166,8 @@ sleep 0.5
 set_perm_recursive "$MODPATH" 0 0 0755 0644
 set_perm_recursive "$MODPATH/zygisk" 0 0 0755 0644
 set_perm "$MODPATH/gu_controller" 0 0 0755
+set_perm "$MODPATH/jq" 0 0 0755
+set_perm "$MODPATH/webroot/cgi-bin/api.sh" 0 0 0755
 
 ui_print ""
 ui_print " Installation complete"

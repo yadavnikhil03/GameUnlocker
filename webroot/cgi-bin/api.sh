@@ -4,6 +4,7 @@ echo ""
 
 MODDIR="/data/adb/modules/Game-Unlocker"
 CONFIG_FILE="$MODDIR/config.json"
+export PATH="$MODDIR:$PATH"
 
 # Parse query string params
 ACTION=$(echo "$QUERY_STRING" | grep -o 'action=[^&]*' | cut -d= -f2)
@@ -246,7 +247,8 @@ elif [ "$ACTION" = "get_device_info" ]; then
 elif [ "$ACTION" = "generate_logs" ]; then
     SNIPPET=$(logcat -d -s GameUnlocker -t 50 2>/dev/null)
     logcat -d -s GameUnlocker > /sdcard/Download/GameUnlocker_Logs.txt 2>/dev/null
-    echo "{\"success\": true, \"snippet\": \"$(echo "$SNIPPET" | base64 -w 0 2>/dev/null || echo "$SNIPPET" | base64)\"}"
+    B64=$(echo "$SNIPPET" | base64 2>/dev/null | tr -d '\n')
+    echo "{\"success\": true, \"snippet\": \"$B64\"}"
 
 else
     echo '{"error": "invalid action"}'
