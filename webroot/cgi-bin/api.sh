@@ -7,11 +7,24 @@ CONFIG_FILE="$MODDIR/config.json"
 export PATH="$MODDIR:$PATH"
 
 # Parse query string params
+TOKEN=$(echo "$QUERY_STRING" | grep -o 'token=[^&]*' | cut -d= -f2)
 ACTION=$(echo "$QUERY_STRING" | grep -o 'action=[^&]*' | cut -d= -f2)
 PKG=$(echo "$QUERY_STRING" | grep -o 'pkg=[^&]*' | cut -d= -f2)
 PROFILE=$(echo "$QUERY_STRING" | grep -o 'profile=[^&]*' | cut -d= -f2)
 FIELD=$(echo "$QUERY_STRING" | grep -o 'field=[^&]*' | cut -d= -f2)
 VALUE=$(echo "$QUERY_STRING" | grep -o 'value=[^&]*' | cut -d= -f2)
+
+# Authentication Verification
+if [ ! -f "$MODDIR/auth_token" ]; then
+    echo '{"error": "Authentication token missing on server. Restart WebUI."}'
+    exit 1
+fi
+
+EXPECTED_TOKEN=$(cat "$MODDIR/auth_token")
+if [ "$TOKEN" != "$EXPECTED_TOKEN" ] || [ -z "$TOKEN" ]; then
+    echo '{"error": "Unauthorized access. Invalid or missing token."}'
+    exit 1
+fi
 
 urldecode() {
   local data="$1"

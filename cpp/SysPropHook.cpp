@@ -9,10 +9,6 @@
 
 namespace gameunlocker {
 
-// ----------------------------------------------------------------
-// Static profile state
-// ----------------------------------------------------------------
-
 std::optional<DeviceProfile> SysPropHook::activeProfile_ = std::nullopt;
 bool SysPropHook::cpuSpoofOnly_ = false;
 
@@ -29,16 +25,6 @@ bool SysPropHook::isCpuSpoofOnly() {
     return cpuSpoofOnly_;
 }
 
-
-
-// ----------------------------------------------------------------
-// Core spoof logic
-//
-// This follows the PROVEN PlayIntegrityFix pattern:
-//  - Single hook on __system_property_read_callback only
-//  - std::string_view suffix matching — partition-agnostic
-//  - Returns true + sets outValue if this prop should be overridden
-// ----------------------------------------------------------------
 
 static inline bool starts_with(std::string_view s, std::string_view prefix) {
     return s.size() >= prefix.size() && s.compare(0, prefix.size(), prefix) == 0;
@@ -59,9 +45,6 @@ static bool getSpoofedValue(const char* name, std::string& outValue) {
 
     if (!hasProfile && !cpuOnly) return false;
 
-    // ============================================================
-    // SoC / CPU properties — spoofed in both modes
-    // ============================================================
 
     if (prop == "ro.product.board" || prop == "ro.board.platform") {
         outValue = (hasProfile && !profileOpt->board.empty())
@@ -256,7 +239,8 @@ static int my_system_property_get(const char* name, char* value) {
     std::string spoofedVal;
     if (getSpoofedValue(name, spoofedVal)) {
         LOGD("SysPropHook: __system_property_get [%s]: -> '%s'", name, spoofedVal.c_str());
-        strcpy(value, spoofedVal.c_str());
+        strncpy(value, spoofedVal.c_str(), PROP_VALUE_MAX - 1);
+        value[PROP_VALUE_MAX - 1] = '\0';
         return spoofedVal.length();
     }
     
@@ -276,7 +260,8 @@ static int my_system_property_read(const prop_info* pi, char* name, char* value)
         std::string spoofedVal;
         if (getSpoofedValue(name, spoofedVal)) {
             LOGD("SysPropHook: __system_property_read [%s]: -> '%s'", name, spoofedVal.c_str());
-            strcpy(value, spoofedVal.c_str());
+            strncpy(value, spoofedVal.c_str(), PROP_VALUE_MAX - 1);
+            value[PROP_VALUE_MAX - 1] = '\0';
         }
     }
     

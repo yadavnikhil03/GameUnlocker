@@ -349,7 +349,11 @@ select.form-input{appearance:none;-webkit-appearance:none;cursor:pointer;backgro
 <div id="toast"></div>
 
 <script>
-const API = 'cgi-bin/api.sh';
+const urlParams = new URLSearchParams(window.location.search);
+const token = urlParams.get('token') || sessionStorage.getItem('gu_token') || '';
+if (token) sessionStorage.setItem('gu_token', token);
+
+const API = 'cgi-bin/api.sh?' + (token ? 'token=' + token + '&' : '');
 let config = null;
 let allApps = [];
 let selectedProfile = null;
@@ -359,7 +363,7 @@ let appsPolling = null;
 // ── Fetch config on load ─────────────────────────────────────
 async function fetchConfig() {
   try {
-    const r = await fetch(`${API}?action=get_config`);
+    const r = await fetch(`${API}action=get_config`);
     config = await r.json();
     renderDashboard();
     renderGames();
@@ -391,7 +395,7 @@ function renderDashboard() {
 
 async function loadDeviceInfo() {
   try {
-    const r = await fetch(`${API}?action=get_device_info`);
+    const r = await fetch(`${API}action=get_device_info`);
     const d = await r.json();
     if (d.success) {
       document.getElementById('dc-model').textContent = d.brand + ' ' + d.model;
@@ -524,13 +528,13 @@ function selectChip(name) {
 }
 
 function startLoadApps() {
-  fetch(`${API}?action=get_apps_async`);
+  fetch(`${API}action=get_apps_async`);
   appsPolling = setInterval(pollApps, 1500);
 }
 
 async function pollApps() {
   try {
-    const r = await fetch(`${API}?action=poll_apps`);
+    const r = await fetch(`${API}action=poll_apps`);
     const d = await r.json();
     if (d.success && d.apps) {
       clearInterval(appsPolling);
@@ -577,7 +581,7 @@ async function addManualGame() {
 
 async function doAddGame(pkg, profile) {
   try {
-    const r = await fetch(`${API}?action=add_game&pkg=${encodeURIComponent(pkg)}&profile=${encodeURIComponent(profile)}`);
+    const r = await fetch(`${API}action=add_game&pkg=${encodeURIComponent(pkg)}&profile=${encodeURIComponent(profile)}`);
     const d = await r.json();
     if (d.success) {
       toast('Game added! Reboot to apply.', 'success');
@@ -594,7 +598,7 @@ async function doAddGame(pkg, profile) {
 async function removeGame(pkg) {
   if (!confirm(`Remove "${pkg}" from spoofed games?`)) return;
   try {
-    const r = await fetch(`${API}?action=remove_game&pkg=${encodeURIComponent(pkg)}`);
+    const r = await fetch(`${API}action=remove_game&pkg=${encodeURIComponent(pkg)}`);
     const d = await r.json();
     if (d.success) {
       toast('Removed. Reboot to apply.', 'success');
@@ -616,7 +620,7 @@ function openAddProfile() {
 async function updateCloudProfiles() {
   toast('Fetching cloud updates...', '');
   try {
-    const r = await fetch(`${API}?action=update_cloud_profiles`);
+    const r = await fetch(`${API}action=update_cloud_profiles`);
     const res = await r.json();
     if (res.success) {
       toast('Profiles updated from cloud!', 'success');
@@ -652,7 +656,7 @@ async function saveProfile() {
     toast('Manufacturer, Model and Fingerprint are required', 'error'); return;
   }
   try {
-    const r = await fetch(`${API}?action=add_profile`, {
+    const r = await fetch(`${API}action=add_profile`, {
       method: 'POST',
       body: JSON.stringify(data),
       headers: {'Content-Type':'application/json'}
@@ -671,7 +675,7 @@ async function saveProfile() {
 async function deleteProfile(name) {
   if (!confirm(`Delete profile "${name}" and all its game rules?`)) return;
   try {
-    const r = await fetch(`${API}?action=delete_profile&profile=${encodeURIComponent(name)}`);
+    const r = await fetch(`${API}action=delete_profile&profile=${encodeURIComponent(name)}`);
     const d = await r.json();
     if (d.success) {
       toast('Profile deleted', 'success');
@@ -686,7 +690,7 @@ async function deleteProfile(name) {
 async function loadLogs() {
   document.getElementById('log-area').innerHTML = '<div class="center-loader"><div class="loader"></div>Loading logs…</div>';
   try {
-    const r = await fetch(`${API}?action=generate_logs`);
+    const r = await fetch(`${API}action=generate_logs`);
     const d = await r.json();
     if (d.success) {
       const raw = atob(d.snippet);

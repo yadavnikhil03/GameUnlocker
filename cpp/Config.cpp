@@ -67,6 +67,7 @@ bool ConfigManager::parseJson(const std::string& jsonString) {
                     !val.contains("DEVICE") || !val["DEVICE"].is_string() ||
                     !val.contains("PRODUCT") || !val["PRODUCT"].is_string() ||
                     !val.contains("FINGERPRINT") || !val["FINGERPRINT"].is_string()) {
+                    LOGW("Config: skipping malformed profile '%s' (missing required fields)", key.c_str());
                     continue;
                 }
 
@@ -118,6 +119,7 @@ bool ConfigManager::parseJson(const std::string& jsonString) {
                     !ruleJson.contains("pattern") || !ruleJson["pattern"].is_string() ||
                     !ruleJson.contains("profile") || !ruleJson["profile"].is_string() ||
                     !ruleJson.contains("priority") || !ruleJson["priority"].is_number()) {
+                    LOGW("Config: skipping malformed routing rule");
                     continue;
                 }
 
@@ -128,7 +130,10 @@ bool ConfigManager::parseJson(const std::string& jsonString) {
                 else if (typeStr == "prefix") rule.type = MatchType::PREFIX;
                 else if (typeStr == "suffix") rule.type = MatchType::SUFFIX;
                 else if (typeStr == "wildcard") rule.type = MatchType::WILDCARD;
-                else continue;
+                else {
+                    LOGW("Config: skipping routing rule with unknown type '%s'", typeStr.c_str());
+                    continue;
+                }
 
                 rule.pattern = ruleJson["pattern"].get<std::string>();
                 rule.profile = ruleJson["profile"].get<std::string>();

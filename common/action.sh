@@ -49,6 +49,12 @@ if [ -z "$BB" ]; then
 fi
 
 RANDOM_PORT=$(generate_random_port)
+
+# Generate a secure 16-byte hex token
+AUTH_TOKEN=$(od -An -N16 -tx1 /dev/urandom | tr -d ' \n')
+echo "$AUTH_TOKEN" > "$MODDIR/auth_token"
+chmod 0600 "$MODDIR/auth_token"
+
 chmod -R 0755 "$MODDIR/webroot/cgi-bin"
 
 BB_DIR=$($BB dirname "$BB")
@@ -65,7 +71,7 @@ echo "Starting background server and opening browser..."
 ) &
 
 sleep 1
-am start -a android.intent.action.VIEW -d "http://127.0.0.1:$RANDOM_PORT" >/dev/null 2>&1
+am start -a android.intent.action.VIEW -d "http://127.0.0.1:$RANDOM_PORT?token=$AUTH_TOKEN" >/dev/null 2>&1
 
 echo ""
 echo "Done! The WebUI should now be open."
