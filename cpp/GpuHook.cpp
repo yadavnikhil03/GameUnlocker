@@ -60,6 +60,21 @@ static const char* spoofed_gl_renderer() {
     return cached.c_str();
 }
 
+static uint32_t spoofed_vk_vendor_id() {
+    std::string vendor = spoofed_gl_vendor();
+    if (vendor.find("Qualcomm") != std::string::npos) return 0x5143;
+    if (vendor.find("ARM") != std::string::npos) return 0x13B5;
+    if (vendor.find("Imagination") != std::string::npos) return 0x1010;
+    return 0x5143; 
+}
+
+static uint32_t spoofed_vk_device_id() {
+    std::string vendor = spoofed_gl_vendor();
+    if (vendor.find("Qualcomm") != std::string::npos) return 0x07050000; 
+    if (vendor.find("ARM") != std::string::npos) return 0x7150; // Generic Mali ID
+    return 0x0;
+}
+
 // ----------------------------------------------------------------
 // JNI-layer hooks — intercept android.opengl.GLES{20,30,31,32}
 // ----------------------------------------------------------------
@@ -146,6 +161,8 @@ static void my_vkGetPhysicalDeviceProperties(void* physicalDevice, VkPhysicalDev
     if (pProperties) {
         strncpy(pProperties->deviceName, spoofed_gl_renderer(), VK_MAX_PHYSICAL_DEVICE_NAME_SIZE - 1);
         pProperties->deviceName[VK_MAX_PHYSICAL_DEVICE_NAME_SIZE - 1] = '\0';
+        pProperties->vendorID = spoofed_vk_vendor_id();
+        pProperties->deviceID = spoofed_vk_device_id();
     }
 }
 
@@ -162,6 +179,8 @@ static void my_vkGetPhysicalDeviceProperties2(void* physicalDevice, VkPhysicalDe
     if (pProperties) {
         strncpy(pProperties->properties.deviceName, spoofed_gl_renderer(), VK_MAX_PHYSICAL_DEVICE_NAME_SIZE - 1);
         pProperties->properties.deviceName[VK_MAX_PHYSICAL_DEVICE_NAME_SIZE - 1] = '\0';
+        pProperties->properties.vendorID = spoofed_vk_vendor_id();
+        pProperties->properties.deviceID = spoofed_vk_device_id();
     }
 }
 

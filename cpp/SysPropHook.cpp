@@ -29,20 +29,7 @@ bool SysPropHook::isCpuSpoofOnly() {
     return cpuSpoofOnly_;
 }
 
-// ----------------------------------------------------------------
-// Helper: derive SDK int string from Android version string
-// ----------------------------------------------------------------
 
-static const char* sdkFromVersion(const std::string& ver) {
-    if (ver == "16") return "36";
-    if (ver == "15") return "35";
-    if (ver == "14") return "34";
-    if (ver == "13") return "33";
-    if (ver == "12") return "32";
-    if (ver == "11") return "30";
-    if (ver == "10") return "29";
-    return "34";
-}
 
 // ----------------------------------------------------------------
 // Core spoof logic
@@ -142,23 +129,7 @@ static bool getSpoofedValue(const char* name, std::string& outValue) {
         outValue = p.fingerprint; return true;
     }
 
-    // Android version
-    if (ends_with(prop, ".version.release") ||
-        ends_with(prop, ".version.release_or_codename")) {
-        if (!p.android_version.empty()) {
-            outValue = p.android_version; return true;
-        }
-        return false;
-    }
 
-    // SDK level — PIF uses "api_level" suffix; we cover both forms
-    if (ends_with(prop, "api_level") || ends_with(prop, ".version.sdk")) {
-        if (!p.android_version.empty()) {
-            outValue = sdkFromVersion(p.android_version);
-            return true;
-        }
-        return false;
-    }
 
     // Security patch — exact PIF pattern
     if (ends_with(prop, ".security_patch")) {

@@ -98,16 +98,6 @@ static void parseFingerprintParts(const std::string& fp,
     }
 }
 
-static int sdkIntFromVersion(const std::string& ver) {
-    if (ver == "16") return 36;
-    if (ver == "15") return 35;
-    if (ver == "14") return 34;
-    if (ver == "13") return 33;
-    if (ver == "12") return 32;
-    if (ver == "11") return 30;
-    if (ver == "10") return 29;
-    return 0;
-}
 
 void Spoofer::applyDeviceSpoof(const DeviceProfile& profile) {
     JNIEnv* env = ctx_.getEnv();
@@ -165,29 +155,14 @@ void Spoofer::applyDeviceSpoof(const DeviceProfile& profile) {
         LOGW("Spoofer: could not find android/os/Build$VERSION");
     } else {
         ScopedLocalRef<jclass> scopedVersion(env, versionClass);
-
-        // Prefer the explicit android_version field; fall back to fingerprint
-        const std::string& verStr = !profile.android_version.empty()
-                                    ? profile.android_version : versionRelease;
-
-        if (!verStr.empty()) {
-            setStringField(versionClass, "RELEASE", verStr);
-
-            int sdkInt = sdkIntFromVersion(verStr);
-            if (sdkInt > 0) {
-                setIntField(versionClass, "SDK_INT", static_cast<jint>(sdkInt));
-            }
-        }
-
         if (!profile.security_patch.empty()) {
             setStringField(versionClass, "SECURITY_PATCH", profile.security_patch);
         }
     }
 
-    LOGI("Spoofer: applied spoof — model=%s board=%s android=%s patch=%s",
+    LOGI("Spoofer: applied spoof — model=%s board=%s patch=%s",
          profile.model.c_str(),
          profile.board.empty()           ? "(none)" : profile.board.c_str(),
-         profile.android_version.empty() ? versionRelease.c_str() : profile.android_version.c_str(),
          profile.security_patch.empty()  ? "(none)" : profile.security_patch.c_str());
 }
 
