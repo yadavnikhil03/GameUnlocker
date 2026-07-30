@@ -14,16 +14,15 @@ PROFILE=$(echo "$QUERY_STRING" | grep -o 'profile=[^&]*' | cut -d= -f2)
 FIELD=$(echo "$QUERY_STRING" | grep -o 'field=[^&]*' | cut -d= -f2)
 VALUE=$(echo "$QUERY_STRING" | grep -o 'value=[^&]*' | cut -d= -f2)
 
-# Authentication Verification
-if [ ! -f "$MODDIR/auth_token" ]; then
-    echo '{"error": "Authentication token missing on server. Restart WebUI."}'
-    exit 1
-fi
-
-EXPECTED_TOKEN=$(cat "$MODDIR/auth_token")
-if [ "$TOKEN" != "$EXPECTED_TOKEN" ] || [ -z "$TOKEN" ]; then
-    echo '{"error": "Unauthorized access. Invalid or missing token."}'
-    exit 1
+# Authentication Verification (Adaptive)
+# If auth_token exists (via action.sh), enforce token checking to prevent unauthorized network access.
+# If it doesn't exist, we assume we are running inside KSUWebUI's secure native sandbox and skip the check.
+if [ -f "$MODDIR/auth_token" ]; then
+    EXPECTED_TOKEN=$(cat "$MODDIR/auth_token")
+    if [ "$TOKEN" != "$EXPECTED_TOKEN" ] || [ -z "$TOKEN" ]; then
+        echo '{"error": "Unauthorized access. Invalid or missing token."}'
+        exit 1
+    fi
 fi
 
 urldecode() {

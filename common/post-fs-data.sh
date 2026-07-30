@@ -11,3 +11,4 @@ setprop persist.vendor.qti.game.fps 120
 
 # Log
 log -p i -t GameUnlocker "Applied baseline FPS properties"
+rm -f "$MODDIR/auth_token"

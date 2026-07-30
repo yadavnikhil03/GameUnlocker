@@ -68,6 +68,7 @@ echo "Starting background server and opening browser..."
     "$BB" httpd -p 127.0.0.1:$RANDOM_PORT -h "$MODDIR/webroot" >/dev/null 2>&1
     sleep 300
     "$BB" pkill -f "httpd -p 127.0.0.1:$RANDOM_PORT" >/dev/null 2>&1
+    rm -f "$MODDIR/auth_token"
 ) &
 
 sleep 1

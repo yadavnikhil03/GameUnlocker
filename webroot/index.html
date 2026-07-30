@@ -365,11 +365,16 @@ async function fetchConfig() {
   try {
     const r = await fetch(`${API}action=get_config`);
     config = await r.json();
+    if (config.error) {
+      toast('API Error: ' + config.error, 'error');
+      document.getElementById('stat-games').textContent = 'Error';
+      return;
+    }
     renderDashboard();
     renderGames();
     renderProfiles();
   } catch(e) {
-    toast('Failed to load config', 'error');
+    toast('Failed to load config: ' + e.message, 'error');
   }
 }
 
