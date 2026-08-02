@@ -349,22 +349,222 @@ select.form-input{appearance:none;-webkit-appearance:none;cursor:pointer;backgro
 <div id="toast"></div>
 
 <script>
+const MODDIR = '/data/adb/modules/Game-Unlocker';
+const CONFIG_FILE = MODDIR + '/config.json';
+const IS_KSU = !!(window.ksu && typeof window.ksu.exec === 'function');
+
 const urlParams = new URLSearchParams(window.location.search);
 const token = urlParams.get('token') || sessionStorage.getItem('gu_token') || '';
 if (token) sessionStorage.setItem('gu_token', token);
-
 const API = 'cgi-bin/api.sh?' + (token ? 'token=' + token + '&' : '');
+
 let config = null;
 let allApps = [];
 let selectedProfile = null;
 let appsLoaded = false;
 let appsPolling = null;
 
+// ── KSU exec helper ─────────────────────────────────────────
+async function ksuExec(cmd) {
+  const { errno, stdout, stderr } = await ksu.exec(cmd);
+  if (errno !== 0) throw new Error(stderr || 'Command failed (exit ' + errno + ')');
+  return stdout.trim();
+}
+
+// ── Dual-mode API caller ────────────────────────────────────
+async function callAPI(action, params = {}, postBody = null) {
+  if (IS_KSU) {
+    return await callKSU(action, params, postBody);
+  }
+  // Browser/httpd CGI mode
+  let url = `${API}action=${action}`;
+  for (const [k, v] of Object.entries(params)) {
+    url += `&${k}=${encodeURIComponent(v)}`;
+  }
+  const opts = {};
+  if (postBody) {
+    opts.method = 'POST';
+    opts.body = typeof postBody === 'string' ? postBody : JSON.stringify(postBody);
+    opts.headers = { 'Content-Type': 'application/json' };
+  }
+  const r = await fetch(url, opts);
+  return await r.json();
+}
+
+async function callKSU(action, params, postBody) {
+  const JQ = MODDIR + '/jq';
+
+  if (action === 'get_config') {
+    const out = await ksuExec(`cat "${CONFIG_FILE}"`);
+    return JSON.parse(out);
+  }
+
+  if (action === 'get_device_info') {
+    const out = await ksuExec(`
+      MODEL=$(getprop ro.product.model)
+      BRAND=$(getprop ro.product.brand)
+      ANDROID=$(getprop ro.build.version.release)
+      SOC=$(getprop ro.soc.model)
+      [ -z "$SOC" ] && SOC=$(getprop ro.board.platform)
+      ACTIVE_GAMES=$(${JQ} -r '[.routing_rules[].pattern] | length' "${CONFIG_FILE}" 2>/dev/null || echo "0")
+      echo "{\\"success\\": true, \\"model\\": \\"$MODEL\\", \\"brand\\": \\"$BRAND\\", \\"android\\": \\"$ANDROID\\", \\"soc\\": \\"$SOC\\", \\"active_games\\": $ACTIVE_GAMES}"
+    `);
+    return JSON.parse(out);
+  }
+
+  if (action === 'list_profiles') {
+    const out = await ksuExec(`${JQ} -r '[.profiles | keys[]]' "${CONFIG_FILE}"`);
+    return { success: true, profiles: JSON.parse(out) };
+  }
+
+  if (action === 'add_game') {
+    const pkg = params.pkg;
+    const prof = params.profile;
+    if (!pkg || !prof) return { success: false, error: 'missing pkg or profile' };
+    const out = await ksuExec(`
+      EXISTING=$(${JQ} -r --arg pkg "${pkg}" '[.routing_rules[] | select(.pattern == $pkg)] | length' "${CONFIG_FILE}" 2>/dev/null)
+      if [ "$EXISTING" != "0" ] && [ -n "$EXISTING" ]; then
+        echo '{"success": true, "message": "package already has a routing rule"}'
+        exit 0
+      fi
+      PROFILE_EXISTS=$(${JQ} -r --arg p "${prof}" '.profiles | has($p)' "${CONFIG_FILE}" 2>/dev/null)
+      if [ "$PROFILE_EXISTS" != "true" ]; then
+        echo '{"success": false, "error": "profile not found"}'
+        exit 0
+      fi
+      TMP=$(mktemp)
+      ${JQ} --arg pkg "${pkg}" --arg prof "${prof}" '.routing_rules += [{"type": "exact", "pattern": $pkg, "profile": $prof, "priority": 50}]' "${CONFIG_FILE}" > "$TMP" && mv "$TMP" "${CONFIG_FILE}"
+      chmod 0644 "${CONFIG_FILE}"
+      echo '{"success": true}'
+    `);
+    return JSON.parse(out);
+  }
+
+  if (action === 'remove_game') {
+    const pkg = params.pkg;
+    if (!pkg) return { success: false, error: 'missing pkg' };
+    const out = await ksuExec(`
+      TMP=$(mktemp)
+      ${JQ} --arg pkg "${pkg}" '.routing_rules = [.routing_rules[] | select(.pattern != $pkg)]' "${CONFIG_FILE}" > "$TMP" && mv "$TMP" "${CONFIG_FILE}"
+      chmod 0644 "${CONFIG_FILE}"
+      echo '{"success": true}'
+    `);
+    return JSON.parse(out);
+  }
+
+  if (action === 'add_profile') {
+    if (!postBody) return { success: false, error: 'no data' };
+    const body = typeof postBody === 'string' ? postBody : JSON.stringify(postBody);
+    const escaped = body.replace(/'/g, "'\\''");
+    const out = await ksuExec(`
+      BODY='${escaped}'
+      PROFILE_NAME=$(echo "$BODY" | ${JQ} -r '.name // empty')
+      if [ -z "$PROFILE_NAME" ]; then echo '{"success": false, "error": "missing profile name"}'; exit 0; fi
+      PROFILE_DATA=$(echo "$BODY" | ${JQ} 'del(.name)')
+      TMP=$(mktemp)
+      ${JQ} --arg name "$PROFILE_NAME" --argjson data "$PROFILE_DATA" '.profiles[$name] = $data' "${CONFIG_FILE}" > "$TMP" && mv "$TMP" "${CONFIG_FILE}"
+      chmod 0644 "${CONFIG_FILE}"
+      echo '{"success": true}'
+    `);
+    return JSON.parse(out);
+  }
+
+  if (action === 'delete_profile') {
+    const prof = params.profile;
+    if (!prof) return { success: false, error: 'missing profile' };
+    const out = await ksuExec(`
+      TMP=$(mktemp)
+      ${JQ} --arg prof "${prof}" 'del(.profiles[$prof]) | .routing_rules = [.routing_rules[] | select(.profile != $prof)]' "${CONFIG_FILE}" > "$TMP" && mv "$TMP" "${CONFIG_FILE}"
+      chmod 0644 "${CONFIG_FILE}"
+      echo '{"success": true}'
+    `);
+    return JSON.parse(out);
+  }
+
+  if (action === 'get_apps_async') {
+    // In KSU mode, we fetch apps synchronously since ksu.exec blocks properly
+    ksuExec(`
+      rm -f /data/local/tmp/gameunlocker_apps.json
+      APPS_STR=$(pm list packages -3 | cut -f2 -d: | sort)
+      JSON_ARR="["
+      first=true
+      for p in $APPS_STR; do
+        [ -z "$p" ] && continue
+        if [ "$first" = true ]; then first=false; else JSON_ARR="$JSON_ARR,"; fi
+        LABEL=$(pm dump "$p" 2>/dev/null | grep 'labelRes=' | head -1 | grep -o 'label=[^ ]*' | cut -d= -f2)
+        [ -z "$LABEL" ] && LABEL="$p"
+        JSON_ARR="$JSON_ARR{\\"package\\":\\"$p\\",\\"name\\":\\"$LABEL\\"}"
+      done
+      JSON_ARR="$JSON_ARR]"
+      echo "{\\"success\\": true, \\"apps\\": $JSON_ARR}" > /data/local/tmp/gameunlocker_apps.json
+    `).catch(() => {});
+    return { success: true, message: 'fetching' };
+  }
+
+  if (action === 'poll_apps') {
+    try {
+      const out = await ksuExec('cat /data/local/tmp/gameunlocker_apps.json 2>/dev/null');
+      return JSON.parse(out);
+    } catch(e) {
+      return { success: false, message: 'not_ready' };
+    }
+  }
+
+  if (action === 'upload_config') {
+    if (!postBody) return { success: false, error: 'no data' };
+    const body = typeof postBody === 'string' ? postBody : JSON.stringify(postBody);
+    const escaped = body.replace(/'/g, "'\\''");
+    const out = await ksuExec(`
+      TMP=$(mktemp)
+      echo '${escaped}' > "$TMP"
+      if ${JQ} empty "$TMP" >/dev/null 2>&1; then
+        mv "$TMP" "${CONFIG_FILE}"
+        chmod 0644 "${CONFIG_FILE}"
+        echo '{"success": true}'
+      else
+        echo '{"success": false, "error": "Invalid JSON format"}'
+        rm -f "$TMP"
+      fi
+    `);
+    return JSON.parse(out);
+  }
+
+  if (action === 'update_cloud_profiles') {
+    const out = await ksuExec(`
+      CLOUD_URL="https://raw.githubusercontent.com/yadavnikhil03/GameUnlocker/main/cloud_profiles.json"
+      TMP_CLOUD=$(mktemp)
+      if command -v curl >/dev/null 2>&1; then curl -sL "$CLOUD_URL" > "$TMP_CLOUD"; else wget -qO "$TMP_CLOUD" "$CLOUD_URL"; fi
+      if ${JQ} empty "$TMP_CLOUD" >/dev/null 2>&1; then
+        TMP_MERGE=$(mktemp)
+        ${JQ} -s '(.[0].profiles * .[1].profiles) as $mp | (.[1].routing_rules + .[0].routing_rules | unique_by(.pattern)) as $mr | .[0] | .profiles = $mp | .routing_rules = $mr' "${CONFIG_FILE}" "$TMP_CLOUD" > "$TMP_MERGE"
+        mv "$TMP_MERGE" "${CONFIG_FILE}"
+        chmod 0644 "${CONFIG_FILE}"
+        echo '{"success": true}'
+      else
+        echo '{"success": false, "error": "Failed to fetch or parse cloud profiles"}'
+      fi
+      rm -f "$TMP_CLOUD"
+    `);
+    return JSON.parse(out);
+  }
+
+  if (action === 'generate_logs') {
+    const out = await ksuExec(`
+      SNIPPET=$(logcat -d -s GameUnlocker -t 50 2>/dev/null)
+      logcat -d -s GameUnlocker > /sdcard/Download/GameUnlocker_Logs.txt 2>/dev/null
+      B64=$(echo "$SNIPPET" | base64 2>/dev/null | tr -d '\\n')
+      echo "{\\"success\\": true, \\"snippet\\": \\"$B64\\"}"
+    `);
+    return JSON.parse(out);
+  }
+
+  return { error: 'invalid action' };
+}
+
 // ── Fetch config on load ─────────────────────────────────────
 async function fetchConfig() {
   try {
-    const r = await fetch(`${API}action=get_config`);
-    config = await r.json();
+    config = await callAPI('get_config');
     if (config.error) {
       toast('API Error: ' + config.error, 'error');
       document.getElementById('stat-games').textContent = 'Error';
@@ -400,8 +600,7 @@ function renderDashboard() {
 
 async function loadDeviceInfo() {
   try {
-    const r = await fetch(`${API}action=get_device_info`);
-    const d = await r.json();
+    const d = await callAPI('get_device_info');
     if (d.success) {
       document.getElementById('dc-model').textContent = d.brand + ' ' + d.model;
       document.getElementById('dc-sub').textContent = 'Android ' + d.android;
@@ -533,14 +732,13 @@ function selectChip(name) {
 }
 
 function startLoadApps() {
-  fetch(`${API}action=get_apps_async`);
+  callAPI('get_apps_async').catch(() => {});
   appsPolling = setInterval(pollApps, 1500);
 }
 
 async function pollApps() {
   try {
-    const r = await fetch(`${API}action=poll_apps`);
-    const d = await r.json();
+    const d = await callAPI('poll_apps');
     if (d.success && d.apps) {
       clearInterval(appsPolling);
       appsLoaded = true;
@@ -586,8 +784,7 @@ async function addManualGame() {
 
 async function doAddGame(pkg, profile) {
   try {
-    const r = await fetch(`${API}action=add_game&pkg=${encodeURIComponent(pkg)}&profile=${encodeURIComponent(profile)}`);
-    const d = await r.json();
+    const d = await callAPI('add_game', { pkg, profile });
     if (d.success) {
       toast('Game added! Reboot to apply.', 'success');
       closeOverlay('overlay-add-game');
@@ -603,8 +800,7 @@ async function doAddGame(pkg, profile) {
 async function removeGame(pkg) {
   if (!confirm(`Remove "${pkg}" from spoofed games?`)) return;
   try {
-    const r = await fetch(`${API}action=remove_game&pkg=${encodeURIComponent(pkg)}`);
-    const d = await r.json();
+    const d = await callAPI('remove_game', { pkg });
     if (d.success) {
       toast('Removed. Reboot to apply.', 'success');
       await fetchConfig();
@@ -625,8 +821,7 @@ function openAddProfile() {
 async function updateCloudProfiles() {
   toast('Fetching cloud updates...', '');
   try {
-    const r = await fetch(`${API}action=update_cloud_profiles`);
-    const res = await r.json();
+    const res = await callAPI('update_cloud_profiles');
     if (res.success) {
       toast('Profiles updated from cloud!', 'success');
       fetchConfig();
@@ -661,12 +856,7 @@ async function saveProfile() {
     toast('Manufacturer, Model and Fingerprint are required', 'error'); return;
   }
   try {
-    const r = await fetch(`${API}action=add_profile`, {
-      method: 'POST',
-      body: JSON.stringify(data),
-      headers: {'Content-Type':'application/json'}
-    });
-    const d = await r.json();
+    const d = await callAPI('add_profile', {}, data);
     if (d.success) {
       toast('Profile saved!', 'success');
       closeOverlay('overlay-add-profile');
@@ -680,8 +870,7 @@ async function saveProfile() {
 async function deleteProfile(name) {
   if (!confirm(`Delete profile "${name}" and all its game rules?`)) return;
   try {
-    const r = await fetch(`${API}action=delete_profile&profile=${encodeURIComponent(name)}`);
-    const d = await r.json();
+    const d = await callAPI('delete_profile', { profile: name });
     if (d.success) {
       toast('Profile deleted', 'success');
       await fetchConfig();
@@ -695,8 +884,7 @@ async function deleteProfile(name) {
 async function loadLogs() {
   document.getElementById('log-area').innerHTML = '<div class="center-loader"><div class="loader"></div>Loading logs…</div>';
   try {
-    const r = await fetch(`${API}action=generate_logs`);
-    const d = await r.json();
+    const d = await callAPI('generate_logs');
     if (d.success) {
       const raw = atob(d.snippet);
       const colored = raw
