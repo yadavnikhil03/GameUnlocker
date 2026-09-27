@@ -366,9 +366,29 @@ let appsPolling = null;
 
 // ── KSU exec helper ─────────────────────────────────────────
 async function ksuExec(cmd) {
-  const { errno, stdout, stderr } = await ksu.exec(cmd);
-  if (errno !== 0) throw new Error(stderr || 'Command failed (exit ' + errno + ')');
-  return stdout.trim();
+  const result = await ksu.exec(cmd);
+
+  if (typeof result === 'string') {
+    return result.trim();
+  }
+
+  if (result && typeof result === 'object') {
+    const errno = result.errno;
+    const stdout = result.stdout || '';
+    const stderr = result.stderr || '';
+
+    if (errno !== 0) {
+      throw new Error(
+        stderr || 'Command failed (exit ' + errno + ')'
+      );
+    }
+
+    return stdout.trim();
+  }
+
+  throw new Error(
+    'Unexpected ksu.exec result: ' + String(result)
+  );
 }
 
 // ── Dual-mode API caller ────────────────────────────────────

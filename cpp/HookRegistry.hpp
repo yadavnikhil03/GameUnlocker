@@ -36,7 +36,6 @@ public:
 };
 } 
 #define REGISTER_HOOK(HookClass) \
-
     static ::gameunlocker::HookRegistrar __registrar_##HookClass([]() { \
         return std::make_unique<HookClass>(); \
     });

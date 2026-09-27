@@ -125,7 +125,7 @@ public:
         LOGI("AppLifecycle: hooks active for '%s' — module stays loaded", pkgStr.c_str());
     }
 
-    void postAppSpecialize(const zygisk::AppSpecializeArgs* args) override {
+    void postAppSpecialize(const zygisk::AppSpecializeArgs* /*args*/) override {
         if (isTargetApp_) {
 
             std::thread(connectDaemon).detach();
