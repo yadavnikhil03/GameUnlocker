@@ -2,12 +2,38 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
     <application
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="GameUnlocker"
         android:theme="@style/Theme.AppCompat.NoActionBar">
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             LSPosed / Xposed Module Declaration
+             These meta-data tags are required for LSPosed Manager to
+             recognize this APK as a valid Xposed module and show it in
+             the module list. Without these, the LSPosed hooks are ignored.
+             ══════════════════════════════════════════════════════════════ -->
+
+        <!-- Minimum Xposed API version this module requires.
+             93 = LSPosed 1.9.x (supports system_server scoping) -->
+        <meta-data
+            android:name="xposedminversion"
+            android:value="93" />
+
+        <!-- Flag that marks this as an Xposed module (required) -->
+        <meta-data
+            android:name="xposedmodule"
+            android:value="true" />
+
+        <!-- Human-readable description shown in LSPosed Manager -->
+        <meta-data
+            android:name="xposeddescription"
+            android:value="Hooks GameManagerService (GAME_MODE_PERFORMANCE), Surface.setFrameRate (uncap FPS), PowerManager.getThermalHeadroom (spoof no-throttle). Companion to GameUnlocker Zygisk module." />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

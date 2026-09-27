@@ -3,11 +3,9 @@
 #include "logger.hpp"
 
 namespace gameunlocker {
-
 HookManager::HookManager(const Context& ctx) : ctx_(ctx) {}
 
 void HookManager::initialize() {
-
     for (const auto& factory : HookRegistry::getInstance().getFactories()) {
         auto hook = factory();
         if (hook->isSupported(ctx_)) {
@@ -29,10 +27,7 @@ void HookManager::enableHooks() {
     }
 }
 
-
-
 bool HookManager::hasActiveHooks() const {
     return !activeHooks_.empty();
 }
-
 } 

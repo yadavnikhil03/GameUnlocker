@@ -1,5 +1,4 @@
 #pragma once
-
 #include "context.hpp"
 #include "IHook.hpp"
 #include <vector>
@@ -16,10 +15,9 @@ public:
     void enableHooks();
 
     bool hasActiveHooks() const;
-
 private:
     const Context& ctx_;
+
     std::vector<std::unique_ptr<IHook>> activeHooks_;
 };
-
 } 

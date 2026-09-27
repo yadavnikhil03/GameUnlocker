@@ -9,20 +9,18 @@
 using json = nlohmann::json;
 
 namespace gameunlocker {
-
 GameUnlockerConfig ConfigManager::config_;
 RoutingEngine ConfigManager::routingEngine_;
+
 bool ConfigManager::isLoaded_ = false;
 
 bool ConfigManager::globalInit(const Context& ctx) {
     if (isLoaded_) return true;
-
     FdWrapper dirfd(ctx.getModuleDirFd());
     if (!dirfd.isValid()) {
         LOGE("ConfigManager::globalInit failed: module dir fd is invalid");
         return false;
     }
-
     FdWrapper fd(openat(dirfd.get(), "config.json", O_RDONLY));
     if (!fd.isValid()) {
         LOGE("ConfigManager::globalInit failed: could not open config.json");
@@ -34,7 +32,6 @@ bool ConfigManager::globalInit(const Context& ctx) {
     char chunk[4096];
     ssize_t bytes;
     const size_t kMaxConfigSize = 1048576;
-
     while ((bytes = read(fd.get(), chunk, sizeof(chunk))) > 0) {
         raw.append(chunk, static_cast<size_t>(bytes));
         if (raw.size() > kMaxConfigSize) {
@@ -42,12 +39,10 @@ bool ConfigManager::globalInit(const Context& ctx) {
             return false;
         }
     }
-
     if (raw.empty()) {
         LOGE("ConfigManager::globalInit failed: config.json is empty or read error");
         return false;
     }
-
     isLoaded_ = parseJson(raw);
     return isLoaded_;
 }
@@ -55,11 +50,9 @@ bool ConfigManager::globalInit(const Context& ctx) {
 bool ConfigManager::parseJson(const std::string& jsonString) {
     try {
         json j = json::parse(jsonString);
-
         if (j.contains("profiles") && j["profiles"].is_object()) {
             for (auto& [key, val] : j["profiles"].items()) {
                 if (!val.is_object()) continue;
-
                 DeviceProfile profile;
                 if (!val.contains("MANUFACTURER") || !val["MANUFACTURER"].is_string() ||
                     !val.contains("BRAND") || !val["BRAND"].is_string() ||
@@ -70,14 +63,12 @@ bool ConfigManager::parseJson(const std::string& jsonString) {
                     LOGW("Config: skipping malformed profile '%s' (missing required fields)", key.c_str());
                     continue;
                 }
-
                 profile.manufacturer = val["MANUFACTURER"].get<std::string>();
                 profile.brand = val["BRAND"].get<std::string>();
                 profile.model = val["MODEL"].get<std::string>();
                 profile.device = val["DEVICE"].get<std::string>();
                 profile.product = val["PRODUCT"].get<std::string>();
                 profile.fingerprint = val["FINGERPRINT"].get<std::string>();
-
                 if (val.contains("BRAND_FOR_DEVICE") && val["BRAND_FOR_DEVICE"].is_string()) {
                     profile.brand_for_device = val["BRAND_FOR_DEVICE"].get<std::string>();
                 }
@@ -108,11 +99,9 @@ bool ConfigManager::parseJson(const std::string& jsonString) {
                 if (val.contains("SECURITY_PATCH") && val["SECURITY_PATCH"].is_string()) {
                     profile.security_patch = val["SECURITY_PATCH"].get<std::string>();
                 }
-
                 config_.profiles[key] = profile;
             }
         }
-
         if (j.contains("routing_rules") && j["routing_rules"].is_array()) {
             for (const auto& ruleJson : j["routing_rules"]) {
                 if (!ruleJson.is_object() || !ruleJson.contains("type") || !ruleJson["type"].is_string() ||
@@ -122,10 +111,9 @@ bool ConfigManager::parseJson(const std::string& jsonString) {
                     LOGW("Config: skipping malformed routing rule");
                     continue;
                 }
-
                 RoutingRule rule;
-                std::string typeStr = ruleJson["type"].get<std::string>();
 
+                std::string typeStr = ruleJson["type"].get<std::string>();
                 if (typeStr == "exact") rule.type = MatchType::EXACT;
                 else if (typeStr == "prefix") rule.type = MatchType::PREFIX;
                 else if (typeStr == "suffix") rule.type = MatchType::SUFFIX;
@@ -134,16 +122,13 @@ bool ConfigManager::parseJson(const std::string& jsonString) {
                     LOGW("Config: skipping routing rule with unknown type '%s'", typeStr.c_str());
                     continue;
                 }
-
                 rule.pattern = ruleJson["pattern"].get<std::string>();
                 rule.profile = ruleJson["profile"].get<std::string>();
                 rule.priority = ruleJson["priority"].get<int>();
-
                 routingEngine_.addRule(rule);
             }
             routingEngine_.sortRules();
         }
-
         if (j.contains("cpu_spoof") && j["cpu_spoof"].is_object()) {
             if (j["cpu_spoof"].contains("with_cpu") && j["cpu_spoof"]["with_cpu"].is_array()) {
                 for (const auto& pkg : j["cpu_spoof"]["with_cpu"]) {
@@ -160,7 +145,6 @@ bool ConfigManager::parseJson(const std::string& jsonString) {
                 }
             }
         }
-
         return !config_.profiles.empty() || !config_.cpuSpoofApps.empty() || !config_.blacklistedApps.empty() || j.contains("routing_rules");
     } catch (const json::parse_error& e) {
         LOGE("Failed to parse config.json: %s", e.what());
@@ -195,5 +179,4 @@ std::optional<DeviceProfile> ConfigManager::getProfileForApp(const std::string& 
     }
     return std::nullopt;
 }
-
 } 

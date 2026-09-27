@@ -1,5 +1,4 @@
 #pragma once
-
 #include "RoutingModels.hpp"
 #include <vector>
 #include <string>
@@ -19,15 +18,18 @@ public:
     void sortRules();
 
     std::optional<std::string> resolveProfile(std::string_view packageName);
-
 private:
+
     std::vector<RoutingRule> rules_;
+
     std::unordered_map<std::string, std::string> cache_;
+
     std::mutex cacheMutex_;
 
     bool matchRule(const RoutingRule& rule, std::string_view pkg) const;
+
     bool isSystemPackage(std::string_view pkg) const;
+
     void putCache(const std::string& pkg, const std::string& profile);
 };
-
 } 

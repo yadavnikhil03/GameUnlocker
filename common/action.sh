@@ -8,16 +8,21 @@ echo "=========================================="
 echo "Starting WebUI Configuration..."
 
 find_busybox() {
+
     for candidate in /data/adb/ksu/bin/busybox /data/adb/magisk/busybox /data/adb/ap/bin/busybox /system/bin/busybox; do
+
         if [ -f "$candidate" ] && [ -x "$candidate" ]; then
+
             if "$candidate" true >/dev/null 2>&1; then
                 echo "$candidate"
                 return 0
             fi
         fi
     done
+
     if command -v busybox >/dev/null 2>&1; then
         sys_bb=$(command -v busybox)
+
         if "$sys_bb" true >/dev/null 2>&1; then
             echo "$sys_bb"
             return 0
@@ -27,6 +32,7 @@ find_busybox() {
 }
 
 generate_random_port() {
+
     if [ -c "/dev/urandom" ]; then
         PORT=$(od -An -N2 -tu2 /dev/urandom | tr -d ' ')
         PORT=$((6000 + (PORT % 4000)))
@@ -43,6 +49,7 @@ if pm list packages | grep -q "io.github.a13e300.ksuwebui"; then
 fi
 
 BB=$(find_busybox)
+
 if [ -z "$BB" ]; then
     echo "Error: Busybox not found! Cannot start WebUI."
     exit 1
@@ -50,7 +57,6 @@ fi
 
 RANDOM_PORT=$(generate_random_port)
 
-# Generate a secure 16-byte hex token
 AUTH_TOKEN=$(od -An -N16 -tx1 /dev/urandom | tr -d ' \n')
 echo "$AUTH_TOKEN" > "$MODDIR/auth_token"
 chmod 0600 "$MODDIR/auth_token"

@@ -1,5 +1,4 @@
 #pragma once
-
 #include "context.hpp"
 #include "ConfigData.hpp"
 #include <string>
@@ -11,12 +10,11 @@ public:
     explicit Spoofer(const Context& ctx);
 
     void applyDeviceSpoof(const DeviceProfile& profile);
-
 private:
     const Context& ctx_;
 
     void setStringField(jclass clazz, const char* fieldName, const std::string& value);
+
     void setIntField(jclass clazz, const char* fieldName, jint value);
 };
-
 }

@@ -1,5 +1,4 @@
 #pragma once
-
 #include "IHook.hpp"
 #include "ConfigData.hpp"
 #include "zygisk.hpp"
@@ -14,14 +13,15 @@ public:
 
     bool onEnable(const Context& ctx) override;
 
-
     static void setProfile(const std::optional<DeviceProfile>& profile, bool cpuSpoofOnly = false);
-    static std::optional<DeviceProfile> getProfile();
-    static bool isCpuSpoofOnly();
 
+    static std::optional<DeviceProfile> getProfile();
+
+    static bool isCpuSpoofOnly();
 private:
+
     static std::optional<DeviceProfile> activeProfile_;
+
     static bool cpuSpoofOnly_;
 };
-
 }   

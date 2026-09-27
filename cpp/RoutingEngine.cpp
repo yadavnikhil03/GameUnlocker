@@ -17,6 +17,7 @@ void RoutingEngine::addRule(const RoutingRule& rule) {
 }
 
 void RoutingEngine::sortRules() {
+
     std::sort(rules_.begin(), rules_.end());
 }
 
@@ -73,24 +74,21 @@ bool RoutingEngine::isSystemPackage(std::string_view pkg) const {
         "com.android.email", "com.android.calculator", "com.android.nfc",
         "com.android.bluetooth", "com.android.wallpaper"
     };
-
     for (auto prefix : kReservedPrefixes) {
         if (pkg == prefix) return true;
         if (pkg.size() > prefix.size() &&
             pkg.compare(0, prefix.size(), prefix) == 0 &&
             pkg[prefix.size()] == '.') return true;
     }
-
     return false;
 }
 
 std::optional<std::string> RoutingEngine::resolveProfile(std::string_view packageName) {
-    std::string pkgStr(packageName);
 
+    std::string pkgStr(packageName);
     if (isSystemPackage(packageName)) {
         return std::nullopt;
     }
-
     {
         std::lock_guard<std::mutex> lock(cacheMutex_);
         auto it = cache_.find(pkgStr);
@@ -99,21 +97,18 @@ std::optional<std::string> RoutingEngine::resolveProfile(std::string_view packag
             return it->second;
         }
     }
-
     for (const auto& rule : rules_) {
         if (matchRule(rule, packageName)) {
+
             std::lock_guard<std::mutex> lock(cacheMutex_);
             putCache(pkgStr, rule.profile);
             return rule.profile;
         }
     }
-
     {
         std::lock_guard<std::mutex> lock(cacheMutex_);
         putCache(pkgStr, "");
     }
-
     return std::nullopt;
 }
-
 } 

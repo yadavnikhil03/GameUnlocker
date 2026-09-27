@@ -1,0 +1,3 @@
+com.yadavnikhil03.gameunlocker.xposed.GameUnlockerXposed
+com.yadavnikhil03.gameunlocker.xposed.FrameRateHook
+com.yadavnikhil03.gameunlocker.xposed.ThermalHook

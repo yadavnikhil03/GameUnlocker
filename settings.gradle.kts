@@ -13,6 +13,5 @@ dependencyResolutionManagement {
         maven("https://jitpack.io")
     }
 }
-
 rootProject.name = "GameUnlocker"
 include(":app")

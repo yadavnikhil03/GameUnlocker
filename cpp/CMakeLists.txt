@@ -4,7 +4,7 @@ project(GameUnlockerModule)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_compile_options(-Os -flto -ffunction-sections -fdata-sections)
+add_compile_options(-Os -flto -ffunction-sections -fdata-sections -Wall -Wextra)
 add_link_options(-flto -Wl,--gc-sections)
 
 add_subdirectory(bytehook)
@@ -40,6 +40,10 @@ set_target_properties(gameunlocker PROPERTIES
 
 add_executable(gu_controller controller.cpp)
 target_link_libraries(gu_controller ${log-lib})
+target_include_directories(gu_controller PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR})
 set_target_properties(gu_controller PROPERTIES
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED ON
     LINK_FLAGS "-Wl,--gc-sections"
 )

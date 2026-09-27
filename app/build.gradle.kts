@@ -2,19 +2,16 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
 }
-
 android {
     namespace = "com.yadavnikhil03.gameunlocker"
     compileSdk = 34
-
     defaultConfig {
         applicationId = "com.yadavnikhil03.gameunlocker"
-        minSdk = 24
+        minSdk = 31
         targetSdk = 34
-        versionCode = 211
-        versionName = "2.1.1"
+        versionCode = 230
+        versionName = "2.3.0"
     }
-
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -42,10 +39,10 @@ android {
         abortOnError = false
     }
 }
-
 dependencies {
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.11.0")
     implementation("com.github.topjohnwu.libsu:core:5.2.2")
+    compileOnly("de.robv.android.xposed:api:82")
 }
