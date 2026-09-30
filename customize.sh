@@ -1,7 +1,7 @@
 #!/system/bin/sh
 
 SKIPMOUNT=false
-PROPFILE=true        # Load system.prop at boot via module system
+PROPFILE=false       # Do not load system.prop at boot to prevent global property bootloops
 POSTFSDATA=true      # Run post-fs-data.sh
 LATESTARTSERVICE=true # Run service.sh after boot_completed
 SKIPUNZIP=1          # We handle extraction manually (SKIPUNZIP=1)

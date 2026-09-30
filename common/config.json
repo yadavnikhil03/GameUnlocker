@@ -330,6 +330,30 @@
     },
     {
       "type": "exact",
+      "pattern": "com.activision.callofduty.shooter",
+      "profile": "REDMAGIC_9_PRO",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.garena.game.codm",
+      "profile": "REDMAGIC_9_PRO",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.tencent.tmgp.kr.codm",
+      "profile": "REDMAGIC_9_PRO",
+      "priority": 50
+    },
+    {
+      "type": "exact",
+      "pattern": "com.vng.codmvn",
+      "profile": "REDMAGIC_9_PRO",
+      "priority": 50
+    },
+    {
+      "type": "exact",
       "pattern": "com.gamedevltd.destinywarfare",
       "profile": "REDMAGIC_9_PRO",
       "priority": 50

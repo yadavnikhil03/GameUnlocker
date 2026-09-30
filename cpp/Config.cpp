@@ -16,12 +16,12 @@ bool ConfigManager::isLoaded_ = false;
 
 bool ConfigManager::globalInit(const Context& ctx) {
     if (isLoaded_) return true;
-    FdWrapper dirfd(ctx.getModuleDirFd());
-    if (!dirfd.isValid()) {
+    int dirfd = ctx.getModuleDirFd();
+    if (dirfd < 0) {
         LOGE("ConfigManager::globalInit failed: module dir fd is invalid");
         return false;
     }
-    FdWrapper fd(openat(dirfd.get(), "config.json", O_RDONLY));
+    FdWrapper fd(openat(dirfd, "config.json", O_RDONLY));
     if (!fd.isValid()) {
         LOGE("ConfigManager::globalInit failed: could not open config.json");
         return false;
